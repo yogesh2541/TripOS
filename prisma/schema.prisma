@@ -32,6 +32,10 @@ enum TripStatus {
   PLANNING
   QUOTED
   BOOKED
+  VENDOR_CONFIRMATION_PENDING
+  PARTIALLY_CONFIRMED
+  READY_TO_TRAVEL
+  IN_PROGRESS
   COMPLETED
   CANCELLED
 }
@@ -71,6 +75,114 @@ enum ActivityType {
   BOOKING_CREATED
   PAYMENT_RECORDED
   CUSTOM
+  // Operations / vendor lifecycle
+  VENDOR_ASSIGNED
+  VENDOR_CONFIRMED
+  VENDOR_CANCELLED
+  VOUCHER_GENERATED
+  VOUCHER_SENT
+  VENDOR_PAYMENT_ADDED
+  OPS_TASK_CREATED
+  OPS_TASK_COMPLETED
+  TRIP_READY
+  TRIP_STARTED
+  TRIP_COMPLETED
+  // WhatsApp communication
+  WHATSAPP_INBOUND
+  WHATSAPP_OUTBOUND
+  QUOTE_SENT_WHATSAPP
+  INVOICE_SENT_WHATSAPP
+  PAYMENT_REMINDER_SENT
+  FOLLOW_UP_SENT
+  TRIP_REMINDER_SENT
+  VOUCHER_SENT_WHATSAPP
+}
+
+enum VendorType {
+  HOTEL
+  TRANSPORT
+  DRIVER
+  GUIDE
+  ACTIVITY
+  DMC
+  OTHER
+}
+
+enum VendorAssignmentCategory {
+  HOTEL
+  TRANSFER
+  SIGHTSEEING
+  ACTIVITY
+  GUIDE
+  FLIGHT
+  TRAIN
+  OTHER
+}
+
+enum VendorAssignmentStatus {
+  PENDING
+  REQUESTED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum OperationTaskType {
+  HOTEL_CONFIRMATION
+  DRIVER_ASSIGNMENT
+  PAYMENT_COLLECTION
+  VOUCHER_SENT
+  DOCUMENT_COLLECTION
+  INTERNAL
+  OTHER
+}
+
+enum OperationTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum OperationTaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum VendorPaymentMode {
+  CASH
+  BANK
+  UPI
+  CARD
+  OTHER
+}
+
+// Tax invoice domain — designed to be extensible for credit/debit notes,
+// vendor billing, multi-rate, TCS/TDS and e-invoicing in later phases.
+enum TaxableBasis {
+  // Tax computed on the entire invoice value
+  FULL_AMOUNT
+  // Tax computed only on a service-fee component
+  SERVICE_FEE_ONLY
+  // Tax computed only on the agency margin (selling - cost)
+  MARGIN_ONLY
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum InvoiceTaxScheme {
+  // 5% concessional (tour operator services, no Input Tax Credit)
+  GST_5_NO_ITC
+  // 18% regular regime (with ITC)
+  GST_18_REGULAR
+  // Exempt (e.g. exports, SEZ supplies)
+  EXEMPT
 }
 
 enum TravelSegmentType {
@@ -78,47 +190,116 @@ enum TravelSegmentType {
   TRAIN
 }
 
+// === WhatsApp Cloud API ===
+
+enum WhatsappDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum WhatsappStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum WhatsappMessageKind {
+  TEXT
+  TEMPLATE
+  DOCUMENT
+  IMAGE
+  INTERACTIVE
+  REACTION
+  LOCATION
+  UNKNOWN
+}
+
+enum WhatsappTemplateCategory {
+  PROPOSAL
+  INVOICE
+  PAYMENT_REMINDER
+  FOLLOW_UP
+  TRIP_REMINDER
+  OPERATIONS
+  UTILITY
+  MARKETING
+  CUSTOM
+}
+
+enum WhatsappAutomationTrigger {
+  QUOTE_SENT_NO_REPLY_24H
+  QUOTE_SENT_NO_REPLY_3D
+  QUOTE_SENT_NO_REPLY_7D
+  PAYMENT_DUE_T_MINUS_3
+  PAYMENT_DUE_TODAY
+  PAYMENT_OVERDUE_2D
+  TRIP_T_MINUS_7
+  TRIP_T_MINUS_1
+  TRIP_DEPARTURE_DAY
+  TRIP_COMPLETED_THANKS
+  INVOICE_ISSUED
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  leads     Lead[]
-  trips     Trip[]
+  id                  String                   @id @default(cuid())
+  email               String                   @unique
+  name                String?
+  createdAt           DateTime                 @default(now())
+  leads               Lead[]
+  trips               Trip[]
+  invoices            Invoice[]
+  invoiceCounters     InvoiceCounter[]
+  agencySettings      AgencySettings?
+  whatsappMessages    WhatsappMessage[]
+  whatsappTemplates   WhatsappTemplate[]
+  whatsappAutomations WhatsappAutomationRule[]
 }
 
 model Lead {
-  id              String     @id @default(cuid())
-  userId          String
-  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name            String
-  phone           String?
-  email           String?
-  source          LeadSource @default(MANUAL)
-  status          LeadStatus @default(NEW)
+  name   String
+  phone  String?
+  email  String?
+  source LeadSource @default(MANUAL)
+  status LeadStatus @default(NEW)
 
   destination     String?
   travelStartDate DateTime?
   travelEndDate   DateTime?
-  adults          Int        @default(1)
+  adults          Int       @default(1)
   children        Json?
   budget          Int?
   notes           String?
   nextFollowUpAt  DateTime?
   lostReason      String?
 
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  // Billing identity — used as the default recipient for tax invoices
+  gstin            String?
+  billingName      String?
+  billingAddress   String?
+  billingCity      String?
+  billingState     String?
+  billingStateCode String?
+  billingPincode   String?
 
-  customer        Customer?
-  trips           Trip[]
-  activities      Activity[]
-  tasks           Task[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  customer         Customer?
+  trips            Trip[]
+  activities       Activity[]
+  tasks            Task[]
+  whatsappMessages WhatsappMessage[]
 
   @@index([userId, status, nextFollowUpAt])
   @@index([userId, deletedAt])
+  @@index([phone])
 }
 
 model Customer {
@@ -130,35 +311,42 @@ model Customer {
   convertedAt   DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
+
+  whatsappMessages WhatsappMessage[]
 }
 
 model Trip {
-  id          String      @id @default(cuid())
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leadId      String?
-  lead        Lead?       @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadId String?
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   destination String
   days        Int
   travelers   Int
   startDate   DateTime?
   budget      Int?
-  travelType  String      @default("Luxury")
-  pace        String      @default("Moderate")
-  hotelType   String      @default("Boutique")
+  travelType  String    @default("Luxury")
+  pace        String    @default("Moderate")
+  hotelType   String    @default("Boutique")
   interests   String[]
   notes       String?
 
-  status      TripStatus  @default(PLANNING)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  deletedAt   DateTime?
+  status    TripStatus @default(PLANNING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
 
-  itineraries    Itinerary[]
-  quotes         Quote[]
-  bookings       Booking[]
-  travelSegments TravelSegment[]
+  itineraries       Itinerary[]
+  quotes            Quote[]
+  bookings          Booking[]
+  travelSegments    TravelSegment[]
+  vendorAssignments VendorAssignment[]
+  operationTasks    OperationTask[]
+  vendorPayments    VendorPayment[]
+  activities        Activity[]
+  whatsappMessages  WhatsappMessage[]
 
   @@index([userId, createdAt])
   @@index([leadId])
@@ -181,12 +369,12 @@ model Itinerary {
 }
 
 model Quote {
-  id           String      @id @default(cuid())
-  tripId       String
-  trip         Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  version      Int
-  label        String?
-  status       QuoteStatus @default(DRAFT)
+  id      String      @id @default(cuid())
+  tripId  String
+  trip    Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  version Int
+  label   String?
+  status  QuoteStatus @default(DRAFT)
 
   items        QuoteItem[]
   markupPct    Float       @default(15)
@@ -195,11 +383,11 @@ model Quote {
   sellingPrice Float       @default(0)
   profit       Float       @default(0)
 
-  shareToken   String?     @unique
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  shareToken String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  booking      Booking?
+  booking Booking?
 
   @@unique([tripId, version])
   @@index([tripId, status])
@@ -218,17 +406,22 @@ model QuoteItem {
 }
 
 model Booking {
-  id          String        @id @default(cuid())
-  tripId      String
-  trip        Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  quoteId     String        @unique
-  quote       Quote         @relation(fields: [quoteId], references: [id])
-  status      BookingStatus @default(PENDING)
-  totalAmount Float
-  paidAmount  Float         @default(0)
-  payments    Payment[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                String             @id @default(cuid())
+  tripId            String
+  trip              Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  quoteId           String             @unique
+  quote             Quote              @relation(fields: [quoteId], references: [id])
+  status            BookingStatus      @default(PENDING)
+  totalAmount       Float
+  paidAmount        Float              @default(0)
+  payments          Payment[]
+  vendorAssignments VendorAssignment[]
+  operationTasks    OperationTask[]
+  vendorPayments    VendorPayment[]
+  invoice           Invoice?
+  whatsappMessages  WhatsappMessage[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@index([tripId])
 }
@@ -248,8 +441,14 @@ model Payment {
 
 model Activity {
   id        String       @id @default(cuid())
-  leadId    String
-  lead      Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  leadId    String?
+  lead      Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tripId    String?
+  trip      Trip?        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  vendorId  String?
+  vendor    Vendor?      @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  invoiceId String?
+  invoice   Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   type      ActivityType
   title     String
   body      String?
@@ -257,15 +456,18 @@ model Activity {
   createdAt DateTime     @default(now())
 
   @@index([leadId, createdAt])
+  @@index([tripId, createdAt])
+  @@index([vendorId, createdAt])
+  @@index([invoiceId, createdAt])
 }
 
 model TravelSegment {
-  id            String            @id @default(cuid())
-  tripId        String
-  trip          Trip              @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  tripId String
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
-  type          TravelSegmentType
-  dayNumber     Int               @default(1)
+  type      TravelSegmentType
+  dayNumber Int               @default(1)
 
   from          String
   to            String
@@ -273,20 +475,20 @@ model TravelSegment {
   arrivalTime   DateTime
 
   // Flight fields
-  airline       String?
-  flightNumber  String?
-  pnr           String?
+  airline      String?
+  flightNumber String?
+  pnr          String?
 
   // Train fields
-  trainName     String?
-  trainNumber   String?
-  coach         String?
-  seat          String?
+  trainName   String?
+  trainNumber String?
+  coach       String?
+  seat        String?
 
-  notes         String?
+  notes String?
 
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tripId, dayNumber])
 }
@@ -304,4 +506,441 @@ model Task {
 
   @@index([completedAt, dueAt])
   @@index([leadId])
+}
+
+model Vendor {
+  id   String     @id @default(cuid())
+  name String
+  type VendorType @default(OTHER)
+
+  phone    String?
+  whatsapp String?
+  email    String?
+  address  String?
+  city     String?
+  state    String?
+  country  String?
+
+  gstNumber    String?
+  paymentTerms String?
+  notes        String?
+
+  isPreferred Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  assignments VendorAssignment[]
+  payments    VendorPayment[]
+  activities  Activity[]
+
+  @@index([type, isActive, deletedAt])
+  @@index([city])
+  @@index([deletedAt])
+}
+
+model VendorAssignment {
+  id String @id @default(cuid())
+
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+
+  category    VendorAssignmentCategory
+  title       String
+  description String?
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  quantity     Int?
+  unitCost     Float?
+  totalCost    Float?
+  sellingPrice Float?
+
+  confirmationNumber String?
+  voucherSent        Boolean @default(false)
+  customerVisible    Boolean @default(true)
+
+  status VendorAssignmentStatus @default(PENDING)
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vouchers Voucher[]
+
+  @@index([tripId, status])
+  @@index([vendorId, status])
+  @@index([bookingId])
+}
+
+model Voucher {
+  id           String           @id @default(cuid())
+  assignmentId String
+  assignment   VendorAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  voucherNumber String @unique
+  shareToken    String @unique
+  title         String
+  content       Json
+
+  generatedAt   DateTime  @default(now())
+  sentAt        DateTime?
+  downloadCount Int       @default(0)
+
+  @@index([assignmentId])
+}
+
+model OperationTask {
+  id String @id @default(cuid())
+
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  title       String
+  description String?
+
+  type     OperationTaskType     @default(OTHER)
+  status   OperationTaskStatus   @default(PENDING)
+  priority OperationTaskPriority @default(MEDIUM)
+
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tripId, status])
+  @@index([status, dueDate])
+}
+
+model VendorPayment {
+  id       String @id @default(cuid())
+  vendorId String
+  vendor   Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  tripId    String?
+  trip      Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  amount      Float
+  paymentDate DateTime
+  mode        VendorPaymentMode @default(BANK)
+  reference   String?
+  notes       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([vendorId, paymentDate])
+  @@index([tripId])
+}
+
+/// Per-user agency identity + invoice configuration. Singleton per user.
+model AgencySettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  legalName String
+  tradeName String?
+  gstin     String?
+  pan       String?
+
+  // Address (used as supplier on invoices)
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  stateCode    String? // GST state code, e.g. "27" for Maharashtra
+  pincode      String?
+  country      String  @default("India")
+
+  // Contact
+  phone   String?
+  email   String?
+  website String?
+
+  // Signatory shown on invoices
+  authorizedSignatory  String?
+  signatoryDesignation String?
+
+  // Branding
+  logoUrl String?
+
+  // Invoice configuration
+  invoicePrefix                 String           @default("TC")
+  defaultTaxScheme              InvoiceTaxScheme @default(GST_5_NO_ITC)
+  defaultTaxableBasis           TaxableBasis     @default(FULL_AMOUNT)
+  defaultSacCode                String           @default("998552")
+  defaultPlaceOfSupplyState     String?
+  defaultPlaceOfSupplyStateCode String?
+
+  // Optional bank details printed on invoice footer
+  bankName          String?
+  bankAccountNumber String?
+  bankIfscCode      String?
+  bankAccountHolder String?
+
+  // Free-text terms / notes shown on invoice footer
+  invoiceTerms String?
+  invoiceNotes String?
+
+  // Future-proof feature flags
+  eInvoiceEnabled Boolean @default(false)
+  eWayBillEnabled Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Per-user, per-fiscal-year sequence allocator. Locked atomically on
+/// invoice issue so numbers stay sequential and unique within the FY.
+model InvoiceCounter {
+  id           String @id @default(cuid())
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fiscalYear   String // e.g. "26-27"
+  prefix       String // captured at first allocation; informational
+  lastSequence Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, fiscalYear])
+}
+
+model Invoice {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  // Numbering — assigned at ISSUE; null for DRAFT
+  invoiceNumber   String? @unique
+  invoiceFy       String?
+  invoiceSequence Int?
+
+  status       InvoiceStatus @default(DRAFT)
+  invoiceDate  DateTime      @default(now())
+  issuedAt     DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+
+  // GST regime selected for this invoice
+  taxScheme    InvoiceTaxScheme @default(GST_5_NO_ITC)
+  taxRatePct   Float            @default(5)
+  taxableBasis TaxableBasis     @default(FULL_AMOUNT)
+
+  // Place of supply (drives CGST+SGST vs IGST split)
+  placeOfSupplyState     String?
+  placeOfSupplyStateCode String?
+
+  // Frozen snapshots so historical edits to agency / lead don't mutate issued docs
+  supplierSnapshot  Json?
+  recipientSnapshot Json?
+
+  // Line items
+  items InvoiceItem[]
+
+  // Computed totals (denormalized for display + reporting)
+  subtotal      Float   @default(0)
+  cgstAmount    Float   @default(0)
+  sgstAmount    Float   @default(0)
+  igstAmount    Float   @default(0)
+  taxTotal      Float   @default(0)
+  roundOff      Float   @default(0)
+  grandTotal    Float   @default(0)
+  amountInWords String?
+
+  // Public share token (for the recipient to view/download online)
+  shareToken String? @unique
+
+  activities       Activity[]
+  whatsappMessages WhatsappMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, invoiceFy, invoiceSequence])
+  @@index([userId, status])
+  @@index([userId, invoiceFy])
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  position    Int    @default(0)
+  description String
+  sacCode     String // SAC for services (HSN repurposed for goods if ever needed)
+
+  quantity  Float @default(1)
+  unitPrice Float @default(0)
+
+  // Used only when invoice.taxableBasis = MARGIN_ONLY
+  cost Float?
+
+  // Computed by the tax service when invoice is built / regenerated
+  taxableValue Float @default(0)
+  taxRatePct   Float @default(5)
+  cgstAmount   Float @default(0)
+  sgstAmount   Float @default(0)
+  igstAmount   Float @default(0)
+
+  @@index([invoiceId])
+}
+
+/// One WhatsApp message — inbound or outbound. Acts as both the queue
+/// record (status QUEUED before dispatch) and the historical ledger.
+/// `whatsappMessageId` is the Meta-issued wamid and is the idempotency key
+/// for webhook status updates.
+model WhatsappMessage {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Optional links — any of these can be set so the message timelines
+  // against the right CRM entity. Storing all of them keeps queries simple.
+  leadId     String?
+  lead       Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  tripId     String?
+  trip       Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  invoiceId  String?
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  bookingId  String?
+  booking    Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  kind      WhatsappMessageKind @default(TEXT)
+  direction WhatsappDirection
+  status    WhatsappStatus      @default(QUEUED)
+
+  templateName  String?
+  templateId    String?
+  // E.164 with no '+' (Meta's expected wire format), e.g. "919876543210"
+  phone         String
+  message       String  @db.Text
+  mediaUrl      String?
+  mediaFilename String?
+
+  // Free-form: template variables, conversation context, button payloads,
+  // pricing categories, automation trigger that scheduled this, etc.
+  metadata Json?
+
+  // Meta wamid — unique once we have it.
+  whatsappMessageId String? @unique
+
+  // Idempotency on outbound. Hash of (userId|phone|template|payload|day)
+  // so retries don't double-send. Nullable for inbound.
+  idempotencyKey String?
+
+  // Scheduled dispatch time — null means "send immediately".
+  scheduledFor DateTime?
+  attempts     Int       @default(0)
+
+  // Automation provenance (when a rule produced this message).
+  automationRuleId String?
+  automationRule   WhatsappAutomationRule? @relation(fields: [automationRuleId], references: [id], onDelete: SetNull)
+
+  // Inbound conversation linking — pointer to the outbound message this
+  // is replying to (best effort, used for thread rendering).
+  replyToId String?
+  replyTo   WhatsappMessage?  @relation("WhatsappMessageReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   WhatsappMessage[] @relation("WhatsappMessageReply")
+
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  failedReason String?
+  failedCode   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, status, scheduledFor])
+  @@index([userId, phone, createdAt])
+  @@index([leadId, createdAt])
+  @@index([customerId, createdAt])
+  @@index([tripId, createdAt])
+  @@index([invoiceId, createdAt])
+  @@index([bookingId, createdAt])
+  @@index([automationRuleId, createdAt])
+}
+
+/// Reusable Meta-approved template registry. `templateId` mirrors the
+/// Meta template name as it must be referenced when sending.
+model WhatsappTemplate {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name     String // display name (internal)
+  category WhatsappTemplateCategory @default(CUSTOM)
+  language String                   @default("en")
+
+  // Name registered with Meta (snake_case). The send API references this.
+  templateId String
+
+  // Ordered list of variable definitions: { key, label, example }
+  variables Json
+
+  // Local preview body — Meta-approved canonical body lives on Meta's side,
+  // this is the editor preview text. Variables use {{name}} placeholders.
+  bodyPreview String @db.Text
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  automationRules WhatsappAutomationRule[]
+
+  @@unique([userId, templateId, language])
+  @@index([userId, category, isActive])
+}
+
+/// Trigger → template binding. The automation runner scans the relevant
+/// domain (quotes, payments, trips) for entities matching `trigger` and
+/// enqueues outbound messages.
+model WhatsappAutomationRule {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  trigger    WhatsappAutomationTrigger
+  templateId String
+  template   WhatsappTemplate          @relation(fields: [templateId], references: [id], onDelete: Restrict)
+
+  enabled      Boolean @default(true)
+  // Additional offset *after* the canonical trigger window fires.
+  delayMinutes Int     @default(0)
+
+  // Free-form policy bag (quiet hours, target lead statuses, max attempts).
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages WhatsappMessage[]
+
+  @@unique([userId, trigger])
+  @@index([userId, enabled])
 }

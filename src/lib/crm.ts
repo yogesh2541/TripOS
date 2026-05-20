@@ -4,6 +4,13 @@ import type {
   LeadStatus,
   PaymentType,
   TripStatus,
+  VendorType,
+  VendorAssignmentCategory,
+  VendorAssignmentStatus,
+  VendorPaymentMode,
+  OperationTaskStatus,
+  OperationTaskType,
+  OperationTaskPriority,
 } from "@prisma/client";
 
 export const LEAD_STATUS_ORDER: LeadStatus[] = [
@@ -68,6 +75,10 @@ export const TRIP_STATUS_LABEL: Record<TripStatus, string> = {
   PLANNING: "Planning",
   QUOTED: "Quoted",
   BOOKED: "Booked",
+  VENDOR_CONFIRMATION_PENDING: "Awaiting vendors",
+  PARTIALLY_CONFIRMED: "Partially confirmed",
+  READY_TO_TRAVEL: "Ready to travel",
+  IN_PROGRESS: "In progress",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
 };
@@ -76,6 +87,10 @@ export const TRIP_STATUS_TONE: Record<TripStatus, LeadStatusTone> = {
   PLANNING: "outline",
   QUOTED: "accent",
   BOOKED: "default",
+  VENDOR_CONFIRMATION_PENDING: "outline",
+  PARTIALLY_CONFIRMED: "accent",
+  READY_TO_TRAVEL: "success",
+  IN_PROGRESS: "default",
   COMPLETED: "success",
   CANCELLED: "danger",
 };
@@ -109,6 +124,138 @@ export const PAYMENT_TYPE_LABEL: Record<PaymentType, string> = {
   PARTIAL: "Partial",
   FINAL: "Final",
 };
+
+// Vendors & operations
+export const VENDOR_TYPE_LABEL: Record<VendorType, string> = {
+  HOTEL: "Hotel",
+  TRANSPORT: "Transport",
+  DRIVER: "Driver",
+  GUIDE: "Guide",
+  ACTIVITY: "Activity",
+  DMC: "DMC",
+  OTHER: "Other",
+};
+
+export const VENDOR_TYPE_ORDER: VendorType[] = [
+  "HOTEL",
+  "TRANSPORT",
+  "DRIVER",
+  "GUIDE",
+  "ACTIVITY",
+  "DMC",
+  "OTHER",
+];
+
+export const VENDOR_ASSIGNMENT_CATEGORY_LABEL: Record<
+  VendorAssignmentCategory,
+  string
+> = {
+  HOTEL: "Hotel",
+  TRANSFER: "Transfer",
+  SIGHTSEEING: "Sightseeing",
+  ACTIVITY: "Activity",
+  GUIDE: "Guide",
+  FLIGHT: "Flight",
+  TRAIN: "Train",
+  OTHER: "Other",
+};
+
+export const VENDOR_ASSIGNMENT_CATEGORY_ORDER: VendorAssignmentCategory[] = [
+  "HOTEL",
+  "TRANSFER",
+  "SIGHTSEEING",
+  "ACTIVITY",
+  "GUIDE",
+  "FLIGHT",
+  "TRAIN",
+  "OTHER",
+];
+
+export const VENDOR_ASSIGNMENT_STATUS_LABEL: Record<
+  VendorAssignmentStatus,
+  string
+> = {
+  PENDING: "Pending",
+  REQUESTED: "Requested",
+  CONFIRMED: "Confirmed",
+  CANCELLED: "Cancelled",
+  COMPLETED: "Completed",
+};
+
+export const VENDOR_ASSIGNMENT_STATUS_TONE: Record<
+  VendorAssignmentStatus,
+  LeadStatusTone
+> = {
+  PENDING: "outline",
+  REQUESTED: "accent",
+  CONFIRMED: "default",
+  COMPLETED: "success",
+  CANCELLED: "danger",
+};
+
+export const VENDOR_PAYMENT_MODE_LABEL: Record<VendorPaymentMode, string> = {
+  CASH: "Cash",
+  BANK: "Bank transfer",
+  UPI: "UPI",
+  CARD: "Card",
+  OTHER: "Other",
+};
+
+export const OPERATION_TASK_STATUS_LABEL: Record<OperationTaskStatus, string> =
+  {
+    PENDING: "Pending",
+    IN_PROGRESS: "In progress",
+    COMPLETED: "Completed",
+    BLOCKED: "Blocked",
+  };
+
+export const OPERATION_TASK_STATUS_TONE: Record<
+  OperationTaskStatus,
+  LeadStatusTone
+> = {
+  PENDING: "outline",
+  IN_PROGRESS: "accent",
+  COMPLETED: "success",
+  BLOCKED: "danger",
+};
+
+export const OPERATION_TASK_TYPE_LABEL: Record<OperationTaskType, string> = {
+  HOTEL_CONFIRMATION: "Hotel confirmation",
+  DRIVER_ASSIGNMENT: "Driver assignment",
+  PAYMENT_COLLECTION: "Payment collection",
+  VOUCHER_SENT: "Voucher sent",
+  DOCUMENT_COLLECTION: "Document collection",
+  INTERNAL: "Internal",
+  OTHER: "Other",
+};
+
+export const OPERATION_TASK_PRIORITY_LABEL: Record<
+  OperationTaskPriority,
+  string
+> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
+};
+
+export const OPERATION_TASK_PRIORITY_TONE: Record<
+  OperationTaskPriority,
+  LeadStatusTone
+> = {
+  LOW: "muted",
+  MEDIUM: "outline",
+  HIGH: "accent",
+  URGENT: "danger",
+};
+
+export function vendorContactLine(v: {
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+}) {
+  return [v.city, v.state, v.country].filter(Boolean).join(", ");
+}
 
 export function whatsappLink(phone?: string | null) {
   if (!phone) return null;

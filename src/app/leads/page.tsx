@@ -1,6 +1,9 @@
+import { Sparkles } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { LeadKanban, type KanbanLead } from "@/components/crm/lead-kanban";
 import { NewLeadDialog } from "@/components/crm/lead-form-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
+import { getWhatsappStatsForEntities } from "@/server/services/whatsapp";
 import { prisma, getOrCreateDemoUser } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -23,17 +26,33 @@ export default async function LeadsPage() {
     },
   });
 
-  const kanbanLeads: KanbanLead[] = leads.map((l) => ({
-    id: l.id,
-    name: l.name,
-    destination: l.destination,
-    source: l.source,
-    budget: l.budget,
-    adults: l.adults,
-    travelStartDate: l.travelStartDate,
-    nextFollowUpAt: l.nextFollowUpAt,
-    status: l.status,
-  }));
+  const waStats = await getWhatsappStatsForEntities({
+    userId: user.id,
+    scope: "leadId",
+    ids: leads.map((l) => l.id),
+  });
+
+  const kanbanLeads: KanbanLead[] = leads.map((l) => {
+    const w = waStats.get(l.id);
+    return {
+      id: l.id,
+      name: l.name,
+      destination: l.destination,
+      source: l.source,
+      budget: l.budget,
+      adults: l.adults,
+      travelStartDate: l.travelStartDate,
+      nextFollowUpAt: l.nextFollowUpAt,
+      status: l.status,
+      wa: w
+        ? {
+            count: w.count,
+            unreadInbound: w.unreadInbound,
+            lastDirection: w.lastDirection,
+          }
+        : null,
+    };
+  });
 
   return (
     <PageShell>
@@ -53,15 +72,13 @@ export default async function LeadsPage() {
       </header>
 
       {leads.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-16 text-center">
-          <p className="font-display text-2xl text-navy">No leads yet</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Add your first lead to start the pipeline.
-          </p>
-          <div className="mt-6 inline-flex">
-            <NewLeadDialog />
-          </div>
-        </div>
+        <EmptyState
+          icon={<Sparkles className="h-5 w-5" />}
+          title="Your pipeline starts here"
+          body="Capture your first inquiry — Instagram DM, walk-in, referral, anywhere. From there you'll quote, book, and run the trip."
+          action={<NewLeadDialog />}
+          hint="Step 1 of the funnel"
+        />
       ) : (
         <LeadKanban leads={kanbanLeads} />
       )}

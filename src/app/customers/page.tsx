@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, Sparkles, Heart } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { ContactStrip } from "@/components/crm/contact-strip";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { InlineWhatsappBadge } from "@/components/whatsapp/inline-whatsapp-badge";
+import { getWhatsappStatsForEntities } from "@/server/services/whatsapp";
 import { prisma, getOrCreateDemoUser } from "@/lib/prisma";
 import { formatDate, formatINR } from "@/lib/utils";
 
@@ -44,6 +48,12 @@ export default async function CustomersPage() {
     return { ...c, lifetimePaid, lifetimeBooked };
   });
 
+  const waStats = await getWhatsappStatsForEntities({
+    userId: user.id,
+    scope: "leadId",
+    ids: enriched.map((c) => c.lead.id),
+  });
+
   return (
     <PageShell>
       <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
@@ -61,13 +71,21 @@ export default async function CustomersPage() {
       </header>
 
       {enriched.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-16 text-center">
-          <Sparkles className="h-6 w-6 mx-auto text-muted-foreground mb-3" />
-          <p className="font-display text-2xl text-navy">No customers yet</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Convert a lead from the pipeline to capture a customer here.
-          </p>
-        </div>
+        <EmptyState
+          icon={<Heart className="h-5 w-5" />}
+          title="Customers appear when leads say yes"
+          body="Once a lead is marked Won and converted, they show here with lifetime value, contact details and trip history."
+          action={
+            <Link href="/leads">
+              <Button variant="default">
+                <Sparkles className="h-4 w-4" />
+                Open pipeline
+              </Button>
+            </Link>
+          }
+          hint="Tip: drag a lead into the Won column on the kanban"
+          variant="card"
+        />
       ) : (
         <ul className="grid gap-4 lg:grid-cols-2">
           {enriched.map((c) => (
@@ -75,15 +93,28 @@ export default async function CustomersPage() {
               <article className="rounded-2xl border border-line bg-white p-6 shadow-soft hover:shadow-lift transition-all flex flex-col gap-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-display text-2xl text-navy">
-                      {c.lead.name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-display text-2xl text-navy">
+                        {c.lead.name}
+                      </p>
+                      {(() => {
+                        const w = waStats.get(c.lead.id);
+                        return w ? (
+                          <InlineWhatsappBadge
+                            count={w.count}
+                            unreadInbound={w.unreadInbound}
+                            lastDirection={w.lastDirection}
+                          />
+                        ) : null;
+                      })()}
+                    </div>
                     <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                       Since {formatDate(c.convertedAt)}
                     </p>
                   </div>
                   <ContactStrip
                     leadId={c.lead.id}
+                    leadName={c.lead.name}
                     phone={c.lead.phone}
                     email={c.lead.email}
                   />

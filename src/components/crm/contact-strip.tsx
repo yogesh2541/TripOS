@@ -1,21 +1,22 @@
 "use client";
 
 import { Mail, MessageCircle, Phone } from "lucide-react";
-import { toast } from "sonner";
-import { mailtoLink, telLink, whatsappLink } from "@/lib/crm";
-import { logCallAction, logWhatsAppAction } from "@/server/actions/activities";
+import { mailtoLink, telLink } from "@/lib/crm";
+import { logCallAction } from "@/server/actions/activities";
+import { WhatsappComposer } from "@/components/whatsapp/whatsapp-composer";
 
 export function ContactStrip({
   leadId,
+  leadName,
   phone,
   email,
 }: {
   leadId: string;
+  leadName?: string | null;
   phone?: string | null;
   email?: string | null;
 }) {
   const tel = telLink(phone);
-  const wa = whatsappLink(phone);
   const mail = mailtoLink(email);
 
   return (
@@ -27,22 +28,22 @@ export function ContactStrip({
           </IconButton>
         </a>
       )}
-      {wa && (
-        <a
-          href={wa}
-          target="_blank"
-          rel="noreferrer"
-          onClick={() =>
-            logWhatsAppAction({ leadId, body: null }).then(() =>
-              toast.success("Opened WhatsApp")
-            )
+      {phone ? (
+        <WhatsappComposer
+          defaultPhone={phone}
+          recipientName={leadName}
+          link={{ leadId }}
+          trigger={
+            <button
+              type="button"
+              title="WhatsApp"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-emerald-700 hover:border-emerald-200 transition-colors"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+            </button>
           }
-        >
-          <IconButton title="WhatsApp">
-            <MessageCircle className="h-3.5 w-3.5" />
-          </IconButton>
-        </a>
-      )}
+        />
+      ) : null}
       {mail && (
         <a href={mail}>
           <IconButton title={email ?? "Email"}>

@@ -19,6 +19,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { WhatsappBadge } from "@/components/whatsapp/whatsapp-badge";
+import { WhatsappComposer } from "@/components/whatsapp/whatsapp-composer";
+import { WhatsappThread } from "@/components/whatsapp/whatsapp-thread";
 import { prisma } from "@/lib/prisma";
 import {
   LEAD_SOURCE_LABEL,
@@ -44,6 +47,10 @@ export default async function LeadDetailPage({
       },
       activities: { orderBy: { createdAt: "desc" } },
       tasks: { orderBy: [{ completedAt: "asc" }, { dueAt: "asc" }] },
+      whatsappMessages: {
+        orderBy: { createdAt: "asc" },
+        take: 200,
+      },
     },
   });
   if (!lead) notFound();
@@ -81,11 +88,23 @@ export default async function LeadDetailPage({
           </p>
           <ContactStrip
             leadId={lead.id}
+            leadName={lead.name}
             phone={lead.phone}
             email={lead.email}
           />
+          <WhatsappBadge
+            scope={{ leadId: lead.id }}
+            href="/communications"
+          />
         </div>
         <div className="flex items-center gap-2">
+          {lead.phone ? (
+            <WhatsappComposer
+              defaultPhone={lead.phone}
+              recipientName={lead.name}
+              link={{ leadId: lead.id }}
+            />
+          ) : null}
           {!lead.customer && <ConvertCustomerDialog leadId={lead.id} />}
           <Link href={`/trips/new?leadId=${lead.id}`}>
             <Button variant={lead.customer ? "accent" : "default"}>
@@ -121,6 +140,14 @@ export default async function LeadDetailPage({
               {lead.tasks.length > 0 && (
                 <span className="ml-2 text-xs opacity-70">
                   {lead.tasks.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp">
+              WhatsApp
+              {lead.whatsappMessages.length > 0 && (
+                <span className="ml-2 text-xs opacity-70">
+                  {lead.whatsappMessages.length}
                 </span>
               )}
             </TabsTrigger>
@@ -174,6 +201,25 @@ export default async function LeadDetailPage({
 
           <TabsContent value="tasks">
             <TaskList leadId={lead.id} tasks={lead.tasks} />
+          </TabsContent>
+
+          <TabsContent value="whatsapp">
+            <div className="space-y-3">
+              {lead.phone ? (
+                <div className="flex items-center justify-end">
+                  <WhatsappComposer
+                    defaultPhone={lead.phone}
+                    recipientName={lead.name}
+                    link={{ leadId: lead.id }}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-line bg-white/60 p-4 text-xs text-muted-foreground">
+                  Add a phone number to send WhatsApp.
+                </div>
+              )}
+              <WhatsappThread messages={lead.whatsappMessages} />
+            </div>
           </TabsContent>
         </Tabs>
 

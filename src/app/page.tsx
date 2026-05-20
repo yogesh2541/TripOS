@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   CalendarClock,
+  MessageCircle,
   Plus,
   Sparkles,
   TrendingUp,
@@ -17,6 +18,8 @@ import {
 } from "@/components/crm/activity-feed";
 import { FollowUpRow, type FollowUpRowData } from "@/components/crm/follow-up-row";
 import { NewLeadDialog } from "@/components/crm/lead-form-dialog";
+import { OneTimeHint } from "@/components/ui/one-time-hint";
+import { OnboardingPanel } from "@/components/onboarding-panel";
 import { prisma, getOrCreateDemoUser } from "@/lib/prisma";
 import { formatINR } from "@/lib/utils";
 
@@ -37,6 +40,7 @@ export default async function DashboardPage() {
     customers,
     activitiesRaw,
     upcomingTasks,
+    unreadInboundCount,
   ] = await Promise.all([
     prisma.lead.count({ where: { userId: user.id, deletedAt: null } }),
     prisma.lead.count({
@@ -92,6 +96,16 @@ export default async function DashboardPage() {
       orderBy: { dueAt: "asc" },
       take: 5,
     }),
+    // Inbound WhatsApp messages received in the last 7 days — proxy for
+    // "needs reply" since we don't yet track per-message read state on our
+    // side. Operators clear this by sending an outbound reply.
+    prisma.whatsappMessage.count({
+      where: {
+        userId: user.id,
+        direction: "INBOUND",
+        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      },
+    }),
   ]);
 
   const conversionPct =
@@ -112,6 +126,19 @@ export default async function DashboardPage() {
 
   return (
     <PageShell>
+      <OnboardingPanel />
+
+      <OneTimeHint
+        id="welcome-search"
+        title="Press ⌘K (or Ctrl+K) to find anything fast"
+        variant="accent"
+        className="mb-8"
+      >
+        Search across leads, trips, vendors, and vouchers from anywhere in
+        the app — even from inside a trip workspace. Tap the Search button in
+        the header on mobile.
+      </OneTimeHint>
+
       <section className="grid gap-10 md:grid-cols-[1.4fr_1fr] items-end mb-12">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-sand-700 flex items-center gap-2">
@@ -144,7 +171,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-12">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-12">
         <StatTile
           icon={<Users className="h-3 w-3" />}
           label="Active leads"
@@ -174,6 +201,14 @@ export default async function DashboardPage() {
           hint={overdueCount > 0 ? "Triage first" : "All clear"}
           href="/follow-ups"
           tone={overdueCount > 0 ? "danger" : undefined}
+        />
+        <StatTile
+          icon={<MessageCircle className="h-3 w-3" />}
+          label="WhatsApp replies (7d)"
+          value={String(unreadInboundCount)}
+          hint={unreadInboundCount > 0 ? "Open and reply" : "No new replies"}
+          href="/communications?direction=INBOUND"
+          tone={unreadInboundCount > 0 ? "navy" : undefined}
         />
       </section>
 

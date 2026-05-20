@@ -1,16 +1,19 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+// Cache the client on globalThis so Next.js HMR doesn't open a new pool on
+// every reload. Key the cache by the engine version so regenerating the
+// client (e.g. after a schema edit) invalidates the cached instance — no
+// dev-server restart needed for the new models to show up.
+const CACHE_KEY = `prisma_${Prisma.prismaVersion?.client ?? "0"}`;
+const g = globalThis as unknown as Record<string, PrismaClient | undefined>;
 
 export const prisma =
-  globalForPrisma.prisma ??
+  g[CACHE_KEY] ??
   new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") g[CACHE_KEY] = prisma;
 
 export const DEMO_USER_EMAIL = "demo@tripcraft.app";
 

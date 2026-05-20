@@ -125,3 +125,55 @@ export async function deleteTripAction(tripId: string) {
   revalidatePath("/");
   return { ok: true as const };
 }
+
+export async function markTripStartedAction(tripId: string) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { id: true, leadId: true, status: true },
+  });
+  if (!trip) throw new Error("Trip not found");
+  if (trip.status === "IN_PROGRESS") return { ok: true as const };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { status: "IN_PROGRESS" },
+  });
+
+  await logActivity({
+    tripId,
+    leadId: trip.leadId,
+    type: "TRIP_STARTED",
+    title: "Trip started",
+    metadata: { from: trip.status, to: "IN_PROGRESS" },
+  });
+
+  revalidatePath(`/trips/${tripId}`);
+  revalidatePath("/operations");
+  return { ok: true as const };
+}
+
+export async function markTripCompletedAction(tripId: string) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { id: true, leadId: true, status: true },
+  });
+  if (!trip) throw new Error("Trip not found");
+  if (trip.status === "COMPLETED") return { ok: true as const };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { status: "COMPLETED" },
+  });
+
+  await logActivity({
+    tripId,
+    leadId: trip.leadId,
+    type: "TRIP_COMPLETED",
+    title: "Trip completed",
+    metadata: { from: trip.status, to: "COMPLETED" },
+  });
+
+  revalidatePath(`/trips/${tripId}`);
+  revalidatePath("/operations");
+  return { ok: true as const };
+}

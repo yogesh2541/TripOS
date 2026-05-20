@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Compass } from "lucide-react";
+import { GlobalSearch } from "@/components/global-search";
+import { MobileNav } from "@/components/mobile-nav";
 import { cn } from "@/lib/utils";
 
 export function PageShell({
@@ -30,35 +32,69 @@ function SiteHeader() {
             TripCraft
           </span>
         </Link>
-        <nav className="flex items-center gap-5 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-navy transition-colors">
-            Dashboard
-          </Link>
-          <Link href="/leads" className="hover:text-navy transition-colors">
-            Leads
-          </Link>
-          <Link
-            href="/customers"
-            className="hover:text-navy transition-colors"
-          >
-            Customers
-          </Link>
-          <Link href="/trips" className="hover:text-navy transition-colors">
-            Trips
-          </Link>
-          <Link
-            href="/bookings"
-            className="hover:text-navy transition-colors"
-          >
-            Bookings
-          </Link>
-          <Link
-            href="/follow-ups"
-            className="hover:text-navy transition-colors"
-          >
-            Follow-ups
-          </Link>
-        </nav>
+        <div className="flex items-center gap-3">
+          <nav className="hidden md:flex items-center gap-5 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-navy transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/leads" className="hover:text-navy transition-colors">
+              Leads
+            </Link>
+            <Link
+              href="/customers"
+              className="hover:text-navy transition-colors"
+            >
+              Customers
+            </Link>
+            <Link href="/trips" className="hover:text-navy transition-colors">
+              Trips
+            </Link>
+            <Link
+              href="/bookings"
+              className="hover:text-navy transition-colors"
+            >
+              Bookings
+            </Link>
+            <Link
+              href="/invoices"
+              className="hover:text-navy transition-colors"
+            >
+              Invoices
+            </Link>
+            <Link
+              href="/vendors"
+              className="hover:text-navy transition-colors"
+            >
+              Vendors
+            </Link>
+            <Link
+              href="/operations"
+              className="hover:text-navy transition-colors"
+            >
+              Operations
+            </Link>
+            <Link
+              href="/communications"
+              className="hover:text-navy transition-colors"
+            >
+              Communications
+            </Link>
+            <Link
+              href="/follow-ups"
+              className="hover:text-navy transition-colors"
+            >
+              Follow-ups
+            </Link>
+            <Link
+              href="/settings/agency"
+              className="hover:text-navy transition-colors"
+            >
+              Settings
+            </Link>
+          </nav>
+          <GlobalSearch />
+          <MobileNav />
+        </div>
       </div>
     </header>
   );

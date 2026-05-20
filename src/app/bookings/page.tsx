@@ -3,6 +3,8 @@ import { ArrowUpRight, Wallet } from "lucide-react";
 import type { BookingStatus } from "@prisma/client";
 import { PageShell } from "@/components/page-shell";
 import { Badge } from "@/components/ui/badge";
+import { InlineWhatsappBadge } from "@/components/whatsapp/inline-whatsapp-badge";
+import { getWhatsappStatsForEntities } from "@/server/services/whatsapp";
 import { prisma, getOrCreateDemoUser } from "@/lib/prisma";
 import {
   BOOKING_STATUS_LABEL,
@@ -69,6 +71,12 @@ export default async function BookingsPage({
     _count: true,
   });
 
+  const waStats = await getWhatsappStatsForEntities({
+    userId: user.id,
+    scope: "tripId",
+    ids: bookings.map((b) => b.trip.id),
+  });
+
   return (
     <PageShell>
       <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
@@ -111,12 +119,29 @@ export default async function BookingsPage({
       </div>
 
       {bookings.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-16 text-center">
+        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-12 text-center">
           <Wallet className="h-6 w-6 mx-auto text-muted-foreground mb-3" />
-          <p className="font-display text-2xl text-navy">No bookings here</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Accept a quote to create one — bookings will land here automatically.
+          <p className="font-display text-2xl text-navy">
+            No bookings in this filter
           </p>
+          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+            Accept a quote on a trip to create one — bookings land here
+            automatically with payment status, invoice and trip context.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+            <Link href="/trips">
+              <button className="inline-flex items-center gap-1.5 rounded-2xl border border-line bg-white px-5 py-2 text-sm hover:border-sand">
+                Browse trips
+              </button>
+            </Link>
+            {filter !== "all" ? (
+              <Link href="/bookings?status=all">
+                <button className="inline-flex items-center gap-1.5 rounded-2xl border border-line bg-white px-5 py-2 text-sm hover:border-sand">
+                  See all statuses
+                </button>
+              </Link>
+            ) : null}
+          </div>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -171,6 +196,16 @@ export default async function BookingsPage({
                   </div>
 
                   <div className="flex items-center gap-3">
+                    {(() => {
+                      const w = waStats.get(b.trip.id);
+                      return w ? (
+                        <InlineWhatsappBadge
+                          count={w.count}
+                          unreadInbound={w.unreadInbound}
+                          lastDirection={w.lastDirection}
+                        />
+                      ) : null;
+                    })()}
                     <Badge variant={BOOKING_STATUS_TONE[b.status]}>
                       {BOOKING_STATUS_LABEL[b.status]}
                     </Badge>

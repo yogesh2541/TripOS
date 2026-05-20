@@ -119,7 +119,8 @@ function Section({
   tone?: "danger";
   muted?: boolean;
 }) {
-  if (tasks.length === 0 && title !== "Today" && title !== "This week") return null;
+  // Hide empty sections entirely — the page-level empty state covers zero tasks.
+  if (tasks.length === 0) return null;
   return (
     <section>
       <h2
@@ -133,15 +134,11 @@ function Section({
       >
         {title} <span className="ml-1 opacity-70">{tasks.length}</span>
       </h2>
-      {tasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">Nothing here.</p>
-      ) : (
-        <ul className="space-y-2">
-          {tasks.map((t) => (
-            <FollowUpRow key={t.id} task={t} />
-          ))}
-        </ul>
-      )}
+      <ul className="space-y-2">
+        {tasks.map((t) => (
+          <FollowUpRow key={t.id} task={t} />
+        ))}
+      </ul>
     </section>
   );
 }

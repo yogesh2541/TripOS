@@ -33,6 +33,7 @@ import {
   type PricingItem,
 } from "@/types";
 import { ShareDialog } from "@/components/quotes/share-dialog";
+import { SuccessFlash } from "@/components/ui/success-flash";
 import {
   acceptQuoteAction,
   deleteQuoteAction,
@@ -164,6 +165,10 @@ export function QuoteBuilder({
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [isSaving, startSave] = useTransition();
   const [isMutating, startMutation] = useTransition();
+  const [flash, setFlash] = useState<{
+    title: string;
+    body?: string;
+  } | null>(null);
 
   const editable = isNew || activeQuote?.status === "DRAFT";
 
@@ -250,6 +255,10 @@ export function QuoteBuilder({
     startMutation(async () => {
       try {
         await acceptQuoteAction(activeQuote.id);
+        setFlash({
+          title: "Booking confirmed ✨",
+          body: `Quote v${activeQuote.version} accepted — they're going.`,
+        });
         toast.success("Quote accepted — booking created");
         router.refresh();
       } catch (e) {
@@ -313,6 +322,12 @@ export function QuoteBuilder({
 
   return (
     <section className="rounded-2xl border border-line bg-white shadow-soft p-6 md:p-8">
+      <SuccessFlash
+        open={flash !== null}
+        onClose={() => setFlash(null)}
+        title={flash?.title ?? ""}
+        body={flash?.body}
+      />
       <header className="flex items-start justify-between gap-3 mb-5">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-sand-600">

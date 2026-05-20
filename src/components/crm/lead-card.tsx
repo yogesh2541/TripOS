@@ -7,6 +7,7 @@ import { CalendarClock, MapPin, Users } from "lucide-react";
 import { cn, formatDate, formatINR } from "@/lib/utils";
 import { LEAD_SOURCE_LABEL } from "@/lib/crm";
 import type { LeadSource } from "@prisma/client";
+import { InlineWhatsappBadge } from "@/components/whatsapp/inline-whatsapp-badge";
 
 export type LeadCardData = {
   id: string;
@@ -17,6 +18,11 @@ export type LeadCardData = {
   adults: number;
   travelStartDate: Date | string | null;
   nextFollowUpAt: Date | string | null;
+  wa?: {
+    count: number;
+    unreadInbound: number;
+    lastDirection: "INBOUND" | "OUTBOUND";
+  } | null;
 };
 
 export function LeadCard({ lead }: { lead: LeadCardData }) {
@@ -48,9 +54,18 @@ export function LeadCard({ lead }: { lead: LeadCardData }) {
         onPointerDown={(e) => e.stopPropagation()}
         className="block"
       >
-        <p className="font-display text-lg text-navy leading-tight">
-          {lead.name}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-display text-lg text-navy leading-tight">
+            {lead.name}
+          </p>
+          {lead.wa ? (
+            <InlineWhatsappBadge
+              count={lead.wa.count}
+              unreadInbound={lead.wa.unreadInbound}
+              lastDirection={lead.wa.lastDirection}
+            />
+          ) : null}
+        </div>
         <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           {LEAD_SOURCE_LABEL[lead.source]}
         </p>

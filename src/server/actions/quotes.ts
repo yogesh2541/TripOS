@@ -355,6 +355,89 @@ export async function revertQuoteToDraftAction(quoteId: string) {
   return { ok: true as const };
 }
 
+/**
+ * Public-facing accept — called from the customer's view of /share/[token].
+ * Only requires the unguessable shareToken, so a malicious caller would need
+ * to know the token; same security model as the share link itself.
+ *
+ * Idempotent: re-accepting an already-accepted quote returns ok rather than
+ * erroring (customers double-tap mobile buttons constantly).
+ */
+export async function acceptQuoteByTokenAction(token: string) {
+  if (!token || token.length < 8) {
+    return { ok: false as const, error: "Invalid link" };
+  }
+
+  const quote = await prisma.quote.findUnique({
+    where: { shareToken: token },
+    include: { trip: { select: { id: true, leadId: true } } },
+  });
+  if (!quote) return { ok: false as const, error: "Quote not found" };
+
+  if (quote.status === "ACCEPTED") {
+    return { ok: true as const, alreadyAccepted: true as const };
+  }
+  if (quote.status === "REJECTED" || quote.status === "EXPIRED") {
+    return {
+      ok: false as const,
+      error: "This quote is no longer available — please get in touch.",
+    };
+  }
+
+  const existingBooking = await prisma.booking.findFirst({
+    where: { tripId: quote.tripId, status: { not: "CANCELLED" } },
+  });
+  if (existingBooking) {
+    return {
+      ok: false as const,
+      error: "This trip already has an active booking — please get in touch.",
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.quote.update({
+      where: { id: quote.id },
+      data: { status: "ACCEPTED" },
+    });
+    await tx.booking.create({
+      data: {
+        tripId: quote.tripId,
+        quoteId: quote.id,
+        status: "PENDING",
+        totalAmount: quote.sellingPrice,
+      },
+    });
+    await tx.trip.update({
+      where: { id: quote.tripId },
+      data: { status: "BOOKED" },
+    });
+  });
+
+  if (quote.trip.leadId) {
+    await prisma.lead.update({
+      where: { id: quote.trip.leadId },
+      data: { status: "WON" },
+    });
+    await logActivity({
+      leadId: quote.trip.leadId,
+      type: "QUOTE_ACCEPTED",
+      title: `Customer accepted quote v${quote.version} (via share link)`,
+      metadata: { quoteId: quote.id, version: quote.version, source: "public_share" },
+    });
+    await logActivity({
+      leadId: quote.trip.leadId,
+      type: "BOOKING_CREATED",
+      title: "Booking created from public accept",
+      metadata: { quoteId: quote.id, tripId: quote.tripId },
+    });
+  }
+
+  revalidatePath(`/share/${token}`);
+  revalidatePath(`/trips/${quote.tripId}`);
+  if (quote.trip.leadId) revalidatePath(`/leads/${quote.trip.leadId}`);
+  return { ok: true as const };
+}
+
 export async function generateShareTokenAction(quoteId: string) {
   const quote = await prisma.quote.findUnique({
     where: { id: quoteId },

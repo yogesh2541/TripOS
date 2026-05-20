@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Compass } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { TripCard } from "@/components/trip-card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { prisma, getOrCreateDemoUser } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -37,20 +38,20 @@ export default async function TripsIndexPage() {
       </header>
 
       {trips.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-16 text-center">
-          <p className="font-display text-2xl text-navy">No trips yet</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Start your first proposal — it takes a few minutes.
-          </p>
-          <div className="mt-6">
+        <EmptyState
+          icon={<Compass className="h-5 w-5" />}
+          title="Craft your first proposal"
+          body="Start with a destination and a few days — we'll generate a luxury itinerary draft you can shape from there."
+          action={
             <Link href="/trips/new">
               <Button>
                 <Plus className="h-4 w-4" />
                 Create new trip
               </Button>
             </Link>
-          </div>
-        </div>
+          }
+          hint="Tip: convert a Won lead to skip the form"
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {trips.map((t, i) => (

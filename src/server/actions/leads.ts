@@ -36,6 +36,9 @@ const createLeadSchema = z.object({
   adults: z.coerce.number().int().min(1).max(40).default(1),
   budget: z.coerce.number().int().min(0).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
+  // Billing identity — optional at lead time; usable as the recipient default
+  // when generating tax invoices.
+  gstin: z.string().max(20).optional().nullable(),
 });
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
@@ -59,6 +62,7 @@ export async function createLeadAction(input: CreateLeadInput) {
       adults: data.adults,
       budget: data.budget ?? null,
       notes: data.notes ?? null,
+      gstin: data.gstin?.trim().toUpperCase() || null,
     },
   });
 

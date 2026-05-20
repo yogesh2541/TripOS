@@ -2,19 +2,25 @@
 
 import { motion } from "framer-motion";
 import {
+  Building2,
   CalendarDays,
+  Check,
+  Compass,
   Map,
+  MapPin,
   Plane,
-  Sun,
-  Sunrise,
-  Sunset,
   Train,
   Users,
+  Utensils,
   UtensilsCrossed,
-  Compass,
+  X,
 } from "lucide-react";
 import type { TravelSegment } from "@prisma/client";
-import type { ItineraryContent, ItineraryDay } from "@/lib/ai";
+import {
+  readDay,
+  type ItineraryContent,
+  type ItineraryDay,
+} from "@/lib/ai";
 import type { PricingItem } from "@/types";
 import { formatDate, formatINR } from "@/lib/utils";
 
@@ -50,14 +56,89 @@ export function PreviewRenderer({
   pricing: Pricing;
   segments?: TravelSegment[];
 }) {
+  // Normalize all days to the modern shape — handles legacy itineraries
+  // (morning/afternoon/evening / sights / freeform food) transparently.
+  const normalized: ItineraryContent | null = itinerary
+    ? { ...itinerary, days: itinerary.days.map((d) => readDay(d)) }
+    : null;
+
   return (
     <div className="space-y-20 print:space-y-10">
-      <Hero trip={trip} summary={itinerary?.summary} />
+      <Hero
+        trip={trip}
+        summary={normalized?.summary}
+        coverImageUrl={normalized?.coverImageUrl ?? null}
+      />
+      {normalized && normalized.days.length > 0 && (
+        <AtAGlance itinerary={normalized} />
+      )}
       {segments.length > 0 && <TravelPlan segments={segments} />}
-      {itinerary && <Itinerary itinerary={itinerary} />}
+      {normalized && <Itinerary itinerary={normalized} />}
       {pricing && <PricingBlock pricing={pricing} />}
       <Footer />
     </div>
+  );
+}
+
+function AtAGlance({ itinerary }: { itinerary: ItineraryContent }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6 }}
+      className="rounded-3xl border border-line bg-white p-6 md:p-10 shadow-soft print:break-inside-avoid"
+    >
+      <p className="text-[11px] uppercase tracking-[0.25em] text-sand-700 mb-5 text-center">
+        Trip at a glance
+      </p>
+      <div className="overflow-x-auto -mx-2 md:mx-0">
+        <table className="w-full">
+          <thead>
+            <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-line">
+              <th className="pb-3 px-2 font-medium w-16">Day</th>
+              <th className="pb-3 px-2 font-medium">Where</th>
+              <th className="pb-3 px-2 font-medium">Stay</th>
+              <th className="pb-3 px-2 font-medium">Highlights</th>
+            </tr>
+          </thead>
+          <tbody>
+            {itinerary.days.map((day, i) => (
+              <tr key={i} className="border-b border-line/50 last:border-0">
+                <td className="py-3 px-2 text-sand-700 font-medium tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </td>
+                <td className="py-3 px-2 text-navy">
+                  {day.city || stripDayPrefix(day.title) || "—"}
+                </td>
+                <td className="py-3 px-2 text-ink/80 text-sm">
+                  {day.hotel ? (
+                    <>
+                      {day.hotel}
+                      {day.mealPlan && (
+                        <span className="text-muted-foreground">
+                          {" · "}
+                          {day.mealPlan}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="py-3 px-2 text-ink/80 text-sm">
+                  {day.activities && day.activities.length > 0 ? (
+                    day.activities.slice(0, 3).join(" · ")
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </motion.section>
   );
 }
 
@@ -171,7 +252,16 @@ function SegmentLine({ segment }: { segment: TravelSegment }) {
   );
 }
 
-function Hero({ trip, summary }: { trip: Trip; summary?: string }) {
+function Hero({
+  trip,
+  summary,
+  coverImageUrl,
+}: {
+  trip: Trip;
+  summary?: string;
+  coverImageUrl?: string | null;
+}) {
+  const hasCover = !!coverImageUrl;
   return (
     <motion.section
       initial={{ opacity: 0, y: 24 }}
@@ -179,6 +269,19 @@ function Hero({ trip, summary }: { trip: Trip; summary?: string }) {
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="relative overflow-hidden rounded-3xl bg-navy text-ivory print:rounded-none"
     >
+      {hasCover && (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-40"
+          style={{ backgroundImage: `url(${coverImageUrl})` }}
+          aria-hidden
+        />
+      )}
+      {hasCover && (
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-navy/85 via-navy/60 to-navy/40"
+          aria-hidden
+        />
+      )}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,169,106,0.18),transparent_60%)]" />
       <div className="relative px-8 py-16 md:px-16 md:py-24">
         <p className="text-xs uppercase tracking-[0.3em] text-sand">
@@ -253,27 +356,9 @@ function Itinerary({ itinerary }: { itinerary: ItineraryContent }) {
 }
 
 function DayBlock({ day, index }: { day: ItineraryDay; index: number }) {
-  const blocks: {
-    key: keyof ItineraryDay;
-    label: string;
-    icon: React.ReactNode;
-  }[] = [
-    {
-      key: "morning",
-      label: "Morning",
-      icon: <Sunrise className="h-3.5 w-3.5" />,
-    },
-    {
-      key: "afternoon",
-      label: "Afternoon",
-      icon: <Sun className="h-3.5 w-3.5" />,
-    },
-    {
-      key: "evening",
-      label: "Evening",
-      icon: <Sunset className="h-3.5 w-3.5" />,
-    },
-  ];
+  // Falls back to legacy food string when foodNote isn't filled — keeps old
+  // itineraries rendering well.
+  const foodText = day.foodNote?.trim() || day.food?.trim() || null;
 
   return (
     <motion.article
@@ -290,35 +375,63 @@ function DayBlock({ day, index }: { day: ItineraryDay; index: number }) {
         <h3 className="mt-3 font-display text-2xl text-navy leading-tight">
           {stripDayPrefix(day.title)}
         </h3>
+        {day.city && (
+          <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-ink/70">
+            <MapPin className="h-3 w-3 text-sand-700" />
+            {day.city}
+          </p>
+        )}
+        {day.meals && hasAnyMeal(day.meals) && (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {day.meals.breakfast && <MealChip label="B" />}
+            {day.meals.lunch && <MealChip label="L" />}
+            {day.meals.dinner && <MealChip label="D" />}
+          </div>
+        )}
       </div>
 
       <div className="space-y-6">
-        {blocks.map((b) => {
-          const value = (day[b.key] as string)?.trim();
-          if (!value) return null;
-          return (
-            <div
-              key={b.key}
-              className="grid grid-cols-[110px_1fr] gap-4 border-l-2 border-sand-200 pl-5"
-            >
-              <div className="flex items-center gap-2 pt-0.5 text-[11px] uppercase tracking-[0.2em] text-sand-700">
-                {b.icon}
-                {b.label}
-              </div>
-              <p className="text-ink/80 text-base leading-relaxed whitespace-pre-line">
-                {value}
-              </p>
-            </div>
-          );
-        })}
-
-        {day.food?.trim() && (
-          <Callout
-            icon={<UtensilsCrossed className="h-3.5 w-3.5" />}
-            label="Food"
-            text={day.food}
+        {day.imageUrl && (
+          <div
+            className="h-48 md:h-56 w-full rounded-2xl bg-cover bg-center border border-line print:break-inside-avoid"
+            style={{ backgroundImage: `url(${day.imageUrl})` }}
+            aria-hidden
           />
         )}
+        {(day.hotel || day.mealPlan) && <StayCard day={day} />}
+
+        {day.summary?.trim() && (
+          <p className="text-ink/85 text-base md:text-[17px] leading-relaxed whitespace-pre-line">
+            {day.summary.trim()}
+          </p>
+        )}
+
+        {day.activities && day.activities.length > 0 && (
+          <ActivitiesBlock activities={day.activities} />
+        )}
+
+        {foodText && (
+          <Callout
+            icon={<UtensilsCrossed className="h-3.5 w-3.5" />}
+            label="Food highlight"
+            text={foodText}
+          />
+        )}
+
+        {((day.inclusions && day.inclusions.length > 0) ||
+          (day.exclusions && day.exclusions.length > 0)) && (
+          <InclusionsExclusions day={day} />
+        )}
+
+        {day.transferNote?.trim() && (
+          <Callout
+            icon={<Map className="h-3.5 w-3.5" />}
+            label="Transfer"
+            text={day.transferNote}
+            tone="ivory"
+          />
+        )}
+
         {day.notes?.trim() && (
           <Callout
             icon={<Compass className="h-3.5 w-3.5" />}
@@ -329,6 +442,109 @@ function DayBlock({ day, index }: { day: ItineraryDay; index: number }) {
         )}
       </div>
     </motion.article>
+  );
+}
+
+function ActivitiesBlock({ activities }: { activities: string[] }) {
+  return (
+    <div className="rounded-2xl border border-line bg-white p-5">
+      <p className="text-[10px] uppercase tracking-[0.22em] text-sand-700 mb-3 inline-flex items-center gap-1.5">
+        <Map className="h-3 w-3" />
+        Activities & highlights
+      </p>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {activities.map((a, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-2 text-sm text-ink/85"
+          >
+            <span className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full bg-sand-400" />
+            {a}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function MealChip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 text-[10px] font-medium text-emerald-800">
+      {label}
+    </span>
+  );
+}
+
+function hasAnyMeal(m: { breakfast?: boolean; lunch?: boolean; dinner?: boolean }) {
+  return !!(m.breakfast || m.lunch || m.dinner);
+}
+
+function StayCard({ day }: { day: ItineraryDay }) {
+  return (
+    <div className="rounded-2xl border border-sand-200 bg-sand-50/50 px-5 py-4 flex items-start gap-4">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-sand-200 text-sand-700 flex-shrink-0">
+        <Building2 className="h-4 w-4" />
+      </span>
+      <div className="flex-1 min-w-0">
+        {day.hotel && (
+          <p className="font-medium text-navy">
+            {day.hotel}
+            {day.roomType && (
+              <span className="text-ink/70 font-normal"> · {day.roomType}</span>
+            )}
+          </p>
+        )}
+        {day.mealPlan && (
+          <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+            <Utensils className="h-3 w-3" />
+            {day.mealPlan}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InclusionsExclusions({ day }: { day: ItineraryDay }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 print:grid-cols-2">
+      {day.inclusions && day.inclusions.length > 0 && (
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-3">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-800 mb-2">
+            Included
+          </p>
+          <ul className="space-y-1">
+            {day.inclusions.map((it, i) => (
+              <li
+                key={i}
+                className="text-sm text-ink/85 flex items-start gap-1.5"
+              >
+                <Check className="h-3 w-3 text-emerald-600 mt-1 flex-shrink-0" />
+                {it}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {day.exclusions && day.exclusions.length > 0 && (
+        <div className="rounded-xl border border-line bg-ivory/60 px-4 py-3">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+            Not included
+          </p>
+          <ul className="space-y-1">
+            {day.exclusions.map((it, i) => (
+              <li
+                key={i}
+                className="text-sm text-ink/75 flex items-start gap-1.5"
+              >
+                <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
+                {it}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 

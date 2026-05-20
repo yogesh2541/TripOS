@@ -54,6 +54,7 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
     adults: 2,
     budget: null,
     notes: null,
+    gstin: "",
   });
 
   function update<K extends keyof CreateLeadInput>(
@@ -204,6 +205,22 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
                   e.target.value === "" ? null : Number(e.target.value)
                 )
               }
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="lead-gstin">
+              GSTIN
+              <span className="ml-1 text-[10px] text-muted-foreground">
+                (for B2B invoices)
+              </span>
+            </Label>
+            <Input
+              id="lead-gstin"
+              value={form.gstin ?? ""}
+              onChange={(e) => update("gstin", e.target.value.toUpperCase())}
+              maxLength={15}
+              placeholder="27AAACT1234A1ZS"
             />
           </div>
 

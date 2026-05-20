@@ -17,7 +17,8 @@ export default async function PreviewPage({
   const trip = await prisma.trip.findUnique({
     where: { id: params.id },
     include: {
-      itineraries: { where: { version: 1 }, take: 1 },
+      // Latest itinerary version, not v1 — operators iterate.
+      itineraries: { orderBy: { version: "desc" }, take: 1 },
       quotes: {
         orderBy: { version: "desc" },
         include: { items: { orderBy: { position: "asc" } } },
@@ -25,6 +26,7 @@ export default async function PreviewPage({
       travelSegments: {
         orderBy: [{ dayNumber: "asc" }, { departureTime: "asc" }],
       },
+      lead: { select: { id: true, name: true, phone: true } },
     },
   });
   if (!trip) notFound();
@@ -72,7 +74,13 @@ export default async function PreviewPage({
             <ArrowLeft className="h-4 w-4" />
             Back to workspace
           </Link>
-          <PreviewActions tripId={trip.id} />
+          <PreviewActions
+            tripId={trip.id}
+            quoteId={quote?.id ?? null}
+            recipientPhone={trip.lead?.phone ?? null}
+            recipientName={trip.lead?.name ?? null}
+            destination={trip.destination}
+          />
         </div>
       </header>
 

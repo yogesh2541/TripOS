@@ -1,16 +1,40 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
-import { CheckCircle2, Loader2, Trash2, Wallet, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Trash2,
+  Wallet,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
-import type { Booking, BookingStatus, Payment } from "@prisma/client";
+import type {
+  Booking,
+  BookingStatus,
+  InvoiceStatus,
+  Payment,
+} from "@prisma/client";
 import { BookingStatusPill } from "@/components/bookings/booking-status-pill";
 import { AddPaymentDialog } from "@/components/bookings/add-payment-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cancelBookingAction } from "@/server/actions/bookings";
 import { deletePaymentAction } from "@/server/actions/payments";
+import { createDraftInvoiceAction } from "@/server/actions/invoices";
 import { PAYMENT_TYPE_LABEL } from "@/lib/crm";
 import { cn, formatDate, formatINR } from "@/lib/utils";
+
+type InvoiceShortcut = {
+  id: string;
+  invoiceNumber: string | null;
+  status: InvoiceStatus;
+  grandTotal: number;
+} | null;
 
 type Props = {
   booking: Pick<
@@ -19,12 +43,29 @@ type Props = {
   > & {
     payments: Pick<Payment, "id" | "type" | "amount" | "method" | "reference" | "paidAt">[];
     quoteVersion: number;
+    invoice?: InvoiceShortcut;
   };
 };
 
 export function BookingPanel({ booking }: Props) {
+  const router = useRouter();
   const [showHistory, setShowHistory] = useState(false);
   const [isCancelling, startCancel] = useTransition();
+  const [isGenerating, startGenerate] = useTransition();
+
+  function generateInvoice() {
+    startGenerate(async () => {
+      try {
+        const r = await createDraftInvoiceAction({ bookingId: booking.id });
+        toast.success("Draft invoice created");
+        router.push(`/invoices/${r.id}`);
+      } catch (e) {
+        toast.error(
+          e instanceof Error ? e.message : "Couldn't create invoice"
+        );
+      }
+    });
+  }
 
   const pending = Math.max(0, booking.totalAmount - booking.paidAmount);
   const pct =
@@ -142,6 +183,70 @@ export function BookingPanel({ booking }: Props) {
           Fully paid. Mark this booking as completed when the trip wraps.
         </div>
       )}
+
+      {/* Tax invoice */}
+      <div className="mt-5 rounded-2xl border border-line bg-ivory/60 p-4 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-line text-sand-700">
+            <FileText className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              Tax invoice
+            </p>
+            {booking.invoice ? (
+              <p className="text-sm text-navy mt-0.5 truncate">
+                {booking.invoice.invoiceNumber ?? "Draft"}
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {formatINR(booking.invoice.grandTotal)}
+                </span>
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Not generated yet
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {booking.invoice ? (
+            <>
+              <Badge
+                variant={
+                  booking.invoice.status === "ISSUED"
+                    ? "success"
+                    : booking.invoice.status === "CANCELLED"
+                      ? "danger"
+                      : "outline"
+                }
+              >
+                {booking.invoice.status}
+              </Badge>
+              <Link href={`/invoices/${booking.invoice.id}`}>
+                <Button size="sm" variant="outline">
+                  Open invoice
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </>
+          ) : (
+            !cancelled && (
+              <Button
+                size="sm"
+                onClick={generateInvoice}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <FileText className="h-3.5 w-3.5" />
+                )}
+                Generate tax invoice
+              </Button>
+            )
+          )}
+        </div>
+      </div>
     </section>
   );
 }
