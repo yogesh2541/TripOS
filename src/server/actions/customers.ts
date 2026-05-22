@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { assertCan, requireAgency } from "@/lib/session";
 import { logActivity } from "@/server/helpers/log-activity";
+
+// A "customer" is no longer a separate record — it's a Contact whose
+// `convertedAt` is set. These actions flip that flag and maintain the
+// contact's free-form preferences.
 
 const preferencesSchema = z
   .object({
@@ -15,69 +21,87 @@ const preferencesSchema = z
   .partial();
 
 const convertSchema = z.object({
-  leadId: z.string(),
+  contactId: z.string(),
   preferences: preferencesSchema.optional(),
 });
 
+/** Mark a contact as a customer — sets `convertedAt` and moves it to WON. */
 export async function convertLeadToCustomerAction(
   input: z.infer<typeof convertSchema>
 ) {
   const data = convertSchema.parse(input);
-  const lead = await prisma.lead.findFirst({
-    where: { id: data.leadId, deletedAt: null },
-    include: { customer: true },
-  });
-  if (!lead) throw new Error("Lead not found");
+  const { agencyId } = await requireAgency();
+  await assertCan("contact:update");
 
-  if (lead.customer) {
-    return { ok: true as const, customerId: lead.customer.id };
+  const contact = await prisma.contact.findFirst({
+    where: { id: data.contactId, agencyId, deletedAt: null },
+    select: { id: true, status: true, convertedAt: true },
+  });
+  if (!contact) throw new Error("Contact not found");
+
+  // Already a customer — just refresh preferences if any were passed.
+  if (contact.convertedAt) {
+    if (data.preferences) {
+      await prisma.contact.update({
+        where: { id: contact.id },
+        data: { preferences: data.preferences as Prisma.InputJsonValue },
+      });
+    }
+    revalidatePath(`/contacts/${contact.id}`);
+    return { ok: true as const, contactId: contact.id };
   }
 
-  const customer = await prisma.customer.create({
+  await prisma.contact.update({
+    where: { id: contact.id },
     data: {
-      leadId: lead.id,
-      preferences: data.preferences as Record<string, unknown> | undefined,
+      convertedAt: new Date(),
+      ...(data.preferences
+        ? { preferences: data.preferences as Prisma.InputJsonValue }
+        : {}),
+      // Bump to WON unless already terminal.
+      ...(contact.status !== "WON" && contact.status !== "LOST"
+        ? { status: "WON" as const }
+        : {}),
     },
   });
 
-  // Bump lead status to WON if it isn't already terminal.
-  if (lead.status !== "WON" && lead.status !== "LOST") {
-    await prisma.lead.update({
-      where: { id: lead.id },
-      data: { status: "WON" },
-    });
-  }
-
   await logActivity({
-    leadId: lead.id,
+    contactId: contact.id,
     type: "STATUS_CHANGED",
     title: "Converted to customer",
-    metadata: { customerId: customer.id, from: lead.status, to: "WON" },
+    metadata: { from: contact.status, to: "WON" },
   });
 
-  revalidatePath(`/leads/${lead.id}`);
+  revalidatePath(`/contacts/${contact.id}`);
   revalidatePath("/customers");
-  revalidatePath("/leads");
-  return { ok: true as const, customerId: customer.id };
+  revalidatePath("/contacts");
+  return { ok: true as const, contactId: contact.id };
 }
 
 const updatePrefsSchema = z.object({
-  customerId: z.string(),
+  contactId: z.string(),
   preferences: preferencesSchema,
 });
 
+/** Update a contact's free-form service preferences. */
 export async function updateCustomerPreferencesAction(
   input: z.infer<typeof updatePrefsSchema>
 ) {
   const data = updatePrefsSchema.parse(input);
-  const customer = await prisma.customer.update({
-    where: { id: data.customerId },
-    data: {
-      preferences: data.preferences as Record<string, unknown>,
-    },
-    select: { leadId: true },
+  const { agencyId } = await requireAgency();
+  await assertCan("contact:update");
+
+  const contact = await prisma.contact.findFirst({
+    where: { id: data.contactId, agencyId, deletedAt: null },
+    select: { id: true },
   });
-  revalidatePath(`/leads/${customer.leadId}`);
+  if (!contact) throw new Error("Contact not found");
+
+  await prisma.contact.update({
+    where: { id: contact.id },
+    data: { preferences: data.preferences as Prisma.InputJsonValue },
+  });
+  revalidatePath(`/contacts/${contact.id}`);
   revalidatePath("/customers");
   return { ok: true as const };
 }

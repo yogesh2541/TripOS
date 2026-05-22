@@ -52,7 +52,7 @@ export async function createOperationTaskAction(input: OperationTaskInput) {
 
   const trip = await prisma.trip.findFirst({
     where: { id: data.tripId, deletedAt: null },
-    select: { id: true, leadId: true },
+    select: { id: true, contactId: true },
   });
   if (!trip) throw new Error("Trip not found");
 
@@ -70,7 +70,7 @@ export async function createOperationTaskAction(input: OperationTaskInput) {
 
   await logActivity({
     tripId: trip.id,
-    leadId: trip.leadId,
+    contactId: trip.contactId,
     type: "OPS_TASK_CREATED",
     title: `Ops task: ${task.title}`,
     metadata: { taskId: task.id, type: task.type },
@@ -124,7 +124,7 @@ export async function toggleOperationTaskAction(
   const existing = await prisma.operationTask.findUnique({
     where: { id: taskId },
     include: {
-      trip: { select: { id: true, leadId: true } },
+      trip: { select: { id: true, contactId: true } },
     },
   });
   if (!existing) throw new Error("Task not found");
@@ -140,7 +140,7 @@ export async function toggleOperationTaskAction(
   if (completed) {
     await logActivity({
       tripId: existing.trip.id,
-      leadId: existing.trip.leadId,
+      contactId: existing.trip.contactId,
       type: "OPS_TASK_COMPLETED",
       title: `Completed: ${existing.title}`,
       metadata: { taskId: existing.id, type: existing.type },

@@ -35,11 +35,11 @@ export async function createVendorPaymentAction(input: VendorPaymentInput) {
   });
   if (!vendor) throw new Error("Vendor not found");
 
-  let trip: { id: string; leadId: string | null } | null = null;
+  let trip: { id: string; contactId: string | null } | null = null;
   if (data.tripId) {
     trip = await prisma.trip.findFirst({
       where: { id: data.tripId, deletedAt: null },
-      select: { id: true, leadId: true },
+      select: { id: true, contactId: true },
     });
     if (!trip) throw new Error("Trip not found");
   }
@@ -65,7 +65,7 @@ export async function createVendorPaymentAction(input: VendorPaymentInput) {
   await logActivity({
     vendorId: vendor.id,
     tripId: trip?.id,
-    leadId: trip?.leadId,
+    contactId: trip?.contactId,
     type: "VENDOR_PAYMENT_ADDED",
     title: `Paid ${vendor.name} · ₹${Math.round(data.amount).toLocaleString("en-IN")}`,
     metadata: {

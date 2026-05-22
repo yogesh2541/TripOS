@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type SearchResultType =
-  | "lead"
+  | "contact"
   | "trip"
   | "vendor"
   | "voucher";
@@ -28,7 +28,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
   const insensitive: Prisma.QueryMode = "insensitive";
 
   const [leads, trips, vendors, vouchers] = await Promise.all([
-    prisma.lead.findMany({
+    prisma.contact.findMany({
       where: {
         deletedAt: null,
         OR: [
@@ -65,7 +65,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
         days: true,
         status: true,
         startDate: true,
-        lead: { select: { name: true } },
+        contact: { select: { name: true } },
       },
     }),
 
@@ -112,10 +112,10 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [
     ...leads.map<SearchResult>((l) => ({
       id: l.id,
-      type: "lead",
+      type: "contact",
       title: l.name,
       subtitle: l.destination ?? null,
-      href: `/leads/${l.id}`,
+      href: `/contacts/${l.id}`,
       badge: l.status,
     })),
     ...trips.map<SearchResult>((t) => ({
@@ -124,7 +124,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
       title: t.destination,
       subtitle: [
         `${t.days} ${t.days === 1 ? "day" : "days"}`,
-        t.lead?.name,
+        t.contact?.name,
       ]
         .filter(Boolean)
         .join(" · ") || null,

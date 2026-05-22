@@ -38,7 +38,7 @@ export async function OnboardingPanel() {
       select: { legalName: true, gstin: true, logoUrl: true },
     }),
     prisma.whatsappTemplate.count({ where: { agencyId, isActive: true } }),
-    prisma.lead.count({ where: { agencyId, deletedAt: null } }),
+    prisma.contact.count({ where: { agencyId, deletedAt: null } }),
     prisma.membership.count({ where: { agencyId } }),
   ]);
 
@@ -62,7 +62,7 @@ export async function OnboardingPanel() {
     {
       key: "whatsapp",
       label: "Connect WhatsApp",
-      hint: "Send proposals, invoices and reminders straight from a lead.",
+      hint: "Send proposals, invoices and reminders straight from a contact.",
       href: "/communications",
       cta: "Set up WhatsApp",
       done: isWhatsappConfigured(),
@@ -76,11 +76,11 @@ export async function OnboardingPanel() {
       done: templateCount > 0,
     },
     {
-      key: "lead",
-      label: "Capture your first lead",
+      key: "contact",
+      label: "Capture your first contact",
       hint: "From Instagram, WhatsApp, a referral — anywhere.",
-      href: "/leads",
-      cta: "New lead",
+      href: "/contacts",
+      cta: "New contact",
       done: leadCount > 0,
     },
   ];

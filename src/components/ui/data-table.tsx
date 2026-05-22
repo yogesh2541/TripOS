@@ -49,6 +49,7 @@ export function DataTable<T>({
   selectedIds,
   onToggleRow,
   onToggleAll,
+  rowAccent,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -62,6 +63,12 @@ export function DataTable<T>({
   onToggleRow?: (id: string) => void;
   /** Toggles every currently-rendered row. */
   onToggleAll?: () => void;
+  /**
+   * Optional left-edge accent — returns a `border-l-*` colour class so the
+   * eye can scan the table by category (e.g. pipeline stage) without
+   * reading every cell.
+   */
+  rowAccent?: (row: T) => string;
 }) {
   const [sort, setSort] = useState<SortState>(initialSort ?? null);
 
@@ -186,6 +193,12 @@ export function DataTable<T>({
           const id = rowKey(row);
           const href = rowHref?.(row);
           const selected = selectedIds?.has(id) ?? false;
+          // A constant 3px left edge keeps row heights identical whether or
+          // not an accent is supplied — transparent when there's none.
+          const accent = cn(
+            "border-l-[3px]",
+            rowAccent ? rowAccent(row) : "border-l-transparent"
+          );
 
           if (selectable) {
             return (
@@ -193,6 +206,7 @@ export function DataTable<T>({
                 <div
                   className={cn(
                     "flex items-center transition-colors",
+                    accent,
                     selected ? "bg-sand-50/60" : "hover:bg-ivory/70"
                   )}
                 >
@@ -222,7 +236,10 @@ export function DataTable<T>({
               {href ? (
                 <Link
                   href={href}
-                  className="block hover:bg-ivory/70 transition-colors"
+                  className={cn(
+                    "block hover:bg-ivory/70 transition-colors",
+                    accent
+                  )}
                 >
                   {gridCell(row)}
                 </Link>

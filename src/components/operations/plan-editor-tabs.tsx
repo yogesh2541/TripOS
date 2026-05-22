@@ -51,6 +51,7 @@ export function PlanEditorTabs({
         <SegmentList
           tripId={tripId}
           tripDays={tripDays}
+          tripStartDate={tripStartDate}
           segments={segments}
         />
       )}

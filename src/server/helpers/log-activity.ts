@@ -2,7 +2,7 @@ import type { ActivityType, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 type LogInput = {
-  leadId?: string | null;
+  contactId?: string | null;
   tripId?: string | null;
   vendorId?: string | null;
   invoiceId?: string | null;
@@ -16,14 +16,14 @@ type LogInput = {
 };
 
 export async function logActivity(input: LogInput) {
-  if (!input.leadId && !input.tripId && !input.vendorId && !input.invoiceId) {
+  if (!input.contactId && !input.tripId && !input.vendorId && !input.invoiceId) {
     throw new Error(
-      "logActivity requires at least one of leadId / tripId / vendorId / invoiceId"
+      "logActivity requires at least one of contactId / tripId / vendorId / invoiceId"
     );
   }
   return prisma.activity.create({
     data: {
-      leadId: input.leadId ?? null,
+      contactId: input.contactId ?? null,
       tripId: input.tripId ?? null,
       vendorId: input.vendorId ?? null,
       invoiceId: input.invoiceId ?? null,

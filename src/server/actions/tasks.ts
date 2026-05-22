@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 const createSchema = z.object({
-  leadId: z.string().optional().nullable(),
+  contactId: z.string().optional().nullable(),
   title: z.string().min(1).max(200),
   notes: z.string().max(2000).optional().nullable(),
   dueAt: z.string(),
@@ -15,16 +15,16 @@ export async function createTaskAction(input: z.infer<typeof createSchema>) {
   const data = createSchema.parse(input);
   const task = await prisma.task.create({
     data: {
-      leadId: data.leadId ?? null,
+      contactId: data.contactId ?? null,
       title: data.title.trim(),
       notes: data.notes ?? null,
       dueAt: new Date(data.dueAt),
     },
   });
-  if (task.leadId) {
-    revalidatePath(`/leads/${task.leadId}`);
-    await prisma.lead.update({
-      where: { id: task.leadId },
+  if (task.contactId) {
+    revalidatePath(`/contacts/${task.contactId}`);
+    await prisma.contact.update({
+      where: { id: task.contactId },
       data: { nextFollowUpAt: task.dueAt },
     });
   }
@@ -37,7 +37,7 @@ export async function completeTaskAction(taskId: string) {
     where: { id: taskId },
     data: { completedAt: new Date() },
   });
-  if (task.leadId) revalidatePath(`/leads/${task.leadId}`);
+  if (task.contactId) revalidatePath(`/contacts/${task.contactId}`);
   revalidatePath("/follow-ups");
   revalidatePath("/");
   return { ok: true as const };
@@ -48,7 +48,7 @@ export async function uncompleteTaskAction(taskId: string) {
     where: { id: taskId },
     data: { completedAt: null },
   });
-  if (task.leadId) revalidatePath(`/leads/${task.leadId}`);
+  if (task.contactId) revalidatePath(`/contacts/${task.contactId}`);
   revalidatePath("/follow-ups");
   revalidatePath("/");
   return { ok: true as const };
@@ -59,10 +59,10 @@ export async function snoozeTaskAction(taskId: string, dueAt: string) {
     where: { id: taskId },
     data: { dueAt: new Date(dueAt) },
   });
-  if (task.leadId) {
-    revalidatePath(`/leads/${task.leadId}`);
-    await prisma.lead.update({
-      where: { id: task.leadId },
+  if (task.contactId) {
+    revalidatePath(`/contacts/${task.contactId}`);
+    await prisma.contact.update({
+      where: { id: task.contactId },
       data: { nextFollowUpAt: task.dueAt },
     });
   }
@@ -72,7 +72,7 @@ export async function snoozeTaskAction(taskId: string, dueAt: string) {
 
 export async function deleteTaskAction(taskId: string) {
   const task = await prisma.task.delete({ where: { id: taskId } });
-  if (task.leadId) revalidatePath(`/leads/${task.leadId}`);
+  if (task.contactId) revalidatePath(`/contacts/${task.contactId}`);
   revalidatePath("/follow-ups");
   return { ok: true as const };
 }

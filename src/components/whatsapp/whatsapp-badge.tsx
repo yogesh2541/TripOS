@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 import { MessageStatusPill } from "./message-status-pill";
 
 type Scope =
-  | { leadId: string }
+  | { contactId: string }
   | { tripId: string }
   | { customerId: string }
   | { invoiceId: string };
 
 /**
- * Compact badge for the lead/trip/customer/invoice header: shows the count
+ * Compact badge for the contact/trip/customer/invoice header: shows the count
  * of WhatsApp messages exchanged and the status of the most recent one.
  *
  * Async server component — runs the count + last-message query inline. The
@@ -27,8 +27,8 @@ export async function WhatsappBadge({
   className?: string;
 }) {
   const where =
-    "leadId" in scope
-      ? { leadId: scope.leadId }
+    "contactId" in scope
+      ? { contactId: scope.contactId }
       : "tripId" in scope
         ? { tripId: scope.tripId }
         : "customerId" in scope

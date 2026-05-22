@@ -6,12 +6,12 @@ import { logCallAction } from "@/server/actions/activities";
 import { WhatsappComposer } from "@/components/whatsapp/whatsapp-composer";
 
 export function ContactStrip({
-  leadId,
+  contactId,
   leadName,
   phone,
   email,
 }: {
-  leadId: string;
+  contactId: string;
   leadName?: string | null;
   phone?: string | null;
   email?: string | null;
@@ -22,7 +22,7 @@ export function ContactStrip({
   return (
     <div className="flex items-center gap-2">
       {tel && (
-        <a href={tel} onClick={() => logCallAction({ leadId, body: null })}>
+        <a href={tel} onClick={() => logCallAction({ contactId, body: null })}>
           <IconButton title={phone ?? "Call"}>
             <Phone className="h-3.5 w-3.5" />
           </IconButton>
@@ -32,7 +32,7 @@ export function ContactStrip({
         <WhatsappComposer
           defaultPhone={phone}
           recipientName={leadName}
-          link={{ leadId }}
+          link={{ contactId }}
           trigger={
             <button
               type="button"

@@ -88,11 +88,11 @@ export async function listAgencyMembers(
 
 export type Action =
   // Pipeline / CRM
-  | "lead:create"
-  | "lead:update"
-  | "lead:delete"
-  | "lead:assign"
-  | "lead:read"
+  | "contact:create"
+  | "contact:update"
+  | "contact:delete"
+  | "contact:assign"
+  | "contact:read"
   | "trip:create"
   | "trip:update"
   | "trip:delete"
@@ -135,7 +135,7 @@ export type Action =
   | "team:read";
 
 const VIEWER_ACTIONS: ReadonlySet<Action> = new Set([
-  "lead:read",
+  "contact:read",
   "trip:read",
   "quote:read",
   "booking:read",
@@ -149,9 +149,9 @@ const VIEWER_ACTIONS: ReadonlySet<Action> = new Set([
 
 const STAFF_ACTIONS: ReadonlySet<Action> = new Set([
   ...VIEWER_ACTIONS,
-  "lead:create",
-  "lead:update",
-  "lead:assign",
+  "contact:create",
+  "contact:update",
+  "contact:assign",
   "trip:create",
   "trip:update",
   "quote:create",

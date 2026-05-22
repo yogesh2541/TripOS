@@ -3,8 +3,8 @@
 //
 //   - status updates → flip QUEUED/SENT rows to DELIVERED/READ/FAILED
 //   - inbound messages → create a new INBOUND WhatsappMessage row, attach
-//     to the matching Lead/Customer (best-effort phone lookup), and log a
-//     WHATSAPP_INBOUND activity so it appears on the lead timeline.
+//     to the matching Contact/Customer (best-effort phone lookup), and log a
+//     WHATSAPP_INBOUND activity so it appears on the contact timeline.
 //
 // Signature verification follows Meta's spec: HMAC-SHA256 with the app
 // secret, hex-encoded, prefixed with "sha256=". The raw request body must
@@ -151,28 +151,27 @@ function mapKind(msg: WaWebhookIncomingMessage): "TEXT" | "DOCUMENT" | "IMAGE" |
 
 async function resolveLinks(agencyId: string, phone: string) {
   const norm = normalizeWhatsappPhone(phone);
-  if (!norm) return { leadId: null, customerId: null, tripId: null };
+  if (!norm) return { contactId: null, tripId: null };
 
-  // Most recent active lead with this phone. We strip non-digits when
+  // Most recent active contact with this phone. We strip non-digits when
   // comparing — operators often store "+91 9..." while Meta sends "919...".
   const variants = Array.from(
     new Set([norm, `+${norm}`, norm.replace(/^91/, ""), norm.replace(/^91/, "+91 ")])
   );
 
-  const lead = await prisma.lead.findFirst({
+  const contact = await prisma.contact.findFirst({
     where: {
       agencyId,
       deletedAt: null,
       OR: variants.map((v) => ({ phone: { contains: v } })),
     },
     orderBy: { updatedAt: "desc" },
-    include: { customer: { select: { id: true } }, trips: { select: { id: true }, orderBy: { createdAt: "desc" }, take: 1 } },
+    include: { trips: { select: { id: true }, orderBy: { createdAt: "desc" }, take: 1 } },
   });
 
   return {
-    leadId: lead?.id ?? null,
-    customerId: lead?.customer?.id ?? null,
-    tripId: lead?.trips?.[0]?.id ?? null,
+    contactId: contact?.id ?? null,
+    tripId: contact?.trips?.[0]?.id ?? null,
   };
 }
 
@@ -216,8 +215,7 @@ async function persistInbound(agencyId: string, change: WaWebhookChange, msg: Wa
   const created = await prisma.whatsappMessage.create({
     data: {
       agencyId,
-      leadId: links.leadId,
-      customerId: links.customerId,
+      contactId: links.contactId,
       tripId: links.tripId,
       kind,
       direction: "INBOUND",
@@ -243,12 +241,12 @@ async function persistInbound(agencyId: string, change: WaWebhookChange, msg: Wa
     },
   });
 
-  // Activity log — only when we resolved to a lead, otherwise it's an
+  // Activity log — only when we resolved to a contact, otherwise it's an
   // unknown contact and the operator can triage from /communications.
-  if (links.leadId) {
+  if (links.contactId) {
     await prisma.activity.create({
       data: {
-        leadId: links.leadId,
+        contactId: links.contactId,
         tripId: links.tripId,
         type: "WHATSAPP_INBOUND",
         title: "WhatsApp reply",

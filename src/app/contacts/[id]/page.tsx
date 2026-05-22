@@ -2,15 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Plus, Sparkles } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
-import { LeadStatusPill } from "@/components/crm/lead-status-pill";
+import { LeadStatusPill } from "@/components/crm/contact-status-pill";
 import { ContactStrip } from "@/components/crm/contact-strip";
-import { LeadTimeline } from "@/components/crm/lead-timeline";
+import { LeadTimeline } from "@/components/crm/contact-timeline";
 import { TaskList } from "@/components/crm/task-list";
 import { ConvertCustomerDialog } from "@/components/crm/convert-customer-dialog";
 import {
   CustomerPreferencesPanel,
   type CustomerPreferences,
 } from "@/components/crm/customer-preferences-panel";
+import {
+  TravelerProfilesPanel,
+  type LoyaltyEntry,
+  type TravelerView,
+} from "@/components/crm/traveler-profiles-panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,12 +47,14 @@ export default async function LeadDetailPage({
   const { agencyId, user } = await requireAgency();
   const canEdit = user.activeAgencyRole !== "VIEWER";
 
-  const [lead, members] = await Promise.all([
-    prisma.lead.findFirst({
-      // Tenant-scoped: a lead id from another agency resolves to notFound().
+  const [contact, members] = await Promise.all([
+    prisma.contact.findFirst({
+      // Tenant-scoped: a contact id from another agency resolves to notFound().
       where: { id: params.id, agencyId, deletedAt: null },
       include: {
-        customer: true,
+        travelers: {
+          orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+        },
         trips: {
           where: { deletedAt: null },
           orderBy: { createdAt: "desc" },
@@ -65,19 +72,42 @@ export default async function LeadDetailPage({
     }),
     listAgencyMembers(agencyId),
   ]);
-  if (!lead) notFound();
+  if (!contact) notFound();
 
-  const customerPrefs = (lead.customer?.preferences ?? {}) as CustomerPreferences;
+  const customerPrefs = (contact.preferences ?? {}) as CustomerPreferences;
+  const isCustomer = contact.convertedAt !== null;
+
+  // Serialise traveller dates to ISO for the client panel.
+  const travelers: TravelerView[] = contact.travelers.map((t) => ({
+    id: t.id,
+    fullName: t.fullName,
+    relationship: t.relationship,
+    isPrimary: t.isPrimary,
+    dateOfBirth: t.dateOfBirth?.toISOString() ?? null,
+    gender: t.gender,
+    nationality: t.nationality,
+    passportNumber: t.passportNumber,
+    passportExpiry: t.passportExpiry?.toISOString() ?? null,
+    passportIssueCountry: t.passportIssueCountry,
+    visaNotes: t.visaNotes,
+    dietary: t.dietary,
+    loyaltyNumbers: Array.isArray(t.loyaltyNumbers)
+      ? (t.loyaltyNumbers as unknown as LoyaltyEntry[])
+      : [],
+    phone: t.phone,
+    email: t.email,
+    notes: t.notes,
+  }));
 
   return (
     <PageShell>
       <div className="flex items-center justify-between mb-6">
         <Link
-          href="/leads"
+          href="/contacts"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          All leads
+          All contacts
         </Link>
       </div>
 
@@ -85,10 +115,10 @@ export default async function LeadDetailPage({
         <div className="space-y-3">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="font-display text-4xl md:text-5xl text-navy leading-tight">
-              {lead.name}
+              {contact.name}
             </h1>
-            <LeadStatusPill leadId={lead.id} status={lead.status} />
-            {lead.customer && (
+            <LeadStatusPill contactId={contact.id} status={contact.status} />
+            {isCustomer && (
               <Badge variant="success">
                 <Sparkles className="h-3 w-3" />
                 Customer
@@ -96,36 +126,36 @@ export default async function LeadDetailPage({
             )}
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            Source · {LEAD_SOURCE_LABEL[lead.source]}
+            Source · {LEAD_SOURCE_LABEL[contact.source]}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <ContactStrip
-              leadId={lead.id}
-              leadName={lead.name}
-              phone={lead.phone}
-              email={lead.email}
+              contactId={contact.id}
+              leadName={contact.name}
+              phone={contact.phone}
+              email={contact.email}
             />
             <OwnerPicker
-              kind="lead"
-              entityId={lead.id}
-              currentOwnerId={lead.ownerId}
+              kind="contact"
+              entityId={contact.id}
+              currentOwnerId={contact.ownerId}
               members={members.map((m) => ({ id: m.id, name: m.name }))}
               canAssign={canEdit}
             />
-            <WhatsappBadge scope={{ leadId: lead.id }} href="/communications" />
+            <WhatsappBadge scope={{ contactId: contact.id }} href="/communications" />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {lead.phone ? (
+          {contact.phone ? (
             <WhatsappComposer
-              defaultPhone={lead.phone}
-              recipientName={lead.name}
-              link={{ leadId: lead.id }}
+              defaultPhone={contact.phone}
+              recipientName={contact.name}
+              link={{ contactId: contact.id }}
             />
           ) : null}
-          {!lead.customer && <ConvertCustomerDialog leadId={lead.id} />}
-          <Link href={`/trips/new?leadId=${lead.id}`}>
-            <Button variant={lead.customer ? "accent" : "default"}>
+          {!isCustomer && <ConvertCustomerDialog contactId={contact.id} />}
+          <Link href={`/trips/new?contactId=${contact.id}`}>
+            <Button variant={isCustomer ? "accent" : "default"}>
               <Plus className="h-4 w-4" />
               Create trip
             </Button>
@@ -139,50 +169,58 @@ export default async function LeadDetailPage({
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="trips">
               Trips
-              {lead.trips.length > 0 && (
+              {contact.trips.length > 0 && (
                 <span className="ml-2 text-xs opacity-70">
-                  {lead.trips.length}
+                  {contact.trips.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="travellers">
+              Travellers
+              {travelers.length > 0 && (
+                <span className="ml-2 text-xs opacity-70">
+                  {travelers.length}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger value="activity">
               Activity
-              {lead.activities.length > 0 && (
+              {contact.activities.length > 0 && (
                 <span className="ml-2 text-xs opacity-70">
-                  {lead.activities.length}
+                  {contact.activities.length}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger value="tasks">
               Tasks
-              {lead.tasks.length > 0 && (
+              {contact.tasks.length > 0 && (
                 <span className="ml-2 text-xs opacity-70">
-                  {lead.tasks.length}
+                  {contact.tasks.length}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger value="whatsapp">
               WhatsApp
-              {lead.whatsappMessages.length > 0 && (
+              {contact.whatsappMessages.length > 0 && (
                 <span className="ml-2 text-xs opacity-70">
-                  {lead.whatsappMessages.length}
+                  {contact.whatsappMessages.length}
                 </span>
               )}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
-            <Overview lead={lead} />
+            <Overview contact={contact} />
           </TabsContent>
 
           <TabsContent value="trips">
-            {lead.trips.length === 0 ? (
+            {contact.trips.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-line bg-white/60 p-12 text-center text-sm text-muted-foreground">
                 No trips linked yet.
               </div>
             ) : (
               <ul className="space-y-3">
-                {lead.trips.map((t) => (
+                {contact.trips.map((t) => (
                   <li key={t.id}>
                     <Link
                       href={`/trips/${t.id}`}
@@ -210,25 +248,33 @@ export default async function LeadDetailPage({
             )}
           </TabsContent>
 
+          <TabsContent value="travellers">
+            <TravelerProfilesPanel
+              contactId={contact.id}
+              travelers={travelers}
+              canEdit={canEdit}
+            />
+          </TabsContent>
+
           <TabsContent value="activity">
             <LeadTimeline
-              leadId={lead.id}
-              activities={lead.activities}
+              contactId={contact.id}
+              activities={contact.activities}
             />
           </TabsContent>
 
           <TabsContent value="tasks">
-            <TaskList leadId={lead.id} tasks={lead.tasks} />
+            <TaskList contactId={contact.id} tasks={contact.tasks} />
           </TabsContent>
 
           <TabsContent value="whatsapp">
             <div className="space-y-3">
-              {lead.phone ? (
+              {contact.phone ? (
                 <div className="flex items-center justify-end">
                   <WhatsappComposer
-                    defaultPhone={lead.phone}
-                    recipientName={lead.name}
-                    link={{ leadId: lead.id }}
+                    defaultPhone={contact.phone}
+                    recipientName={contact.name}
+                    link={{ contactId: contact.id }}
                   />
                 </div>
               ) : (
@@ -236,36 +282,34 @@ export default async function LeadDetailPage({
                   Add a phone number to send WhatsApp.
                 </div>
               )}
-              <WhatsappThread messages={lead.whatsappMessages} />
+              <WhatsappThread messages={contact.whatsappMessages} />
             </div>
           </TabsContent>
         </Tabs>
 
         <aside className="lg:sticky lg:top-24 space-y-5">
-          {lead.customer && (
-            <CustomerPreferencesPanel
-              customerId={lead.customer.id}
-              initial={customerPrefs}
-            />
-          )}
+          <CustomerPreferencesPanel
+            contactId={contact.id}
+            initial={customerPrefs}
+          />
           <SidePanel title="Inquiry">
-            <PanelRow label="Destination" value={lead.destination ?? "—"} />
+            <PanelRow label="Destination" value={contact.destination ?? "—"} />
             <PanelRow
               label="Travel dates"
               value={
-                lead.travelStartDate
-                  ? `${formatDate(lead.travelStartDate)}${
-                      lead.travelEndDate
-                        ? ` — ${formatDate(lead.travelEndDate)}`
+                contact.travelStartDate
+                  ? `${formatDate(contact.travelStartDate)}${
+                      contact.travelEndDate
+                        ? ` — ${formatDate(contact.travelEndDate)}`
                         : ""
                     }`
                   : "—"
               }
             />
-            <PanelRow label="Adults" value={String(lead.adults)} />
+            <PanelRow label="Adults" value={String(contact.adults)} />
             <PanelRow
               label="Budget"
-              value={lead.budget ? formatINR(lead.budget) : "—"}
+              value={contact.budget ? formatINR(contact.budget) : "—"}
             />
           </SidePanel>
 
@@ -273,15 +317,15 @@ export default async function LeadDetailPage({
             <PanelRow
               label="Next"
               value={
-                lead.nextFollowUpAt ? formatDate(lead.nextFollowUpAt) : "Not scheduled"
+                contact.nextFollowUpAt ? formatDate(contact.nextFollowUpAt) : "Not scheduled"
               }
             />
           </SidePanel>
 
-          {lead.notes && (
+          {contact.notes && (
             <SidePanel title="Notes">
               <p className="text-sm text-ink/80 whitespace-pre-line leading-relaxed">
-                {lead.notes}
+                {contact.notes}
               </p>
             </SidePanel>
           )}
@@ -292,27 +336,27 @@ export default async function LeadDetailPage({
 }
 
 function Overview({
-  lead,
+  contact,
 }: {
-  lead: { destination: string | null; budget: number | null; adults: number; notes: string | null };
+  contact: { destination: string | null; budget: number | null; adults: number; notes: string | null };
 }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-6 md:p-8 space-y-6">
       <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4">
-        <Field label="Destination" value={lead.destination ?? "—"} />
-        <Field label="Adults" value={String(lead.adults)} />
+        <Field label="Destination" value={contact.destination ?? "—"} />
+        <Field label="Adults" value={String(contact.adults)} />
         <Field
           label="Budget"
-          value={lead.budget ? formatINR(lead.budget) : "—"}
+          value={contact.budget ? formatINR(contact.budget) : "—"}
         />
       </div>
-      {lead.notes && (
+      {contact.notes && (
         <div>
           <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
             Notes
           </p>
           <p className="text-sm text-ink/80 whitespace-pre-line leading-relaxed">
-            {lead.notes}
+            {contact.notes}
           </p>
         </div>
       )}

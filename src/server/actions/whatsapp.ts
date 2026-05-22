@@ -51,7 +51,7 @@ const TEMPLATE_CATEGORIES = [
 const manualSendSchema = z.object({
   toPhone: z.string().min(4),
   message: z.string().min(1).max(4000),
-  leadId: z.string().nullable().optional(),
+  contactId: z.string().nullable().optional(),
   customerId: z.string().nullable().optional(),
   tripId: z.string().nullable().optional(),
   invoiceId: z.string().nullable().optional(),
@@ -72,7 +72,7 @@ export async function sendWhatsappTextAction(input: z.infer<typeof manualSendSch
     toPhone: normalized,
     message: data.message,
     link: {
-      leadId: data.leadId ?? null,
+      contactId: data.contactId ?? null,
       customerId: data.customerId ?? null,
       tripId: data.tripId ?? null,
       invoiceId: data.invoiceId ?? null,
@@ -81,7 +81,7 @@ export async function sendWhatsappTextAction(input: z.infer<typeof manualSendSch
   });
 
   revalidatePath("/communications");
-  if (data.leadId) revalidatePath(`/leads/${data.leadId}`);
+  if (data.contactId) revalidatePath(`/contacts/${data.contactId}`);
   if (data.tripId) revalidatePath(`/trips/${data.tripId}`);
   if (data.invoiceId) revalidatePath(`/invoices/${data.invoiceId}`);
 
@@ -191,7 +191,7 @@ export async function sendPaymentReminderAction(input: z.infer<typeof paymentRem
 }
 
 const followUpSchema = z.object({
-  leadId: z.string(),
+  contactId: z.string(),
   stage: z.enum(["T_24H", "T_3D", "T_7D"]),
 });
 
@@ -201,10 +201,10 @@ export async function sendFollowUpAction(input: z.infer<typeof followUpSchema>) 
   const result = await sendFollowUp({
     agencyId: user.activeAgencyId,
     sentByUserId: user.id,
-    leadId: data.leadId,
+    contactId: data.contactId,
     stage: data.stage,
   });
-  revalidatePath(`/leads/${data.leadId}`);
+  revalidatePath(`/contacts/${data.contactId}`);
   revalidatePath("/communications");
   return {
     ok: result.status !== "FAILED",

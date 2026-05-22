@@ -26,7 +26,7 @@ export async function updateBookingStatusAction(
   const data = updateSchema.parse(input);
   const booking = await prisma.booking.findUnique({
     where: { id: data.bookingId },
-    include: { trip: { select: { id: true, leadId: true } } },
+    include: { trip: { select: { id: true, contactId: true } } },
   });
   if (!booking) throw new Error("Booking not found");
   if (booking.status === data.status) return { ok: true as const };
@@ -50,9 +50,9 @@ export async function updateBookingStatusAction(
       : []),
   ]);
 
-  if (booking.trip.leadId) {
+  if (booking.trip.contactId) {
     await logActivity({
-      leadId: booking.trip.leadId,
+      contactId: booking.trip.contactId,
       type: "STATUS_CHANGED",
       title: `Booking ${BOOKING_STATUS_LABEL[booking.status as BookingStatus]} → ${BOOKING_STATUS_LABEL[data.status]}`,
       metadata: { bookingId: data.bookingId, from: booking.status, to: data.status },

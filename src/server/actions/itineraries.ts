@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { assertCan, requireAgency } from "@/lib/session";
+import { dayNumberForDate } from "@/lib/utils";
 import {
   blankDay,
   generateItineraryAI,
@@ -13,6 +16,54 @@ import {
   type ItineraryContent,
   type ItineraryDay,
 } from "@/lib/ai";
+
+/**
+ * Loads a trip, confirming it belongs to the caller's agency and that the
+ * caller may edit trips. The single tenancy fence for itinerary mutations.
+ */
+async function requireTrip(tripId: string) {
+  const { agencyId } = await requireAgency();
+  await assertCan("trip:update");
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, agencyId },
+  });
+  if (!trip) throw new Error("Trip not found");
+  return trip;
+}
+
+/**
+ * Re-anchors every travel segment's `dayNumber` after the itinerary's day
+ * count changes (insert / remove day). When the trip has a start date the
+ * day is recomputed from the segment's departure date; either way it's
+ * clamped into the trip's valid range so a segment never points at a day
+ * that no longer exists.
+ */
+async function resyncTripSegments(
+  tx: Prisma.TransactionClient,
+  tripId: string
+) {
+  const trip = await tx.trip.findUnique({
+    where: { id: tripId },
+    select: { days: true, startDate: true },
+  });
+  if (!trip) return;
+  const segments = await tx.travelSegment.findMany({
+    where: { tripId },
+    select: { id: true, dayNumber: true, departureTime: true },
+  });
+  for (const s of segments) {
+    const derived = trip.startDate
+      ? dayNumberForDate(s.departureTime, trip.startDate)
+      : null;
+    const target = Math.max(1, Math.min(trip.days, derived ?? s.dayNumber));
+    if (target !== s.dayNumber) {
+      await tx.travelSegment.update({
+        where: { id: s.id },
+        data: { dayNumber: target },
+      });
+    }
+  }
+}
 
 function extractDayPlans(content: ItineraryContent | null): DayPlan[] {
   if (!content?.days) return [];
@@ -50,7 +101,10 @@ function mergeStructuredOntoAI(
         hotel: old.hotel ?? aiDay.hotel ?? null,
         roomType: old.roomType ?? aiDay.roomType ?? null,
         mealPlan: old.mealPlan ?? aiDay.mealPlan ?? null,
-        meals: old.meals && Object.keys(old.meals).length > 0 ? old.meals : aiDay.meals,
+        meals:
+          old.meals && Object.keys(old.meals).length > 0
+            ? old.meals
+            : aiDay.meals,
         activities:
           (old.activities && old.activities.length > 0
             ? old.activities
@@ -67,8 +121,7 @@ function mergeStructuredOntoAI(
 
 /**
  * Normalize all days through writeDay() so the persisted blob is clean
- * (legacy fields stripped, arrays trimmed). Saves the DB from accumulating
- * stale shape over time.
+ * (legacy fields stripped, arrays trimmed).
  */
 function normalizeContent(content: ItineraryContent): ItineraryContent {
   return {
@@ -78,8 +131,7 @@ function normalizeContent(content: ItineraryContent): ItineraryContent {
 }
 
 export async function regenerateItineraryAction(tripId: string) {
-  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-  if (!trip) throw new Error("Trip not found");
+  const trip = await requireTrip(tripId);
 
   const existing = await prisma.itinerary.findUnique({
     where: { tripId_version: { tripId, version: 1 } },
@@ -100,7 +152,9 @@ export async function regenerateItineraryAction(tripId: string) {
     dayPlans: dayPlans.length > 0 ? dayPlans : undefined,
   });
 
-  const merged = normalizeContent(mergeStructuredOntoAI(aiContent, existingContent));
+  const merged = normalizeContent(
+    mergeStructuredOntoAI(aiContent, existingContent)
+  );
 
   if (existing) {
     await prisma.itinerary.update({
@@ -118,6 +172,7 @@ export async function regenerateItineraryAction(tripId: string) {
   }
 
   revalidatePath(`/trips/${tripId}`);
+  revalidatePath(`/trips/${tripId}/preview`);
   return { ok: true as const };
 }
 
@@ -125,6 +180,7 @@ export async function saveItineraryAction(
   tripId: string,
   content: ItineraryContent
 ) {
+  await requireTrip(tripId);
   const cleaned = normalizeContent(content);
   const existing = await prisma.itinerary.findUnique({
     where: { tripId_version: { tripId, version: 1 } },
@@ -149,8 +205,7 @@ export async function saveItineraryAction(
 }
 
 async function loadItinerary(tripId: string) {
-  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-  if (!trip) throw new Error("Trip not found");
+  const trip = await requireTrip(tripId);
   const itin = await prisma.itinerary.findUnique({
     where: { tripId_version: { tripId, version: 1 } },
   });
@@ -241,18 +296,19 @@ export async function insertDayAction(tripId: string, position: number) {
   const days = [...content.days];
   const safePos = Math.max(0, Math.min(days.length, position));
   days.splice(safePos, 0, blankDay(safePos));
-  const updated: ItineraryContent = { ...content, days };
-  const cleaned = normalizeContent(updated);
-  await prisma.$transaction([
-    prisma.itinerary.update({
+  const cleaned = normalizeContent({ ...content, days });
+  await prisma.$transaction(async (tx) => {
+    await tx.itinerary.update({
       where: { id: itin.id },
       data: { content: cleaned as unknown as object },
-    }),
-    prisma.trip.update({
+    });
+    await tx.trip.update({
       where: { id: tripId },
       data: { days: days.length },
-    }),
-  ]);
+    });
+    // Day count grew — re-anchor segments so none point past the range.
+    await resyncTripSegments(tx, tripId);
+  });
   revalidatePath(`/trips/${tripId}`);
   revalidatePath(`/trips/${tripId}/preview`);
   return { ok: true as const };
@@ -266,18 +322,19 @@ export async function removeDayAction(tripId: string, dayIndex: number) {
     throw new Error("Can't delete the only day. Add another first.");
   }
   const days = content.days.filter((_, i) => i !== dayIndex);
-  const updated: ItineraryContent = { ...content, days };
-  const cleaned = normalizeContent(updated);
-  await prisma.$transaction([
-    prisma.itinerary.update({
+  const cleaned = normalizeContent({ ...content, days });
+  await prisma.$transaction(async (tx) => {
+    await tx.itinerary.update({
       where: { id: itin.id },
       data: { content: cleaned as unknown as object },
-    }),
-    prisma.trip.update({
+    });
+    await tx.trip.update({
       where: { id: tripId },
       data: { days: days.length },
-    }),
-  ]);
+    });
+    // Day count shrank — re-anchor / clamp segments to the new range.
+    await resyncTripSegments(tx, tripId);
+  });
   revalidatePath(`/trips/${tripId}`);
   revalidatePath(`/trips/${tripId}/preview`);
   return { ok: true as const };

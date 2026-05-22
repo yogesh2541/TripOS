@@ -143,7 +143,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
         days: true,
         travelers: true,
         status: true,
-        lead: { select: { name: true } },
+        contact: { select: { name: true } },
         vendorAssignments: {
           where: { status: { not: "CANCELLED" } },
           select: { status: true },
@@ -160,7 +160,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
         startDate: true,
         days: true,
         status: true,
-        lead: { select: { name: true } },
+        contact: { select: { name: true } },
       },
     }),
 
@@ -177,7 +177,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
         startDate: true,
         days: true,
         status: true,
-        lead: { select: { name: true } },
+        contact: { select: { name: true } },
       },
     }),
 
@@ -265,7 +265,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
         startDate: true,
         days: true,
         status: true,
-        lead: { select: { name: true } },
+        contact: { select: { name: true } },
       },
     }),
 
@@ -327,7 +327,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
       endDate: t.startDate ? addDays(t.startDate, t.days) : null,
       days: t.days,
       status: t.status,
-      leadName: t.lead?.name ?? null,
+      leadName: t.contact?.name ?? null,
     }));
 
   const shouldComplete: InProgressTrip[] = confirmedTrips
@@ -344,7 +344,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
       endDate: t.startDate ? addDays(t.startDate, t.days) : null,
       days: t.days,
       status: t.status,
-      leadName: t.lead?.name ?? null,
+      leadName: t.contact?.name ?? null,
     }));
 
   // Build calendar (14 days)
@@ -390,7 +390,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
       departures: (upcomingByStartKey.get(k) ?? []).map((t) => ({
         tripId: t.id,
         destination: t.destination,
-        leadName: t.lead?.name ?? null,
+        leadName: t.contact?.name ?? null,
       })),
       endsToday: endsByKey.get(k) ?? [],
     });
@@ -409,7 +409,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
       days: t.days,
       travelers: t.travelers,
       status: t.status,
-      leadName: t.lead?.name ?? null,
+      leadName: t.contact?.name ?? null,
       confirmedCount: confirmed,
       totalCount: total,
     };
@@ -432,7 +432,7 @@ export async function getOperationsDashboard(): Promise<DashboardSnapshot> {
       endDate: t.startDate ? addDays(t.startDate, t.days) : null,
       days: t.days,
       status: t.status,
-      leadName: t.lead?.name ?? null,
+      leadName: t.contact?.name ?? null,
     })),
     shouldStartToday,
     shouldComplete,

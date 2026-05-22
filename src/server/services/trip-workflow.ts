@@ -3,7 +3,7 @@ import type { TripStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type WorkflowStepKey =
-  | "lead"
+  | "contact"
   | "quote"
   | "book"
   | "assign"
@@ -85,7 +85,7 @@ export async function getTripWorkflow(tripId: string): Promise<TripWorkflow | nu
   const voucherSentCount = assignments.filter((a) => a.voucherSent).length;
 
   // Derive done flags
-  const hasLead = true; // trips always link to a lead in this codebase
+  const hasLead = true; // trips always link to a contact in this codebase
   const hasQuote = quotesCount > 0;
   const isBooked = !!activeBookingId;
   const hasAssignments = assignmentCount > 0;
@@ -98,8 +98,8 @@ export async function getTripWorkflow(tripId: string): Promise<TripWorkflow | nu
 
   const steps: WorkflowStep[] = [
     {
-      key: "lead",
-      label: "Lead",
+      key: "contact",
+      label: "Contact",
       done: hasLead,
       current: false,
       hint: "Inquiry captured",

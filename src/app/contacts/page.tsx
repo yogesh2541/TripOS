@@ -1,8 +1,8 @@
 import { Sparkles } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
-import { LeadKanban, type KanbanLead } from "@/components/crm/lead-kanban";
-import { LeadsTable, type LeadRow } from "@/components/crm/leads-table";
-import { NewLeadDialog } from "@/components/crm/lead-form-dialog";
+import { LeadKanban, type KanbanLead } from "@/components/crm/contact-kanban";
+import { LeadsTable, type LeadRow } from "@/components/crm/contacts-table";
+import { NewLeadDialog } from "@/components/crm/contact-form-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import { getWhatsappStatsForEntities } from "@/server/services/whatsapp";
@@ -21,7 +21,7 @@ export default async function LeadsPage({
   const canEdit = user.activeAgencyRole !== "VIEWER";
 
   const [leads, members] = await Promise.all([
-    prisma.lead.findMany({
+    prisma.contact.findMany({
       where: { agencyId, deletedAt: null },
       orderBy: { createdAt: "desc" },
       select: {
@@ -44,7 +44,7 @@ export default async function LeadsPage({
 
   const waStats = await getWhatsappStatsForEntities({
     agencyId,
-    scope: "leadId",
+    scope: "contactId",
     ids: leads.map((l) => l.id),
   });
 
@@ -96,7 +96,7 @@ export default async function LeadsPage({
             Pipeline
           </p>
           <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Leads
+            Contacts
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {view === "board"

@@ -61,6 +61,19 @@ export const LEAD_STATUS_TONE: Record<LeadStatus, LeadStatusTone> = {
   LOST: "danger",
 };
 
+// Left-edge accent colour for dense table rows — lets the eye scan a long
+// list by pipeline stage without reading every Status badge. Border-color
+// utility classes (consumed as `border-l-[3px] <class>`).
+export const LEAD_STATUS_ACCENT: Record<LeadStatus, string> = {
+  NEW: "border-l-navy-200",
+  CONTACTED: "border-l-sand-200",
+  REQUIREMENT_UNDERSTOOD: "border-l-sand-300",
+  QUOTED: "border-l-sand-500",
+  FOLLOW_UP: "border-l-amber-400",
+  WON: "border-l-emerald-500",
+  LOST: "border-l-red-300",
+};
+
 export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
   MANUAL: "Manual",
   INSTAGRAM: "Instagram",
@@ -117,6 +130,14 @@ export const BOOKING_STATUS_TONE: Record<BookingStatus, LeadStatusTone> = {
   IN_PROGRESS: "default",
   COMPLETED: "success",
   CANCELLED: "danger",
+};
+
+export const BOOKING_STATUS_ACCENT: Record<BookingStatus, string> = {
+  PENDING: "border-l-sand-300",
+  CONFIRMED: "border-l-sand-500",
+  IN_PROGRESS: "border-l-navy-300",
+  COMPLETED: "border-l-emerald-500",
+  CANCELLED: "border-l-red-300",
 };
 
 export const PAYMENT_TYPE_LABEL: Record<PaymentType, string> = {

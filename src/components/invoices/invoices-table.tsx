@@ -29,6 +29,12 @@ const TONE: Record<InvoiceStatus, "outline" | "success" | "danger"> = {
   CANCELLED: "danger",
 };
 
+const ACCENT: Record<InvoiceStatus, string> = {
+  DRAFT: "border-l-sand-300",
+  ISSUED: "border-l-emerald-500",
+  CANCELLED: "border-l-red-300",
+};
+
 export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
@@ -144,6 +150,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
         rowHref={(r) => `/invoices/${r.id}`}
         gridClassName="grid-cols-[2fr_0.9fr_0.8fr_1fr_1fr]"
         initialSort={{ key: "date", dir: "desc" }}
+        rowAccent={(r) => ACCENT[r.status]}
         empty={
           <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
             No invoices match these filters.

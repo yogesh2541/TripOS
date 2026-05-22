@@ -195,7 +195,7 @@ export default async function PublicVoucherPage({
             {s.trip.days} {s.trip.days === 1 ? "day" : "days"}
           </Field>
           {s.traveler.leadName ? (
-            <Field label="Lead traveler">{s.traveler.leadName}</Field>
+            <Field label="Contact traveler">{s.traveler.leadName}</Field>
           ) : null}
           {s.trip.startDate ? (
             <Field label="Departs">

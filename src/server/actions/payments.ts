@@ -24,7 +24,7 @@ export async function recordPaymentAction(
 
   const booking = await prisma.booking.findUnique({
     where: { id: data.bookingId },
-    include: { trip: { select: { id: true, leadId: true } } },
+    include: { trip: { select: { id: true, contactId: true } } },
   });
   if (!booking) throw new Error("Booking not found");
   if (booking.status === "CANCELLED") {
@@ -58,9 +58,9 @@ export async function recordPaymentAction(
     data: { paidAmount, status: nextStatus },
   });
 
-  if (booking.trip.leadId) {
+  if (booking.trip.contactId) {
     await logActivity({
-      leadId: booking.trip.leadId,
+      contactId: booking.trip.contactId,
       type: "PAYMENT_RECORDED",
       title: `${data.type === "ADVANCE" ? "Advance" : data.type === "FINAL" ? "Final" : "Partial"} payment — ${formatINR(data.amount)}`,
       body: data.method

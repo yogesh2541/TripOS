@@ -39,7 +39,7 @@ export const SelectContent = React.forwardRef<
       ref={ref}
       position={position}
       className={cn(
-        "relative z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-line bg-white text-ink shadow-lift",
+        "relative z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-line bg-white text-ink shadow-pop",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
@@ -47,7 +47,9 @@ export const SelectContent = React.forwardRef<
       )}
       {...props}
     >
-      <SelectPrimitive.Viewport className="p-1">
+      {/* Cap the height so long lists (e.g. the country picker) scroll
+          instead of running off-screen. */}
+      <SelectPrimitive.Viewport className="p-1 max-h-[min(18rem,var(--radix-select-content-available-height))] overflow-y-auto">
         {children}
       </SelectPrimitive.Viewport>
     </SelectPrimitive.Content>

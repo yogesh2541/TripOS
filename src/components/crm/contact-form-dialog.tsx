@@ -26,7 +26,7 @@ import {
 import {
   createLeadAction,
   type CreateLeadInput,
-} from "@/server/actions/leads";
+} from "@/server/actions/contacts";
 import { LEAD_SOURCE_LABEL } from "@/lib/crm";
 
 const SOURCES: CreateLeadInput["source"][] = [
@@ -68,11 +68,11 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
     startTransition(async () => {
       try {
         const { id } = await createLeadAction(form);
-        toast.success("Lead added");
+        toast.success("Contact added");
         setOpen(false);
-        router.push(`/leads/${id}`);
+        router.push(`/contacts/${id}`);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : "Couldn't create lead";
+        const msg = e instanceof Error ? e.message : "Couldn't create contact";
         toast.error(msg);
       }
     });
@@ -84,13 +84,13 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
         {trigger ?? (
           <Button>
             <Plus className="h-4 w-4" />
-            New lead
+            New contact
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>New lead</DialogTitle>
+          <DialogTitle>New contact</DialogTitle>
           <DialogDescription>
             Capture the essentials — you can fill in the rest later.
           </DialogDescription>
@@ -98,9 +98,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2 space-y-1.5">
-            <Label htmlFor="lead-name">Name</Label>
+            <Label htmlFor="contact-name">Name</Label>
             <Input
-              id="lead-name"
+              id="contact-name"
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
               autoFocus
@@ -108,9 +108,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lead-phone">Phone (WhatsApp)</Label>
+            <Label htmlFor="contact-phone">Phone (WhatsApp)</Label>
             <Input
-              id="lead-phone"
+              id="contact-phone"
               value={form.phone ?? ""}
               onChange={(e) => update("phone", e.target.value)}
               placeholder="+91 …"
@@ -118,9 +118,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lead-email">Email</Label>
+            <Label htmlFor="contact-email">Email</Label>
             <Input
-              id="lead-email"
+              id="contact-email"
               type="email"
               value={form.email ?? ""}
               onChange={(e) => update("email", e.target.value)}
@@ -149,9 +149,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lead-dest">Destination interest</Label>
+            <Label htmlFor="contact-dest">Destination interest</Label>
             <Input
-              id="lead-dest"
+              id="contact-dest"
               value={form.destination ?? ""}
               onChange={(e) => update("destination", e.target.value)}
               placeholder="e.g. Bali, Andamans"
@@ -159,9 +159,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lead-start">Travel from</Label>
+            <Label htmlFor="contact-start">Travel from</Label>
             <Input
-              id="lead-start"
+              id="contact-start"
               type="date"
               value={form.travelStartDate ?? ""}
               onChange={(e) =>
@@ -170,9 +170,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="lead-end">Travel to</Label>
+            <Label htmlFor="contact-end">Travel to</Label>
             <Input
-              id="lead-end"
+              id="contact-end"
               type="date"
               value={form.travelEndDate ?? ""}
               onChange={(e) =>
@@ -182,9 +182,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lead-adults">Adults</Label>
+            <Label htmlFor="contact-adults">Adults</Label>
             <Input
-              id="lead-adults"
+              id="contact-adults"
               type="number"
               min={1}
               max={40}
@@ -193,9 +193,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="lead-budget">Budget (₹)</Label>
+            <Label htmlFor="contact-budget">Budget (₹)</Label>
             <Input
-              id="lead-budget"
+              id="contact-budget"
               type="number"
               min={0}
               value={form.budget ?? ""}
@@ -209,14 +209,14 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="lead-gstin">
+            <Label htmlFor="contact-gstin">
               GSTIN
               <span className="ml-1 text-[10px] text-muted-foreground">
                 (for B2B invoices)
               </span>
             </Label>
             <Input
-              id="lead-gstin"
+              id="contact-gstin"
               value={form.gstin ?? ""}
               onChange={(e) => update("gstin", e.target.value.toUpperCase())}
               maxLength={15}
@@ -225,9 +225,9 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
           </div>
 
           <div className="sm:col-span-2 space-y-1.5">
-            <Label htmlFor="lead-notes">Notes</Label>
+            <Label htmlFor="contact-notes">Notes</Label>
             <Textarea
-              id="lead-notes"
+              id="contact-notes"
               rows={3}
               value={form.notes ?? ""}
               onChange={(e) => update("notes", e.target.value || null)}
@@ -248,7 +248,7 @@ export function NewLeadDialog({ trigger }: { trigger?: React.ReactNode }) {
             disabled={isPending || form.name.trim().length === 0}
           >
             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            Save lead
+            Save contact
           </Button>
         </div>
       </DialogContent>

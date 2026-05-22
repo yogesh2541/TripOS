@@ -38,7 +38,6 @@ const baseSchema = z.object({
   startDate: z.string().optional().nullable(),
   endDate: z.string().optional().nullable(),
   quantity: z.coerce.number().int().min(0).optional().nullable(),
-  unitCost: z.coerce.number().min(0).optional().nullable(),
   totalCost: z.coerce.number().min(0).optional().nullable(),
   sellingPrice: z.coerce.number().min(0).optional().nullable(),
   confirmationNumber: z.string().max(100).optional().nullable(),
@@ -68,7 +67,7 @@ export async function createVendorAssignmentAction(
   const [trip, vendor] = await Promise.all([
     prisma.trip.findFirst({
       where: { id: data.tripId, deletedAt: null },
-      select: { id: true, leadId: true, status: true },
+      select: { id: true, contactId: true, status: true },
     }),
     prisma.vendor.findFirst({
       where: { id: data.vendorId, deletedAt: null },
@@ -89,7 +88,6 @@ export async function createVendorAssignmentAction(
         startDate: toNullableDate(data.startDate),
         endDate: toNullableDate(data.endDate),
         quantity: data.quantity ?? null,
-        unitCost: data.unitCost ?? null,
         totalCost: data.totalCost ?? null,
         sellingPrice: data.sellingPrice ?? null,
         confirmationNumber: trimOrNull(data.confirmationNumber),
@@ -101,7 +99,7 @@ export async function createVendorAssignmentAction(
     await logActivity({
       tripId: trip.id,
       vendorId: vendor.id,
-      leadId: trip.leadId,
+      contactId: trip.contactId,
       type: "VENDOR_ASSIGNED",
       title: `Assigned ${vendor.name} · ${data.title.trim()}`,
       metadata: {
@@ -118,7 +116,7 @@ export async function createVendorAssignmentAction(
       });
       await logActivity({
         tripId: trip.id,
-        leadId: trip.leadId,
+        contactId: trip.contactId,
         type: "STATUS_CHANGED",
         title: "Trip status: BOOKED → VENDOR_CONFIRMATION_PENDING",
         metadata: { from: "BOOKED", to: "VENDOR_CONFIRMATION_PENDING" },
@@ -160,7 +158,6 @@ export async function updateVendorAssignmentAction(
       startDate: toNullableDate(data.startDate),
       endDate: toNullableDate(data.endDate),
       quantity: data.quantity ?? null,
-      unitCost: data.unitCost ?? null,
       totalCost: data.totalCost ?? null,
       sellingPrice: data.sellingPrice ?? null,
       confirmationNumber: trimOrNull(data.confirmationNumber),
@@ -189,7 +186,7 @@ export async function transitionVendorAssignmentAction(
     where: { id: data.assignmentId },
     include: {
       vendor: { select: { id: true, name: true } },
-      trip: { select: { id: true, leadId: true, status: true } },
+      trip: { select: { id: true, contactId: true, status: true } },
     },
   });
   if (!existing) throw new Error("Assignment not found");
@@ -211,7 +208,7 @@ export async function transitionVendorAssignmentAction(
     await logActivity({
       tripId: existing.tripId,
       vendorId: existing.vendorId,
-      leadId: existing.trip.leadId,
+      contactId: existing.trip.contactId,
       type: "VENDOR_CONFIRMED",
       title: `Confirmed ${existing.vendor.name} · ${existing.title}`,
       metadata: {
@@ -223,7 +220,7 @@ export async function transitionVendorAssignmentAction(
     await logActivity({
       tripId: existing.tripId,
       vendorId: existing.vendorId,
-      leadId: existing.trip.leadId,
+      contactId: existing.trip.contactId,
       type: "VENDOR_CANCELLED",
       title: `Cancelled ${existing.vendor.name} · ${existing.title}`,
       metadata: { assignmentId: existing.id },
@@ -232,7 +229,7 @@ export async function transitionVendorAssignmentAction(
     await logActivity({
       tripId: existing.tripId,
       vendorId: existing.vendorId,
-      leadId: existing.trip.leadId,
+      contactId: existing.trip.contactId,
       type: "CUSTOM",
       title: `Marked complete · ${existing.vendor.name} · ${existing.title}`,
       metadata: { assignmentId: existing.id },
@@ -323,7 +320,6 @@ export async function deleteVendorAssignmentAction(assignmentId: string) {
     startDate: existing.startDate?.toISOString() ?? null,
     endDate: existing.endDate?.toISOString() ?? null,
     quantity: existing.quantity,
-    unitCost: existing.unitCost,
     totalCost: existing.totalCost,
     sellingPrice: existing.sellingPrice,
     confirmationNumber: existing.confirmationNumber,
@@ -348,7 +344,6 @@ export async function restoreVendorAssignmentAction(
       startDate: snapshot.startDate ? new Date(snapshot.startDate) : null,
       endDate: snapshot.endDate ? new Date(snapshot.endDate) : null,
       quantity: snapshot.quantity ?? null,
-      unitCost: snapshot.unitCost ?? null,
       totalCost: snapshot.totalCost ?? null,
       sellingPrice: snapshot.sellingPrice ?? null,
       confirmationNumber: snapshot.confirmationNumber ?? null,

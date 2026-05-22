@@ -4,8 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { PreviewRenderer } from "@/components/preview-renderer";
 import { PreviewActions } from "@/components/preview-actions";
 import { prisma } from "@/lib/prisma";
+import { requireAgency } from "@/lib/session";
 import type { ItineraryContent } from "@/lib/ai";
-import type { LineItemCategory, PricingItem } from "@/types";
+import { buildProposalPricing, type LineItemCategory } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,10 @@ export default async function PreviewPage({
 }: {
   params: { id: string };
 }) {
-  const trip = await prisma.trip.findUnique({
-    where: { id: params.id },
+  const { agencyId } = await requireAgency();
+  const trip = await prisma.trip.findFirst({
+    // Tenant-scoped: a trip id from another agency resolves to notFound().
+    where: { id: params.id, agencyId },
     include: {
       // Latest itinerary version, not v1 — operators iterate.
       itineraries: { orderBy: { version: "desc" }, take: 1 },
@@ -26,7 +29,22 @@ export default async function PreviewPage({
       travelSegments: {
         orderBy: [{ dayNumber: "asc" }, { departureTime: "asc" }],
       },
-      lead: { select: { id: true, name: true, phone: true } },
+      contact: { select: { id: true, name: true, phone: true } },
+      agency: {
+        select: {
+          settings: {
+            select: {
+              legalName: true,
+              tradeName: true,
+              logoUrl: true,
+              phone: true,
+              email: true,
+              website: true,
+              invoiceTerms: true,
+            },
+          },
+        },
+      },
     },
   });
   if (!trip) notFound();
@@ -39,29 +57,33 @@ export default async function PreviewPage({
   const nonRejected = trip.quotes.find((q) => q.status !== "REJECTED");
   const quote = accepted ?? nonRejected ?? trip.quotes[0] ?? null;
 
-  const pricing = quote
-    ? {
-        items: quote.items.map((it) => ({
-          id: it.id,
-          category: it.category as LineItemCategory,
-          label: it.label,
-          cost: it.cost,
-        })) as PricingItem[],
-        markupPct: quote.markupPct,
-        discountPct: quote.discountPct,
-        markupAmount: Math.round(
-          quote.totalCost * (quote.markupPct / 100)
-        ),
-        discountAmount: Math.round(
-          quote.totalCost * (1 + quote.markupPct / 100) * (quote.discountPct / 100)
-        ),
-        totalCost: quote.totalCost,
-        sellingPrice: quote.sellingPrice,
-        profit: quote.profit,
-        version: quote.version,
-        status: quote.status,
-      }
-    : null;
+  // Customer-safe pricing — selling amounts only, no cost / markup / profit
+  // ever reaches the proposal. Mirrors the public /share page exactly.
+  const pricing =
+    quote && quote.items.length > 0
+      ? buildProposalPricing({
+          items: quote.items.map((it) => ({
+            id: it.id,
+            category: it.category as LineItemCategory,
+            label: it.label,
+            cost: it.cost,
+          })),
+          markupPct: quote.markupPct,
+          discountPct: quote.discountPct,
+          travelers: trip.travelers,
+        })
+      : null;
+
+  const settings = trip.agency.settings;
+  const agencyName = settings?.tradeName || settings?.legalName || "TripCraft";
+  const proposalAgency = {
+    name: agencyName,
+    logoUrl: settings?.logoUrl ?? null,
+    phone: settings?.phone ?? null,
+    email: settings?.email ?? null,
+    website: settings?.website ?? null,
+    terms: settings?.invoiceTerms ?? null,
+  };
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -77,8 +99,8 @@ export default async function PreviewPage({
           <PreviewActions
             tripId={trip.id}
             quoteId={quote?.id ?? null}
-            recipientPhone={trip.lead?.phone ?? null}
-            recipientName={trip.lead?.name ?? null}
+            recipientPhone={trip.contact?.phone ?? null}
+            recipientName={trip.contact?.name ?? null}
             destination={trip.destination}
           />
         </div>
@@ -96,6 +118,12 @@ export default async function PreviewPage({
           itinerary={itinerary}
           pricing={pricing}
           segments={trip.travelSegments}
+          agency={proposalAgency}
+          meta={{
+            version: quote?.version,
+            preparedAt: (quote?.updatedAt ?? trip.updatedAt).toISOString(),
+            validityDays: 14,
+          }}
         />
       </main>
     </div>

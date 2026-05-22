@@ -28,6 +28,17 @@ enum LeadStatus {
   LOST
 }
 
+enum TravelerRelationship {
+  SELF
+  SPOUSE
+  CHILD
+  PARENT
+  SIBLING
+  FRIEND
+  COLLEAGUE
+  OTHER
+}
+
 enum TripStatus {
   PLANNING
   QUOTED
@@ -279,7 +290,7 @@ model User {
   // Attribution / assignment relations (who in the agency did/owns this).
   // Agency tenancy itself lives on the entity via agencyId; these are
   // nullable because the original creator may have been removed.
-  ownedLeads       Lead[]             @relation("LeadOwner")
+  ownedContacts    Contact[]          @relation("ContactOwner")
   ownedTrips       Trip[]             @relation("TripOwner")
   createdInvoices  Invoice[]          @relation("InvoiceCreator")
   sentMessages     WhatsappMessage[]  @relation("WhatsappSender")
@@ -303,7 +314,7 @@ model Agency {
   invites             Invite[]
   settings            AgencySettings?
   invoiceCounters     InvoiceCounter[]
-  leads               Lead[]
+  contacts            Contact[]
   trips               Trip[]
   invoices            Invoice[]
   vendors             Vendor[]
@@ -353,14 +364,20 @@ model Invite {
   @@index([agencyId, status])
 }
 
-model Lead {
+/// A contact — the permanent person/household the agency works with. The
+/// single CRM identity: it carries the inquiry details, billing identity,
+/// travellers and the full trip history across however many trips they
+/// book over the years. There is no separate "Customer" record — a contact
+/// who has booked is simply one whose `convertedAt` is set; the rest are
+/// "leads". Status reflects the pipeline of their most recent inquiry.
+model Contact {
   id       String  @id @default(cuid())
   agencyId String
   agency   Agency  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  // Lead owner — the sales person on the agency team responsible for this
-  // lead. Nullable so leads survive an owner's removal.
+  // Owner — the sales person responsible for this contact. Nullable so
+  // contacts survive an owner's removal.
   ownerId  String?
-  owner    User?   @relation("LeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  owner    User?   @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
 
   name   String
   phone  String?
@@ -377,6 +394,15 @@ model Lead {
   notes           String?
   nextFollowUpAt  DateTime?
   lostReason      String?
+  // Household-level milestone — drives anniversary outreach. Individual
+  // birthdays come from each Traveler's dateOfBirth.
+  anniversary     DateTime?
+
+  // Free-form service preferences (dietary, hotels, travel style, notes).
+  preferences Json?
+  // When this contact first became a paying customer (first booking).
+  // NULL until then — its presence is what makes a contact a "customer".
+  convertedAt DateTime?
 
   // Billing identity — used as the default recipient for tax invoices
   gstin            String?
@@ -391,8 +417,8 @@ model Lead {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  customer         Customer?
   trips            Trip[]
+  travelers        Traveler[]
   activities       Activity[]
   tasks            Task[]
   whatsappMessages WhatsappMessage[]
@@ -400,20 +426,49 @@ model Lead {
   @@index([agencyId, status, nextFollowUpAt])
   @@index([agencyId, deletedAt])
   @@index([agencyId, ownerId])
+  @@index([agencyId, convertedAt])
   @@index([phone])
 }
 
-model Customer {
-  id            String    @id @default(cuid())
-  leadId        String    @unique
-  lead          Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  preferences   Json?
-  lifetimeValue Int       @default(0)
-  convertedAt   DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+/// An individual person who travels under a Contact. One Contact is a
+/// household/account; its Travelers are the people on the passports —
+/// primary contact, spouse, children, companions. Carries the
+/// booking-critical identity an agency must hold: passport + expiry, visa,
+/// DOB, dietary and seat/meal preferences, loyalty numbers.
+model Traveler {
+  id        String  @id @default(cuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
-  whatsappMessages WhatsappMessage[]
+  fullName     String
+  relationship TravelerRelationship @default(OTHER)
+  // Exactly one traveler per contact should carry this — the account holder.
+  isPrimary    Boolean              @default(false)
+
+  dateOfBirth DateTime?
+  gender      String?
+  nationality String?
+
+  // Passport / visa — the fields that gate international bookings.
+  passportNumber       String?
+  passportExpiry       DateTime?
+  passportIssueCountry String?
+  visaNotes            String?
+
+  // Service preferences carried trip to trip.
+  dietary String?
+  // Loyalty program memberships: [{ program, number }]
+  loyaltyNumbers Json?
+
+  // Optional per-traveler contact overrides (else inherit from the contact).
+  phone String?
+  email String?
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contactId])
 }
 
 model Trip {
@@ -424,8 +479,10 @@ model Trip {
   // Often different from the sales person who closed it.
   ownerId  String?
   owner    User?   @relation("TripOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  leadId   String?
-  lead     Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  // The contact this trip is for. Nullable — a trip can stand alone and be
+  // linked to a contact later.
+  contactId String?
+  contact   Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
   destination String
   days        Int
@@ -455,7 +512,7 @@ model Trip {
 
   @@index([agencyId, createdAt])
   @@index([agencyId, ownerId])
-  @@index([leadId])
+  @@index([contactId])
   @@index([deletedAt])
 }
 
@@ -547,8 +604,8 @@ model Payment {
 
 model Activity {
   id        String       @id @default(cuid())
-  leadId    String?
-  lead      Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  contactId String?
+  contact   Contact?     @relation(fields: [contactId], references: [id], onDelete: Cascade)
   tripId    String?
   trip      Trip?        @relation(fields: [tripId], references: [id], onDelete: Cascade)
   vendorId  String?
@@ -564,7 +621,7 @@ model Activity {
   metadata  Json?
   createdAt DateTime     @default(now())
 
-  @@index([leadId, createdAt])
+  @@index([contactId, createdAt])
   @@index([tripId, createdAt])
   @@index([vendorId, createdAt])
   @@index([invoiceId, createdAt])
@@ -604,8 +661,8 @@ model TravelSegment {
 
 model Task {
   id          String    @id @default(cuid())
-  leadId      String?
-  lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   title       String
   notes       String?
   dueAt       DateTime
@@ -614,7 +671,7 @@ model Task {
   updatedAt   DateTime  @updatedAt
 
   @@index([completedAt, dueAt])
-  @@index([leadId])
+  @@index([contactId])
 }
 
 model Vendor {
@@ -671,7 +728,6 @@ model VendorAssignment {
   endDate   DateTime?
 
   quantity     Int?
-  unitCost     Float?
   totalCost    Float?
   sellingPrice Float?
 
@@ -933,10 +989,8 @@ model WhatsappMessage {
 
   // Optional links — any of these can be set so the message timelines
   // against the right CRM entity. Storing all of them keeps queries simple.
-  leadId     String?
-  lead       Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  contactId  String?
+  contact    Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
   tripId     String?
   trip       Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
   invoiceId  String?
@@ -994,8 +1048,7 @@ model WhatsappMessage {
   @@index([agencyId, status, scheduledFor])
   @@index([agencyId, phone, createdAt])
   @@index([agencyId, direction, createdAt])
-  @@index([leadId, createdAt])
-  @@index([customerId, createdAt])
+  @@index([contactId, createdAt])
   @@index([tripId, createdAt])
   @@index([invoiceId, createdAt])
   @@index([bookingId, createdAt])

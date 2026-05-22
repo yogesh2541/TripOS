@@ -7,6 +7,7 @@ import { BookingPanel } from "@/components/bookings/booking-panel";
 import { OperationsPanel } from "@/components/operations/operations-panel";
 import { PlanEditorTabs } from "@/components/operations/plan-editor-tabs";
 import { TripWorkflowStepper } from "@/components/operations/trip-workflow-stepper";
+import { LinkLeadControl } from "@/components/crm/link-contact-control";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WhatsappBadge } from "@/components/whatsapp/whatsapp-badge";
@@ -18,6 +19,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { prisma } from "@/lib/prisma";
+import { requireAgency } from "@/lib/session";
 import { getTripWorkflow } from "@/server/services/trip-workflow";
 import type { ItineraryContent } from "@/lib/ai";
 import type { LineItemCategory, PricingItem } from "@/types";
@@ -30,10 +32,14 @@ export default async function TripWorkspacePage({
 }: {
   params: { id: string };
 }) {
-  const trip = await prisma.trip.findUnique({
-    where: { id: params.id },
+  const { agencyId, user } = await requireAgency();
+  const canEdit = user.activeAgencyRole !== "VIEWER";
+  const [trip, leadOptions] = await Promise.all([
+    prisma.trip.findFirst({
+    // Tenant-scoped: a trip id from another agency resolves to notFound().
+    where: { id: params.id, agencyId },
     include: {
-      lead: { select: { id: true, name: true, phone: true } },
+      contact: { select: { id: true, name: true, phone: true } },
       itineraries: {
         where: { version: 1 },
         take: 1,
@@ -63,7 +69,15 @@ export default async function TripWorkspacePage({
         orderBy: [{ dayNumber: "asc" }, { departureTime: "asc" }],
       },
     },
-  });
+    }),
+    // Picker options for linking this trip to a CRM contact.
+    prisma.contact.findMany({
+      where: { agencyId, deletedAt: null },
+      select: { id: true, name: true, phone: true },
+      orderBy: { createdAt: "desc" },
+      take: 500,
+    }),
+  ]);
   if (!trip) notFound();
 
   const workflow = await getTripWorkflow(trip.id);
@@ -101,23 +115,21 @@ export default async function TripWorkspacePage({
           All trips
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          {trip.lead && (
-            <Link
-              href={`/leads/${trip.lead.id}`}
-              className="text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-navy transition-colors"
-            >
-              Lead · {trip.lead.name}
-            </Link>
-          )}
+          <LinkLeadControl
+            tripId={trip.id}
+            contact={trip.contact ? { id: trip.contact.id, name: trip.contact.name } : null}
+            leads={leadOptions}
+            canEdit={canEdit}
+          />
           <Badge variant={TRIP_STATUS_TONE[trip.status]}>
             {TRIP_STATUS_LABEL[trip.status]}
           </Badge>
           <WhatsappBadge scope={{ tripId: trip.id }} href="/communications" />
-          {trip.lead?.phone ? (
+          {trip.contact?.phone ? (
             <WhatsappComposer
-              defaultPhone={trip.lead.phone}
-              recipientName={trip.lead.name}
-              link={{ leadId: trip.lead.id, tripId: trip.id }}
+              defaultPhone={trip.contact.phone}
+              recipientName={trip.contact.name}
+              link={{ contactId: trip.contact.id, tripId: trip.id }}
             />
           ) : null}
           <Link href={`/trips/${trip.id}/preview`}>

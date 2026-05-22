@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -52,7 +52,13 @@ import {
   saveItineraryAction,
   suggestActivitiesAction,
 } from "@/server/actions/itineraries";
-import { readDay, type DayMeals, type ItineraryContent, type ItineraryDay } from "@/lib/ai";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
+import {
+  readDay,
+  type DayMeals,
+  type ItineraryContent,
+  type ItineraryDay,
+} from "@/lib/ai";
 import type { TravelSegment } from "@prisma/client";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +73,10 @@ type Props = {
   tripStartDate?: string | null;
 };
 
+function mapInitial(init: ItineraryContent | null): ItineraryContent | null {
+  return init ? { ...init, days: init.days.map((d) => readDay(d)) } : null;
+}
+
 export function ItineraryEditor({
   tripId,
   destination,
@@ -75,24 +85,39 @@ export function ItineraryEditor({
   tripStartDate = null,
 }: Props) {
   const router = useRouter();
-  // Upgrade incoming days through readDay() so legacy fields render naturally.
+
   const [content, setContent] = useState<ItineraryContent | null>(() =>
-    initial
-      ? { ...initial, days: initial.days.map((d) => readDay(d)) }
-      : null
+    mapInitial(initial)
   );
+  // `dirty` = the in-memory content diverges from what's on the server.
+  const [dirty, setDirty] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [isSaving, startSave] = useTransition();
   const [isRegenerating, startRegen] = useTransition();
+  const [isStructuring, startStructural] = useTransition();
   const [view, setView] = useState<View>("normal");
 
-  const startDate = useMemo(
-    () => (tripStartDate ? new Date(tripStartDate) : null),
-    [tripStartDate]
-  );
+  // After a server action + router.refresh(), Next hands us a fresh
+  // `initial`. Adopt it ONLY when we have no unsaved edits — every
+  // structural action below saves first, so at that point we're clean.
+  // This is what stops insert/remove/move/regenerate from blowing away
+  // the operator's prose edits.
+  const initialSigRef = useRef(JSON.stringify(initial));
+  useEffect(() => {
+    const sig = JSON.stringify(initial);
+    if (sig !== initialSigRef.current) {
+      initialSigRef.current = sig;
+      if (!dirty) {
+        setContent(mapInitial(initial));
+      }
+    }
+  }, [initial, dirty]);
+
+  useUnsavedChanges(dirty);
 
   function updateDay(index: number, day: ItineraryDay) {
     if (!content) return;
+    setDirty(true);
     setContent({
       ...content,
       days: content.days.map((d, i) => (i === index ? day : d)),
@@ -101,22 +126,70 @@ export function ItineraryEditor({
 
   function updateSummary(summary: string) {
     if (!content) return;
+    setDirty(true);
     setContent({ ...content, summary });
   }
 
-  function save() {
-    if (!content) return;
-    startSave(async () => {
+  /** Persist current edits — returns true on success. */
+  async function persist(): Promise<boolean> {
+    if (!content) return true;
+    try {
       await saveItineraryAction(tripId, content);
+      initialSigRef.current = JSON.stringify(content);
+      setDirty(false);
       setSavedAt(new Date().toLocaleTimeString());
-      toast.success("Itinerary saved");
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't save");
+      return false;
+    }
+  }
+
+  function save() {
+    startSave(async () => {
+      if (await persist()) toast.success("Itinerary saved");
+    });
+  }
+
+  /**
+   * Run a structural / AI server action. Saves the current edits FIRST so
+   * the action operates on the latest content and nothing is lost, then
+   * refreshes to pull the result back.
+   */
+  function runStructural(
+    action: () => Promise<unknown>,
+    successMessage?: string
+  ) {
+    startStructural(async () => {
+      if (content && !(await persist())) return; // save failed — abort
+      try {
+        await action();
+        if (successMessage) toast.success(successMessage);
+        router.refresh();
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Action failed");
+      }
     });
   }
 
   function regenerate() {
+    if (
+      content &&
+      !confirm(
+        "Regenerate all day descriptions with AI? Your structured facts (hotels, activities, meal plans) are kept — only the written prose is rewritten."
+      )
+    ) {
+      return;
+    }
     startRegen(async () => {
-      await regenerateItineraryAction(tripId);
-      window.location.reload();
+      if (content && !(await persist())) return;
+      try {
+        await regenerateItineraryAction(tripId);
+        router.refresh();
+        toast.success("Itinerary regenerated");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Couldn't regenerate");
+      }
     });
   }
 
@@ -130,6 +203,8 @@ export function ItineraryEditor({
     );
   }
 
+  const busy = isStructuring;
+
   return (
     <div className="space-y-6">
       {/* Header bar */}
@@ -141,16 +216,20 @@ export function ItineraryEditor({
           <h2 className="font-display text-3xl text-navy">{destination}</h2>
         </div>
         <div className="flex items-center gap-2 pt-2 flex-shrink-0">
-          {savedAt && (
+          {dirty ? (
+            <span className="rounded-full border border-sand-200 bg-sand-50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-sand-800">
+              Unsaved
+            </span>
+          ) : savedAt ? (
             <span className="text-xs text-muted-foreground">
               Saved {savedAt}
             </span>
-          )}
+          ) : null}
           <Button
             variant="outline"
             size="sm"
             onClick={regenerate}
-            disabled={isRegenerating}
+            disabled={isRegenerating || busy}
           >
             {isRegenerating ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -159,16 +238,37 @@ export function ItineraryEditor({
             )}
             Regenerate
           </Button>
-          <Button size="sm" onClick={save} disabled={isSaving}>
+          <Button size="sm" onClick={save} disabled={isSaving || !dirty}>
             {isSaving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <Save className="h-3.5 w-3.5" />
             )}
-            Save
+            {dirty ? "Save" : "Saved"}
           </Button>
         </div>
       </div>
+
+      {/* Day navigator — jump to any day on a long itinerary */}
+      {content.days.length > 3 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {content.days.map((d, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById(`itin-day-${i}`)
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+              className="h-7 px-2.5 rounded-lg border border-line bg-white text-[11px] text-navy hover:border-sand hover:bg-ivory transition-colors"
+              title={d.title || `Day ${i + 1}`}
+            >
+              Day {i + 1}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {/* View tabs */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -208,9 +308,10 @@ export function ItineraryEditor({
             </Label>
             <ImageUpload
               value={content.coverImageUrl}
-              onChange={(url) =>
-                setContent((c) => (c ? { ...c, coverImageUrl: url } : c))
-              }
+              onChange={(url) => {
+                setDirty(true);
+                setContent((c) => (c ? { ...c, coverImageUrl: url } : c));
+              }}
               height="h-40"
               label="Click or drop a cover image"
             />
@@ -221,7 +322,7 @@ export function ItineraryEditor({
       {/* Day cards */}
       <div className="space-y-5">
         {content.days.map((day, i) => (
-          <div key={i}>
+          <div key={i} id={`itin-day-${i}`}>
             <DayCard
               tripId={tripId}
               day={day}
@@ -231,9 +332,19 @@ export function ItineraryEditor({
               onChange={(d) => updateDay(i, d)}
               segments={segments.filter((s) => s.dayNumber === i + 1)}
               view={view}
-              startDate={startDate}
+              startDate={tripStartDate ? new Date(tripStartDate) : null}
+              busy={busy}
+              runStructural={runStructural}
             />
-            <InsertDayButton tripId={tripId} position={i + 1} />
+            <InsertDayButton
+              disabled={busy}
+              onInsert={() =>
+                runStructural(
+                  () => insertDayAction(tripId, i + 1),
+                  "Day inserted"
+                )
+              }
+            />
           </div>
         ))}
       </div>
@@ -255,6 +366,8 @@ function DayCard({
   segments = [],
   view,
   startDate,
+  busy,
+  runStructural,
 }: {
   tripId: string;
   day: ItineraryDay;
@@ -265,64 +378,16 @@ function DayCard({
   segments?: TravelSegment[];
   view: View;
   startDate: Date | null;
+  busy: boolean;
+  runStructural: (
+    action: () => Promise<unknown>,
+    successMessage?: string
+  ) => void;
 }) {
-  const router = useRouter();
-  const [isRewriting, startRewrite] = useTransition();
-  const [isMutating, startMutation] = useTransition();
   const [isSuggesting, startSuggest] = useTransition();
 
   function patch<K extends keyof ItineraryDay>(key: K, value: ItineraryDay[K]) {
     onChange({ ...day, [key]: value });
-  }
-
-  function rewriteDay() {
-    startRewrite(async () => {
-      try {
-        await regenerateOneDayAction(tripId, index);
-        toast.success(`Day ${index + 1} rewritten`);
-        router.refresh();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Couldn't rewrite");
-      }
-    });
-  }
-
-  function moveUp() {
-    if (index === 0) return;
-    startMutation(async () => {
-      await moveDayAction(tripId, index, index - 1);
-      router.refresh();
-    });
-  }
-  function moveDown() {
-    if (index >= totalDays - 1) return;
-    startMutation(async () => {
-      await moveDayAction(tripId, index, index + 1);
-      router.refresh();
-    });
-  }
-  function deleteDay() {
-    if (totalDays <= 1) {
-      toast.error("Add another day first before deleting this one.");
-      return;
-    }
-    if (!confirm(`Delete Day ${index + 1}? This cannot be undone.`)) return;
-    startMutation(async () => {
-      try {
-        await removeDayAction(tripId, index);
-        toast.success(`Day ${index + 1} deleted`);
-        router.refresh();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Couldn't delete");
-      }
-    });
-  }
-  function insertAfter() {
-    startMutation(async () => {
-      await insertDayAction(tripId, index + 1);
-      toast.success(`New day inserted`);
-      router.refresh();
-    });
   }
 
   function suggestActivities() {
@@ -369,11 +434,11 @@ function DayCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        delay: index * 0.04,
+        delay: Math.min(index, 6) * 0.04,
         duration: 0.4,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="rounded-2xl border border-line bg-white shadow-soft overflow-hidden"
+      className="rounded-2xl border border-line bg-white shadow-soft overflow-hidden scroll-mt-24"
     >
       {/* Header */}
       <header className="flex items-center gap-3 px-6 md:px-8 py-4 border-b border-line bg-ivory/30">
@@ -393,12 +458,17 @@ function DayCard({
         />
         <button
           type="button"
-          onClick={rewriteDay}
-          disabled={isRewriting || isMutating}
+          onClick={() =>
+            runStructural(
+              () => regenerateOneDayAction(tripId, index),
+              `Day ${index + 1} rewritten`
+            )
+          }
+          disabled={busy}
           className="h-8 px-3 rounded-xl text-xs text-sand-700 hover:text-navy hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
-          title="Rewrite this day with AI"
+          title="Rewrite this day with AI (saves your edits first)"
         >
-          {isRewriting ? (
+          {busy ? (
             <Loader2 className="h-3 w-3 animate-spin" />
           ) : (
             <Wand2 className="h-3 w-3" />
@@ -407,35 +477,60 @@ function DayCard({
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger
-            disabled={isMutating}
+            disabled={busy}
             className="h-8 w-8 rounded-xl text-muted-foreground hover:text-navy hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center flex-shrink-0"
             aria-label="Day actions"
           >
-            {isMutating ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <MoreHorizontal className="h-3.5 w-3.5" />
-            )}
+            <MoreHorizontal className="h-3.5 w-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={moveUp} disabled={index === 0}>
+            <DropdownMenuItem
+              onSelect={() =>
+                runStructural(() => moveDayAction(tripId, index, index - 1))
+              }
+              disabled={index === 0}
+            >
               <ArrowUp className="h-3.5 w-3.5" />
               Move up
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={moveDown}
+              onSelect={() =>
+                runStructural(() => moveDayAction(tripId, index, index + 1))
+              }
               disabled={index >= totalDays - 1}
             >
               <ArrowDown className="h-3.5 w-3.5" />
               Move down
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={insertAfter}>
+            <DropdownMenuItem
+              onSelect={() =>
+                runStructural(
+                  () => insertDayAction(tripId, index + 1),
+                  "Day inserted"
+                )
+              }
+            >
               <Plus className="h-3.5 w-3.5" />
               Insert day below
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onSelect={deleteDay}
+              onSelect={() => {
+                if (totalDays <= 1) {
+                  toast.error(
+                    "Add another day first before deleting this one."
+                  );
+                  return;
+                }
+                if (
+                  !confirm(`Delete Day ${index + 1}? This cannot be undone.`)
+                )
+                  return;
+                runStructural(
+                  () => removeDayAction(tripId, index),
+                  `Day ${index + 1} deleted`
+                );
+              }}
               disabled={totalDays <= 1}
               className="text-red-600 focus:bg-red-50"
             >
@@ -556,16 +651,12 @@ function DayCard({
           <SectionLabel icon={<UtensilsCrossed className="h-3 w-3" />}>
             Meals included
           </SectionLabel>
-          <MealToggles
-            value={meals}
-            onChange={(v) => patch("meals", v)}
-          />
+          <MealToggles value={meals} onChange={(v) => patch("meals", v)} />
         </div>
 
         {/* ===== DETAILED ONLY ===== */}
         {view === "detailed" && (
           <>
-            {/* Inclusions / Exclusions */}
             <div className="grid sm:grid-cols-[180px_1fr] gap-3 items-start">
               <SectionLabel icon={<ListChecks className="h-3 w-3" />}>
                 Inclusions
@@ -589,23 +680,17 @@ function DayCard({
                 placeholder="Personal expenses, tips, alcohol…"
               />
             </div>
-
-            {/* Transfer note */}
             <div className="grid sm:grid-cols-[180px_1fr] gap-3 items-start">
               <SectionLabel icon={<MapPin className="h-3 w-3" />}>
                 Transfer note
               </SectionLabel>
               <Input
                 value={day.transferNote ?? ""}
-                onChange={(e) =>
-                  patch("transferNote", e.target.value || null)
-                }
+                onChange={(e) => patch("transferNote", e.target.value || null)}
                 placeholder="Pickup at 9 AM, 4-hour drive via Coastal Highway"
                 className="h-10"
               />
             </div>
-
-            {/* Food note */}
             <div className="grid sm:grid-cols-[180px_1fr] gap-3 items-start">
               <SectionLabel icon={<UtensilsCrossed className="h-3 w-3" />}>
                 Food highlight
@@ -613,15 +698,11 @@ function DayCard({
               <Textarea
                 rows={2}
                 value={day.foodNote ?? ""}
-                onChange={(e) =>
-                  patch("foodNote", e.target.value || null)
-                }
+                onChange={(e) => patch("foodNote", e.target.value || null)}
                 placeholder="Specific food recommendation — e.g. Try babi guling at Ibu Oka in Ubud"
                 className="text-sm"
               />
             </div>
-
-            {/* Day image */}
             <div className="grid sm:grid-cols-[180px_1fr] gap-3 items-start">
               <SectionLabel icon={<ImageIcon className="h-3 w-3" />}>
                 Day image
@@ -633,8 +714,6 @@ function DayCard({
                 label="Upload day banner"
               />
             </div>
-
-            {/* Internal notes */}
             <div className="grid sm:grid-cols-[180px_1fr] gap-3 items-start">
               <SectionLabel icon={<Sparkles className="h-3 w-3" />}>
                 Internal notes
@@ -705,9 +784,7 @@ function MealToggles({
           <button
             key={t.key}
             type="button"
-            onClick={() =>
-              onChange({ ...value, [t.key]: !active })
-            }
+            onClick={() => onChange({ ...value, [t.key]: !active })}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
               active
@@ -725,45 +802,22 @@ function MealToggles({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Insert-between buttons
-// ---------------------------------------------------------------------------
-
 function InsertDayButton({
-  tripId,
-  position,
+  onInsert,
+  disabled,
 }: {
-  tripId: string;
-  position: number;
+  onInsert: () => void;
+  disabled: boolean;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  function insert() {
-    startTransition(async () => {
-      try {
-        await insertDayAction(tripId, position);
-        toast.success("Day inserted");
-        router.refresh();
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Couldn't insert");
-      }
-    });
-  }
-
   return (
     <div className="flex justify-center -my-2 opacity-0 hover:opacity-100 focus-within:opacity-100 transition-opacity">
       <button
         type="button"
-        onClick={insert}
-        disabled={isPending}
+        onClick={onInsert}
+        disabled={disabled}
         className="h-7 px-3 rounded-full bg-white border border-dashed border-sand-300 text-[10px] uppercase tracking-[0.18em] text-sand-700 hover:bg-sand-50 hover:border-sand inline-flex items-center gap-1.5 disabled:opacity-50"
       >
-        {isPending ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
-        ) : (
-          <Plus className="h-3 w-3" />
-        )}
+        <Plus className="h-3 w-3" />
         Insert day
       </button>
     </div>

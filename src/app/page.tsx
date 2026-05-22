@@ -19,7 +19,7 @@ import {
   type ActivityFeedItem,
 } from "@/components/crm/activity-feed";
 import { FollowUpRow, type FollowUpRowData } from "@/components/crm/follow-up-row";
-import { NewLeadDialog } from "@/components/crm/lead-form-dialog";
+import { NewLeadDialog } from "@/components/crm/contact-form-dialog";
 import { OneTimeHint } from "@/components/ui/one-time-hint";
 import { OnboardingPanel } from "@/components/onboarding-panel";
 import { prisma } from "@/lib/prisma";
@@ -44,7 +44,7 @@ export default async function DashboardPage({
 
   // Scoped filter fragments. `leadFilter` is `{}` for agency view, so the
   // queries below collapse to plain agency scoping when not personal.
-  const leadFilter: Prisma.LeadWhereInput = mine ? { ownerId: user.id } : {};
+  const leadFilter: Prisma.ContactWhereInput = mine ? { ownerId: user.id } : {};
   const tripFilter: Prisma.TripWhereInput = mine ? { ownerId: user.id } : {};
 
   const now = new Date();
@@ -61,10 +61,10 @@ export default async function DashboardPage({
     upcomingTasks,
     unreadInboundCount,
   ] = await Promise.all([
-    prisma.lead.count({
+    prisma.contact.count({
       where: { agencyId, deletedAt: null, ...leadFilter },
     }),
-    prisma.lead.count({
+    prisma.contact.count({
       where: {
         agencyId,
         deletedAt: null,
@@ -72,7 +72,7 @@ export default async function DashboardPage({
         ...leadFilter,
       },
     }),
-    prisma.lead.count({
+    prisma.contact.count({
       where: {
         agencyId,
         deletedAt: null,
@@ -95,24 +95,29 @@ export default async function DashboardPage({
       where: {
         completedAt: null,
         dueAt: { lt: now },
-        lead: { agencyId, deletedAt: null, ...leadFilter },
+        contact: { agencyId, deletedAt: null, ...leadFilter },
       },
     }),
-    prisma.customer.count({
-      where: { lead: { agencyId, deletedAt: null, ...leadFilter } },
+    prisma.contact.count({
+      where: {
+        agencyId,
+        deletedAt: null,
+        convertedAt: { not: null },
+        ...leadFilter,
+      },
     }),
     prisma.activity.findMany({
-      where: { lead: { agencyId, deletedAt: null, ...leadFilter } },
-      include: { lead: { select: { id: true, name: true } } },
+      where: { contact: { agencyId, deletedAt: null, ...leadFilter } },
+      include: { contact: { select: { id: true, name: true } } },
       orderBy: { createdAt: "desc" },
       take: 12,
     }),
     prisma.task.findMany({
       where: {
         completedAt: null,
-        lead: { agencyId, deletedAt: null, ...leadFilter },
+        contact: { agencyId, deletedAt: null, ...leadFilter },
       },
-      include: { lead: { select: { id: true, name: true } } },
+      include: { contact: { select: { id: true, name: true } } },
       orderBy: { dueAt: "asc" },
       take: 5,
     }),
@@ -122,7 +127,7 @@ export default async function DashboardPage({
         agencyId,
         direction: "INBOUND",
         createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-        ...(mine ? { lead: { ownerId: user.id } } : {}),
+        ...(mine ? { contact: { ownerId: user.id } } : {}),
       },
     }),
   ]);
@@ -138,7 +143,7 @@ export default async function DashboardPage({
     title: t.title,
     dueAt: t.dueAt,
     completedAt: t.completedAt,
-    lead: t.lead ? { id: t.lead.id, name: t.lead.name } : null,
+    contact: t.contact ? { id: t.contact.id, name: t.contact.name } : null,
   }));
 
   const firstName = (user.name ?? "").trim().split(/\s+/)[0];
@@ -191,7 +196,7 @@ export default async function DashboardPage({
                 trigger={
                   <Button>
                     <UserPlus className="h-4 w-4" />
-                    New lead
+                    New contact
                   </Button>
                 }
               />
@@ -216,7 +221,8 @@ export default async function DashboardPage({
           label="Active leads"
           value={String(leadsActive)}
           hint={`${leadsTotal} total in pipeline`}
-          href={mine ? "/leads" : "/leads"}
+          href="/contacts"
+          tone="accent"
         />
         <StatTile
           icon={<TrendingUp className="h-3 w-3" />}
@@ -224,6 +230,7 @@ export default async function DashboardPage({
           value={`${leadsWonThisMonth}`}
           hint={`${conversionPct}% conversion`}
           href="/customers"
+          tone="success"
         />
         <StatTile
           icon={<Wallet className="h-3 w-3" />}
@@ -239,7 +246,7 @@ export default async function DashboardPage({
           value={String(overdueCount)}
           hint={overdueCount > 0 ? "Triage first" : "All clear"}
           href="/follow-ups"
-          tone={overdueCount > 0 ? "danger" : undefined}
+          tone={overdueCount > 0 ? "danger" : "default"}
         />
         <StatTile
           icon={<MessageCircle className="h-3 w-3" />}
@@ -247,7 +254,7 @@ export default async function DashboardPage({
           value={String(unreadInboundCount)}
           hint={unreadInboundCount > 0 ? "Open and reply" : "No new replies"}
           href="/communications?direction=INBOUND"
-          tone={unreadInboundCount > 0 ? "navy" : undefined}
+          tone="default"
         />
       </section>
 
@@ -255,7 +262,7 @@ export default async function DashboardPage({
         <div>
           <SectionHeading
             title="Recent activity"
-            cta={{ label: "All leads", href: "/leads" }}
+            cta={{ label: "All leads", href: "/contacts" }}
           />
           <ActivityFeed activities={activities} />
         </div>
@@ -267,7 +274,7 @@ export default async function DashboardPage({
           />
           {followUps.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-line bg-white/60 p-8 text-center text-sm text-muted-foreground">
-              Nothing scheduled. Add a follow-up from any lead.
+              Nothing scheduled. Add a follow-up from any contact.
             </div>
           ) : (
             <ul className="space-y-2">

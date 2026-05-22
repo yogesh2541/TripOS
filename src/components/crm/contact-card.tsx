@@ -25,9 +25,9 @@ export type LeadCardData = {
   } | null;
 };
 
-export function LeadCard({ lead }: { lead: LeadCardData }) {
+export function LeadCard({ contact }: { contact: LeadCardData }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: lead.id });
+    useSortable({ id: contact.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -35,7 +35,7 @@ export function LeadCard({ lead }: { lead: LeadCardData }) {
   };
 
   const overdue =
-    lead.nextFollowUpAt && new Date(lead.nextFollowUpAt) < new Date();
+    contact.nextFollowUpAt && new Date(contact.nextFollowUpAt) < new Date();
 
   return (
     <div
@@ -49,53 +49,53 @@ export function LeadCard({ lead }: { lead: LeadCardData }) {
       )}
     >
       <Link
-        href={`/leads/${lead.id}`}
+        href={`/contacts/${contact.id}`}
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
         className="block"
       >
         <div className="flex items-start justify-between gap-2">
           <p className="font-display text-lg text-navy leading-tight">
-            {lead.name}
+            {contact.name}
           </p>
-          {lead.wa ? (
+          {contact.wa ? (
             <InlineWhatsappBadge
-              count={lead.wa.count}
-              unreadInbound={lead.wa.unreadInbound}
-              lastDirection={lead.wa.lastDirection}
+              count={contact.wa.count}
+              unreadInbound={contact.wa.unreadInbound}
+              lastDirection={contact.wa.lastDirection}
             />
           ) : null}
         </div>
         <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          {LEAD_SOURCE_LABEL[lead.source]}
+          {LEAD_SOURCE_LABEL[contact.source]}
         </p>
 
-        {lead.destination && (
+        {contact.destination && (
           <div className="mt-3 flex items-center gap-1.5 text-sm text-ink/80">
             <MapPin className="h-3.5 w-3.5 text-sand-700" />
-            {lead.destination}
+            {contact.destination}
           </div>
         )}
 
         <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
-            {lead.adults}
+            {contact.adults}
           </span>
-          {lead.budget && (
+          {contact.budget && (
             <span className="font-medium text-navy">
-              {formatINR(lead.budget)}
+              {formatINR(contact.budget)}
             </span>
           )}
         </div>
 
-        {lead.travelStartDate && (
+        {contact.travelStartDate && (
           <div className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            From {formatDate(lead.travelStartDate)}
+            From {formatDate(contact.travelStartDate)}
           </div>
         )}
 
-        {lead.nextFollowUpAt && (
+        {contact.nextFollowUpAt && (
           <div
             className={cn(
               "mt-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em]",
@@ -106,7 +106,7 @@ export function LeadCard({ lead }: { lead: LeadCardData }) {
           >
             <CalendarClock className="h-3 w-3" />
             {overdue ? "Overdue" : "Follow-up"} {" "}
-            {formatDate(lead.nextFollowUpAt)}
+            {formatDate(contact.nextFollowUpAt)}
           </div>
         )}
       </Link>

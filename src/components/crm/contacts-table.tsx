@@ -16,11 +16,12 @@ import {
 import { InlineWhatsappBadge } from "@/components/whatsapp/inline-whatsapp-badge";
 import {
   LEAD_SOURCE_LABEL,
+  LEAD_STATUS_ACCENT,
   LEAD_STATUS_LABEL,
   LEAD_STATUS_ORDER,
   LEAD_STATUS_TONE,
 } from "@/lib/crm";
-import { bulkUpdateLeadsAction } from "@/server/actions/leads";
+import { bulkUpdateLeadsAction } from "@/server/actions/contacts";
 import { formatDate, formatINR } from "@/lib/utils";
 
 export type LeadRow = {
@@ -143,12 +144,12 @@ export function LeadsTable({
   ) {
     const ids = Array.from(visibleSelected);
     if (ids.length === 0) return;
-    if (op.kind === "delete" && !confirm(`Delete ${ids.length} lead(s)?`))
+    if (op.kind === "delete" && !confirm(`Delete ${ids.length} contact(s)?`))
       return;
     startTransition(async () => {
       const res = await bulkUpdateLeadsAction({ ids, op });
       if (res.ok) {
-        toast.success(`Updated ${res.count} lead${res.count === 1 ? "" : "s"}`);
+        toast.success(`Updated ${res.count} contact${res.count === 1 ? "" : "s"}`);
         clearSelection();
         router.refresh();
       } else {
@@ -162,7 +163,7 @@ export function LeadsTable({
   const columns: Column<LeadRow>[] = [
     {
       key: "name",
-      header: "Lead",
+      header: "Contact",
       sortValue: (r) => r.name.toLowerCase(),
       render: (r) => (
         <div className="min-w-0">
@@ -391,9 +392,10 @@ export function LeadsTable({
         rows={filtered}
         columns={columns}
         rowKey={(r) => r.id}
-        rowHref={(r) => `/leads/${r.id}`}
+        rowHref={(r) => `/contacts/${r.id}`}
         gridClassName="grid-cols-[1.6fr_1.1fr_0.9fr_0.9fr_0.8fr_0.8fr_0.9fr_auto]"
         initialSort={{ key: "followUp", dir: "asc" }}
+        rowAccent={(r) => LEAD_STATUS_ACCENT[r.status]}
         selectable={canEdit}
         selectedIds={visibleSelected}
         onToggleRow={toggleRow}
@@ -401,7 +403,7 @@ export function LeadsTable({
         empty={
           <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
             <UserCog className="h-5 w-5 mx-auto mb-2 opacity-60" />
-            No leads match these filters.
+            No contacts match these filters.
           </div>
         }
       />

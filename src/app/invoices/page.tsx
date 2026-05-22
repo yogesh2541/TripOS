@@ -50,7 +50,7 @@ export default async function InvoicesPage({
               select: {
                 id: true,
                 destination: true,
-                lead: { select: { id: true, name: true } },
+                contact: { select: { id: true, name: true } },
               },
             },
           },
@@ -76,7 +76,7 @@ export default async function InvoicesPage({
     invoiceNumber: inv.invoiceNumber,
     status: inv.status,
     destination: inv.booking?.trip?.destination ?? null,
-    customerName: inv.booking?.trip?.lead?.name ?? null,
+    customerName: inv.booking?.trip?.contact?.name ?? null,
     invoiceFy: inv.invoiceFy,
     grandTotal: inv.grandTotal,
     effectiveDate:
@@ -185,8 +185,8 @@ export default async function InvoicesPage({
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {inv.booking?.trip?.destination ?? "—"}
-                    {inv.booking?.trip?.lead
-                      ? ` · ${inv.booking.trip.lead.name}`
+                    {inv.booking?.trip?.contact
+                      ? ` · ${inv.booking.trip.contact.name}`
                       : ""}
                   </p>
                 </div>

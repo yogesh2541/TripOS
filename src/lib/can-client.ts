@@ -9,11 +9,11 @@
 import type { MembershipRole } from "@prisma/client";
 
 export type Action =
-  | "lead:create"
-  | "lead:update"
-  | "lead:delete"
-  | "lead:assign"
-  | "lead:read"
+  | "contact:create"
+  | "contact:update"
+  | "contact:delete"
+  | "contact:assign"
+  | "contact:read"
   | "trip:create"
   | "trip:update"
   | "trip:delete"
@@ -52,7 +52,7 @@ export type Action =
   | "team:read";
 
 const VIEWER_ACTIONS = new Set<Action>([
-  "lead:read",
+  "contact:read",
   "trip:read",
   "quote:read",
   "booking:read",
@@ -66,9 +66,9 @@ const VIEWER_ACTIONS = new Set<Action>([
 
 const STAFF_ACTIONS = new Set<Action>([
   ...Array.from(VIEWER_ACTIONS),
-  "lead:create",
-  "lead:update",
-  "lead:assign",
+  "contact:create",
+  "contact:update",
+  "contact:assign",
   "trip:create",
   "trip:update",
   "quote:create",

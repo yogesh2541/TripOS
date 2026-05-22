@@ -33,7 +33,7 @@ import {
   VENDOR_ASSIGNMENT_CATEGORY_ORDER,
   VENDOR_TYPE_LABEL,
 } from "@/lib/crm";
-import { cn } from "@/lib/utils";
+import { calendarDayDiff, cn, formatINR } from "@/lib/utils";
 import type { VendorOption } from "@/server/services/operations";
 
 type DialogMode = "create" | "edit";
@@ -52,7 +52,6 @@ const EMPTY = (tripId: string): AssignmentFormInput => ({
   startDate: null,
   endDate: null,
   quantity: null,
-  unitCost: null,
   totalCost: null,
   sellingPrice: null,
   confirmationNumber: "",
@@ -84,6 +83,25 @@ export function AssignmentFormDialog({
 
   const selectedVendor = vendors.find((v) => v.id === form.vendorId);
 
+  // Nights are a fact of the dates — derive them rather than asking twice.
+  const derivedNights = useMemo(() => {
+    if (!form.startDate || !form.endDate) return null;
+    const n = calendarDayDiff(form.startDate, form.endDate);
+    return n > 0 ? n : null;
+  }, [form.startDate, form.endDate]);
+
+  const isHotelLike = form.category === "HOTEL";
+
+  // Live margin so the operator sees profitability while typing.
+  const margin = useMemo(() => {
+    const { totalCost, sellingPrice } = form;
+    if (totalCost == null || sellingPrice == null) return null;
+    const amount = sellingPrice - totalCost;
+    const pct =
+      sellingPrice > 0 ? Math.round((amount / sellingPrice) * 100) : 0;
+    return { amount, pct };
+  }, [form.totalCost, form.sellingPrice]);
+
   const filteredVendors = useMemo(() => {
     const q = vendorSearch.trim().toLowerCase();
     if (!q) return vendors;
@@ -110,13 +128,18 @@ export function AssignmentFormDialog({
       toast.error("Add a service title");
       return;
     }
+    // Dates win over any manual quantity — keep them the single source.
+    const payload: AssignmentFormInput = {
+      ...form,
+      quantity: derivedNights ?? form.quantity,
+    };
     startTransition(async () => {
       try {
         if (mode === "edit" && assignment?.id) {
-          await updateVendorAssignmentAction(assignment.id, form);
+          await updateVendorAssignmentAction(assignment.id, payload);
           toast.success("Assignment updated");
         } else {
-          await createVendorAssignmentAction(form);
+          await createVendorAssignmentAction(payload);
           toast.success("Vendor assigned");
         }
         setOpen(false);
@@ -290,39 +313,41 @@ export function AssignmentFormDialog({
             />
           </div>
 
+          {/* Quantity — auto-derived as nights whenever both dates are set,
+              so it never has to be entered twice. */}
           <div className="space-y-1.5">
-            <Label htmlFor="a-qty">Qty / nights</Label>
-            <Input
-              id="a-qty"
-              type="number"
-              min={0}
-              value={form.quantity ?? ""}
-              onChange={(e) =>
-                update(
-                  "quantity",
-                  e.target.value === "" ? null : Number(e.target.value)
-                )
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="a-unit">Unit cost (₹)</Label>
-            <Input
-              id="a-unit"
-              type="number"
-              min={0}
-              value={form.unitCost ?? ""}
-              onChange={(e) =>
-                update(
-                  "unitCost",
-                  e.target.value === "" ? null : Number(e.target.value)
-                )
-              }
-            />
+            <Label htmlFor="a-qty">{isHotelLike ? "Nights" : "Quantity"}</Label>
+            {derivedNights !== null ? (
+              <div className="flex h-11 items-center gap-2 rounded-2xl border border-line bg-ivory px-4 text-sm">
+                <span className="font-medium text-navy tabular-nums">
+                  {derivedNights}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {isHotelLike
+                    ? `night${derivedNights === 1 ? "" : "s"}`
+                    : `day${derivedNights === 1 ? "" : "s"}`}{" "}
+                  · auto from dates
+                </span>
+              </div>
+            ) : (
+              <Input
+                id="a-qty"
+                type="number"
+                min={0}
+                value={form.quantity ?? ""}
+                onChange={(e) =>
+                  update(
+                    "quantity",
+                    e.target.value === "" ? null : Number(e.target.value)
+                  )
+                }
+                placeholder={isHotelLike ? "Set the dates above" : "e.g. 2"}
+              />
+            )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="a-total">Total cost (₹)</Label>
+            <Label htmlFor="a-total">Cost (₹)</Label>
             <Input
               id="a-total"
               type="number"
@@ -337,6 +362,7 @@ export function AssignmentFormDialog({
               placeholder="What you owe the vendor"
             />
           </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="a-sell">Selling price (₹)</Label>
             <Input
@@ -350,8 +376,36 @@ export function AssignmentFormDialog({
                   e.target.value === "" ? null : Number(e.target.value)
                 )
               }
-              placeholder="What client pays for this line"
+              placeholder="What the client pays"
             />
+          </div>
+
+          {/* Live margin — derived, never entered. */}
+          <div className="space-y-1.5">
+            <Label>Margin</Label>
+            <div
+              className={cn(
+                "flex h-11 items-center gap-2 rounded-2xl border px-4 text-sm",
+                margin === null
+                  ? "border-line bg-ivory text-muted-foreground"
+                  : margin.amount >= 0
+                    ? "border-emerald-200 bg-emerald-50/60 text-emerald-800"
+                    : "border-red-200 bg-red-50/60 text-red-700"
+              )}
+            >
+              {margin === null ? (
+                <span className="text-xs">Enter cost &amp; selling price</span>
+              ) : (
+                <>
+                  <span className="font-medium tabular-nums">
+                    {formatINR(margin.amount)}
+                  </span>
+                  <span className="text-xs opacity-80">
+                    {margin.pct}% margin
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="sm:col-span-2 space-y-1.5">

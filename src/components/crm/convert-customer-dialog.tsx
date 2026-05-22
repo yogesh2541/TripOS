@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { convertLeadToCustomerAction } from "@/server/actions/customers";
 
-export function ConvertCustomerDialog({ leadId }: { leadId: string }) {
+export function ConvertCustomerDialog({ contactId }: { contactId: string }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [dietary, setDietary] = useState("");
@@ -30,7 +30,7 @@ export function ConvertCustomerDialog({ leadId }: { leadId: string }) {
     startTransition(async () => {
       try {
         await convertLeadToCustomerAction({
-          leadId,
+          contactId,
           preferences: {
             dietary: dietary || null,
             hotels: hotels || null,

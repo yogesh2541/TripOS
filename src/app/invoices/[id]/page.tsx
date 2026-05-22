@@ -93,7 +93,7 @@ export default async function InvoiceDetailPage({
           invoiceId={invoice.id}
           status={invoice.status}
           previewedNumber={previewedNumber}
-          recipientPhone={invoice.booking?.trip?.lead?.phone ?? null}
+          recipientPhone={invoice.booking?.trip?.contact?.phone ?? null}
         />
       </header>
 

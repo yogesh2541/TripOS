@@ -21,7 +21,7 @@ export async function recomputeTripOpsStatus(
 
   const trip = await db.trip.findUnique({
     where: { id: tripId },
-    select: { status: true, leadId: true },
+    select: { status: true, contactId: true },
   });
   if (!trip) return null;
 
@@ -67,7 +67,7 @@ export async function recomputeTripOpsStatus(
 
   await logActivity({
     tripId,
-    leadId: trip.leadId,
+    contactId: trip.contactId,
     type: next === "READY_TO_TRAVEL" ? "TRIP_READY" : "STATUS_CHANGED",
     title:
       next === "READY_TO_TRAVEL"

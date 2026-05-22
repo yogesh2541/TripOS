@@ -17,10 +17,10 @@ export type CustomerPreferences = {
 };
 
 export function CustomerPreferencesPanel({
-  customerId,
+  contactId,
   initial,
 }: {
-  customerId: string;
+  contactId: string;
   initial: CustomerPreferences;
 }) {
   const [editing, setEditing] = useState(false);
@@ -31,7 +31,7 @@ export function CustomerPreferencesPanel({
     startTransition(async () => {
       try {
         await updateCustomerPreferencesAction({
-          customerId,
+          contactId,
           preferences: prefs,
         });
         toast.success("Preferences saved");

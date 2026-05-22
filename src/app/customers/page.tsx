@@ -15,19 +15,16 @@ export const dynamic = "force-dynamic";
 export default async function CustomersPage() {
   const { agencyId } = await requireAgency();
 
-  const customers = await prisma.customer.findMany({
-    where: { lead: { agencyId, deletedAt: null }, deletedAt: null },
+  // A "customer" is simply a contact who has converted (has a first booking).
+  const customers = await prisma.contact.findMany({
+    where: { agencyId, deletedAt: null, convertedAt: { not: null } },
     include: {
-      lead: {
+      trips: {
+        where: { deletedAt: null },
         include: {
-          trips: {
-            where: { deletedAt: null },
-            include: {
-              bookings: {
-                where: { status: { not: "CANCELLED" } },
-                select: { paidAmount: true, totalAmount: true },
-              },
-            },
+          bookings: {
+            where: { status: { not: "CANCELLED" } },
+            select: { paidAmount: true, totalAmount: true },
           },
         },
       },
@@ -36,14 +33,12 @@ export default async function CustomersPage() {
   });
 
   const enriched = customers.map((c) => {
-    const lifetimePaid = c.lead.trips.reduce(
-      (sum, t) =>
-        sum + t.bookings.reduce((s, b) => s + (b.paidAmount ?? 0), 0),
+    const lifetimePaid = c.trips.reduce(
+      (sum, t) => sum + t.bookings.reduce((s, b) => s + (b.paidAmount ?? 0), 0),
       0
     );
-    const lifetimeBooked = c.lead.trips.reduce(
-      (sum, t) =>
-        sum + t.bookings.reduce((s, b) => s + (b.totalAmount ?? 0), 0),
+    const lifetimeBooked = c.trips.reduce(
+      (sum, t) => sum + t.bookings.reduce((s, b) => s + (b.totalAmount ?? 0), 0),
       0
     );
     return { ...c, lifetimePaid, lifetimeBooked };
@@ -51,8 +46,8 @@ export default async function CustomersPage() {
 
   const waStats = await getWhatsappStatsForEntities({
     agencyId,
-    scope: "leadId",
-    ids: enriched.map((c) => c.lead.id),
+    scope: "contactId",
+    ids: enriched.map((c) => c.id),
   });
 
   return (
@@ -66,7 +61,7 @@ export default async function CustomersPage() {
             Customers
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Leads who said yes — your roster of repeat clients.
+            Contacts who've booked — your roster of repeat clients.
           </p>
         </div>
       </header>
@@ -74,17 +69,17 @@ export default async function CustomersPage() {
       {enriched.length === 0 ? (
         <EmptyState
           icon={<Heart className="h-5 w-5" />}
-          title="Customers appear when leads say yes"
-          body="Once a lead is marked Won and converted, they show here with lifetime value, contact details and trip history."
+          title="Customers appear when contacts say yes"
+          body="Once a contact is converted, they show here with lifetime value, contact details and trip history."
           action={
-            <Link href="/leads">
+            <Link href="/contacts">
               <Button variant="default">
                 <Sparkles className="h-4 w-4" />
                 Open pipeline
               </Button>
             </Link>
           }
-          hint="Tip: drag a lead into the Won column on the kanban"
+          hint="Tip: convert a contact from their profile or the kanban"
           variant="card"
         />
       ) : (
@@ -96,10 +91,10 @@ export default async function CustomersPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-display text-2xl text-navy">
-                        {c.lead.name}
+                        {c.name}
                       </p>
                       {(() => {
-                        const w = waStats.get(c.lead.id);
+                        const w = waStats.get(c.id);
                         return w ? (
                           <InlineWhatsappBadge
                             count={w.count}
@@ -109,32 +104,28 @@ export default async function CustomersPage() {
                         ) : null;
                       })()}
                     </div>
-                    <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                      Since {formatDate(c.convertedAt)}
-                    </p>
+                    {c.convertedAt && (
+                      <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                        Since {formatDate(c.convertedAt)}
+                      </p>
+                    )}
                   </div>
                   <ContactStrip
-                    leadId={c.lead.id}
-                    leadName={c.lead.name}
-                    phone={c.lead.phone}
-                    email={c.lead.email}
+                    contactId={c.id}
+                    leadName={c.name}
+                    phone={c.phone}
+                    email={c.email}
                   />
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <Stat label="Trips" value={String(c.lead.trips.length)} />
-                  <Stat
-                    label="Booked"
-                    value={formatINR(c.lifetimeBooked)}
-                  />
-                  <Stat
-                    label="Paid"
-                    value={formatINR(c.lifetimePaid)}
-                  />
+                  <Stat label="Trips" value={String(c.trips.length)} />
+                  <Stat label="Booked" value={formatINR(c.lifetimeBooked)} />
+                  <Stat label="Paid" value={formatINR(c.lifetimePaid)} />
                 </div>
 
                 <Link
-                  href={`/leads/${c.lead.id}`}
+                  href={`/contacts/${c.id}`}
                   className="text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-navy transition-colors inline-flex items-center gap-1.5 self-start"
                 >
                   Open profile

@@ -21,7 +21,7 @@ const tripSchema = z.object({
     .default("Boutique"),
   interests: z.array(z.string()).default([]),
   notes: z.string().max(1000).optional().nullable(),
-  leadId: z.string().optional().nullable(),
+  contactId: z.string().optional().nullable(),
 });
 
 export type CreateTripInput = z.infer<typeof tripSchema>;
@@ -30,36 +30,29 @@ export async function createTripAction(input: CreateTripInput) {
   const data = tripSchema.parse(input);
   const user = await assertCan("trip:create");
 
-  // Standalone trips still get a Lead so every trip is CRM-trackable.
-  let leadId = data.leadId ?? null;
-  if (!leadId) {
-    const startDate = data.startDate ? new Date(data.startDate) : null;
-    const endDate = startDate
-      ? new Date(startDate.getTime() + data.days * 24 * 60 * 60 * 1000)
-      : null;
-    const directLead = await prisma.lead.create({
-      data: {
+  // A trip can stand alone — no contact required. It stays fully tracked
+  // via its own Trip row + activity timeline, and can be linked to a
+  // contact at any time from the trip workspace. We no longer mint a
+  // placeholder "Direct —" contact, which only cluttered the pipeline.
+  // Any supplied contactId is verified to belong to this agency.
+  let contactId: string | null = null;
+  if (data.contactId) {
+    const contact = await prisma.contact.findFirst({
+      where: {
+        id: data.contactId,
         agencyId: user.activeAgencyId,
-        ownerId: user.id,
-        name: `Direct — ${data.destination.trim()}`,
-        source: "MANUAL",
-        status: "REQUIREMENT_UNDERSTOOD",
-        destination: data.destination.trim(),
-        travelStartDate: startDate,
-        travelEndDate: endDate,
-        adults: data.travelers,
-        budget: data.budget ?? null,
-        notes: data.notes ?? null,
+        deletedAt: null,
       },
+      select: { id: true },
     });
-    leadId = directLead.id;
+    contactId = contact?.id ?? null;
   }
 
   const trip = await prisma.trip.create({
     data: {
       agencyId: user.activeAgencyId,
       ownerId: user.id,
-      leadId,
+      contactId,
       destination: data.destination.trim(),
       days: data.days,
       travelers: data.travelers,
@@ -74,10 +67,12 @@ export async function createTripAction(input: CreateTripInput) {
   });
 
   await logActivity({
-    leadId: trip.leadId!,
+    // tripId always; contactId only when the trip was started from a contact.
+    contactId: trip.contactId,
+    tripId: trip.id,
+    actorId: user.id,
     type: "TRIP_CREATED",
     title: `Trip created — ${trip.destination}`,
-    metadata: { tripId: trip.id },
   });
 
   try {
@@ -104,7 +99,7 @@ export async function createTripAction(input: CreateTripInput) {
   }
 
   revalidatePath("/");
-  if (trip.leadId) revalidatePath(`/leads/${trip.leadId}`);
+  if (trip.contactId) revalidatePath(`/contacts/${trip.contactId}`);
   redirect(`/trips/${trip.id}`);
 }
 
@@ -164,12 +159,91 @@ export async function assignTripOwnerAction(input: {
   return { ok: true as const };
 }
 
+/**
+ * Link a trip to a CRM contact (contact) — or move it from one contact to
+ * another. Both the trip and the contact must belong to the caller's agency.
+ * Issued invoices freeze their own recipient snapshot, so back-linking
+ * never mutates historical documents.
+ */
+export async function linkTripToLeadAction(input: {
+  tripId: string;
+  contactId: string;
+}) {
+  const { agencyId, user } = await requireAgency();
+  await assertCan("trip:update");
+
+  const [trip, contact] = await Promise.all([
+    prisma.trip.findFirst({
+      where: { id: input.tripId, agencyId, deletedAt: null },
+      select: { id: true, contactId: true, destination: true },
+    }),
+    prisma.contact.findFirst({
+      where: { id: input.contactId, agencyId, deletedAt: null },
+      select: { id: true, name: true },
+    }),
+  ]);
+  if (!trip) return { ok: false as const, error: "Trip not found." };
+  if (!contact) return { ok: false as const, error: "Contact not found." };
+  if (trip.contactId === contact.id) return { ok: true as const };
+
+  const previousLeadId = trip.contactId;
+  await prisma.trip.update({
+    where: { id: trip.id },
+    data: { contactId: contact.id },
+  });
+
+  await logActivity({
+    contactId: contact.id,
+    tripId: trip.id,
+    actorId: user.id,
+    type: "CUSTOM",
+    title: previousLeadId
+      ? "Trip re-linked to this contact"
+      : "Trip linked to this contact",
+    body: trip.destination,
+  });
+
+  revalidatePath(`/trips/${trip.id}`);
+  revalidatePath(`/contacts/${contact.id}`);
+  if (previousLeadId) revalidatePath(`/contacts/${previousLeadId}`);
+  return { ok: true as const };
+}
+
+/** Detach a trip from its contact, leaving it standalone. */
+export async function unlinkTripFromLeadAction(tripId: string) {
+  const { agencyId, user } = await requireAgency();
+  await assertCan("trip:update");
+
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, agencyId, deletedAt: null },
+    select: { id: true, contactId: true },
+  });
+  if (!trip) return { ok: false as const, error: "Trip not found." };
+  if (!trip.contactId) return { ok: true as const };
+
+  await prisma.trip.update({
+    where: { id: trip.id },
+    data: { contactId: null },
+  });
+
+  await logActivity({
+    contactId: trip.contactId,
+    actorId: user.id,
+    type: "CUSTOM",
+    title: "Trip unlinked from this contact",
+  });
+
+  revalidatePath(`/trips/${trip.id}`);
+  revalidatePath(`/contacts/${trip.contactId}`);
+  return { ok: true as const };
+}
+
 export async function markTripStartedAction(tripId: string) {
   const { agencyId } = await requireAgency();
   await assertCan("trip:update");
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, agencyId },
-    select: { id: true, leadId: true, status: true },
+    select: { id: true, contactId: true, status: true },
   });
   if (!trip) throw new Error("Trip not found");
   if (trip.status === "IN_PROGRESS") return { ok: true as const };
@@ -181,7 +255,7 @@ export async function markTripStartedAction(tripId: string) {
 
   await logActivity({
     tripId,
-    leadId: trip.leadId,
+    contactId: trip.contactId,
     type: "TRIP_STARTED",
     title: "Trip started",
     metadata: { from: trip.status, to: "IN_PROGRESS" },
@@ -197,7 +271,7 @@ export async function markTripCompletedAction(tripId: string) {
   await assertCan("trip:update");
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, agencyId },
-    select: { id: true, leadId: true, status: true },
+    select: { id: true, contactId: true, status: true },
   });
   if (!trip) throw new Error("Trip not found");
   if (trip.status === "COMPLETED") return { ok: true as const };
@@ -209,7 +283,7 @@ export async function markTripCompletedAction(tripId: string) {
 
   await logActivity({
     tripId,
-    leadId: trip.leadId,
+    contactId: trip.contactId,
     type: "TRIP_COMPLETED",
     title: "Trip completed",
     metadata: { from: trip.status, to: "COMPLETED" },

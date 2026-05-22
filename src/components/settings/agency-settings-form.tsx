@@ -376,7 +376,7 @@ export function AgencySettingsForm({
           </Field>
           <Field
             label="Default place of supply"
-            hint="Used when the recipient lead has no billing state set."
+            hint="Used when the recipient contact has no billing state set."
             className="sm:col-span-2"
           >
             <Select

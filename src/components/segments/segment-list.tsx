@@ -23,10 +23,16 @@ import { formatDate } from "@/lib/utils";
 type Props = {
   tripId: string;
   tripDays: number;
+  tripStartDate?: string | null;
   segments: TravelSegment[];
 };
 
-export function SegmentList({ tripId, tripDays, segments }: Props) {
+export function SegmentList({
+  tripId,
+  tripDays,
+  tripStartDate = null,
+  segments,
+}: Props) {
   const flights = segments.filter((s) => s.type === "FLIGHT");
   const trains = segments.filter((s) => s.type === "TRAIN");
 
@@ -49,6 +55,7 @@ export function SegmentList({ tripId, tripDays, segments }: Props) {
           <SegmentFormDialog
             tripId={tripId}
             tripDays={tripDays}
+            tripStartDate={tripStartDate}
             defaultType="FLIGHT"
             trigger={
               <Button size="sm" variant="outline">
@@ -60,6 +67,7 @@ export function SegmentList({ tripId, tripDays, segments }: Props) {
           <SegmentFormDialog
             tripId={tripId}
             tripDays={tripDays}
+            tripStartDate={tripStartDate}
             defaultType="TRAIN"
             trigger={
               <Button size="sm">
@@ -90,6 +98,7 @@ export function SegmentList({ tripId, tripDays, segments }: Props) {
                   segment={s}
                   tripId={tripId}
                   tripDays={tripDays}
+                  tripStartDate={tripStartDate}
                 />
               ))}
             </Section>
@@ -102,6 +111,7 @@ export function SegmentList({ tripId, tripDays, segments }: Props) {
                   segment={s}
                   tripId={tripId}
                   tripDays={tripDays}
+                  tripStartDate={tripStartDate}
                 />
               ))}
             </Section>
@@ -136,10 +146,12 @@ function SegmentRow({
   segment,
   tripId,
   tripDays,
+  tripStartDate,
 }: {
   segment: TravelSegment;
   tripId: string;
   tripDays: number;
+  tripStartDate?: string | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const isFlight = segment.type === "FLIGHT";
@@ -217,6 +229,7 @@ function SegmentRow({
           <SegmentFormDialog
             tripId={tripId}
             tripDays={tripDays}
+            tripStartDate={tripStartDate}
             segment={segment}
             trigger={
               <button

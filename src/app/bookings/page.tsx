@@ -61,7 +61,7 @@ export default async function BookingsPage({
           days: true,
           travelers: true,
           startDate: true,
-          lead: { select: { id: true, name: true } },
+          contact: { select: { id: true, name: true } },
         },
       },
       quote: { select: { version: true } },
@@ -96,7 +96,7 @@ export default async function BookingsPage({
     id: b.id,
     tripId: b.trip.id,
     destination: b.trip.destination,
-    leadName: b.trip.lead?.name ?? null,
+    leadName: b.trip.contact?.name ?? null,
     quoteVersion: b.quote.version,
     status: b.status,
     totalAmount: b.totalAmount,
@@ -211,7 +211,7 @@ export default async function BookingsPage({
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {b.trip.days} days · {b.trip.travelers} travelers
-                      {b.trip.lead && ` · ${b.trip.lead.name}`}
+                      {b.trip.contact && ` · ${b.trip.contact.name}`}
                     </p>
                   </div>
 

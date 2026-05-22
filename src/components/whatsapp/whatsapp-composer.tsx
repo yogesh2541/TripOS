@@ -32,7 +32,7 @@ import { extractTemplateVariables, interpolateTemplate } from "@/lib/whatsapp/te
 import { formatWhatsappPhoneForDisplay, waMeLink } from "@/lib/whatsapp/phone";
 
 type ComposerLink = {
-  leadId?: string | null;
+  contactId?: string | null;
   customerId?: string | null;
   tripId?: string | null;
   invoiceId?: string | null;
@@ -135,7 +135,7 @@ export function WhatsappComposer({
       const res = await sendWhatsappTextAction({
         toPhone: phone,
         message: renderedBody,
-        leadId: link?.leadId ?? null,
+        contactId: link?.contactId ?? null,
         customerId: link?.customerId ?? null,
         tripId: link?.tripId ?? null,
         invoiceId: link?.invoiceId ?? null,

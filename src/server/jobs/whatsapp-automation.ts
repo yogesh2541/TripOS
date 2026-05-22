@@ -14,7 +14,7 @@
 import {
   type Booking,
   type Invoice,
-  type Lead,
+  type Contact,
   type Quote,
   type Trip,
   type WhatsappAutomationRule,
@@ -55,7 +55,7 @@ function dayWindow(daysFromNow: number, padHours = 12) {
 async function recentlyDispatched(args: {
   agencyId: string;
   automationRuleId: string;
-  entityField: "leadId" | "tripId" | "invoiceId" | "bookingId";
+  entityField: "contactId" | "tripId" | "invoiceId" | "bookingId";
   entityId: string;
   withinHours?: number;
 }): Promise<boolean> {
@@ -91,19 +91,19 @@ async function runFollowUpRule(rule: WhatsappAutomationRule): Promise<RuleResult
       updatedAt: { gte: since, lte: until },
       trip: { agencyId: rule.agencyId },
     },
-    include: { trip: { include: { lead: true } } },
+    include: { trip: { include: { contact: true } } },
   });
 
   let dispatched = 0;
   let failed = 0;
   for (const q of quotes) {
-    const lead = q.trip.lead;
-    if (!lead?.phone) continue;
-    if (lead.status !== "QUOTED" && lead.status !== "FOLLOW_UP") continue;
+    const contact = q.trip.contact;
+    if (!contact?.phone) continue;
+    if (contact.status !== "QUOTED" && contact.status !== "FOLLOW_UP") continue;
 
     const reply = await prisma.whatsappMessage.findFirst({
       where: {
-        leadId: lead.id,
+        contactId: contact.id,
         direction: "INBOUND",
         createdAt: { gte: q.updatedAt },
       },
@@ -115,8 +115,8 @@ async function runFollowUpRule(rule: WhatsappAutomationRule): Promise<RuleResult
       await recentlyDispatched({
         agencyId: rule.agencyId,
         automationRuleId: rule.id,
-        entityField: "leadId",
-        entityId: lead.id,
+        entityField: "contactId",
+        entityId: contact.id,
         withinHours: days * 24 - 12,
       })
     )
@@ -125,7 +125,7 @@ async function runFollowUpRule(rule: WhatsappAutomationRule): Promise<RuleResult
     try {
       const res = await sendFollowUp({
         agencyId: rule.agencyId,
-        leadId: lead.id,
+        contactId: contact.id,
         stage,
         automationRuleId: rule.id,
       });
@@ -252,7 +252,7 @@ async function runTripReminderRule(rule: WhatsappAutomationRule): Promise<RuleRe
     where: {
       agencyId: rule.agencyId,
       startDate: { gte: win.start, lte: win.end },
-      lead: { phone: { not: null } },
+      contact: { phone: { not: null } },
       ...(stage === "THANKS" ? { status: { in: ["COMPLETED", "IN_PROGRESS"] } } : {}),
     },
     select: { id: true },

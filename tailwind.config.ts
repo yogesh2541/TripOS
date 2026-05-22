@@ -40,9 +40,11 @@ const config: Config = {
         ivory: "#F8F6F2",
         ink: "#1A1A1A",
         line: "#E8E4DB",
+        // Darkened from #6B6B6B → #565656 so small / letter-tracked labels
+        // clear WCAG AA on both ivory and white with real headroom.
         muted: {
-          DEFAULT: "#6B6B6B",
-          foreground: "#6B6B6B",
+          DEFAULT: "#565656",
+          foreground: "#565656",
         },
       },
       fontFamily: {
@@ -53,9 +55,15 @@ const config: Config = {
         "2xl": "1rem",
         "3xl": "1.5rem",
       },
+      // Elevation scale, applied by role:
+      //   soft — resting cards / list rows
+      //   lift — modals, the hero / sticky surfaces
+      //   pop  — floating UI (dropdowns, selects, popovers): tighter +
+      //          crisper so it reads clearly *above* the page.
       boxShadow: {
         soft: "0 1px 2px rgba(11,28,44,0.04), 0 8px 24px rgba(11,28,44,0.06)",
         lift: "0 2px 6px rgba(11,28,44,0.05), 0 16px 40px rgba(11,28,44,0.08)",
+        pop: "0 2px 4px rgba(11,28,44,0.06), 0 10px 28px rgba(11,28,44,0.16)",
       },
       keyframes: {
         "fade-in": {

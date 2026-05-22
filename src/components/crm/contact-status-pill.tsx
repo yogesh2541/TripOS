@@ -13,14 +13,14 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { LEAD_STATUS_LABEL, LEAD_STATUS_ORDER, LEAD_STATUS_TONE } from "@/lib/crm";
-import { updateLeadStatusAction } from "@/server/actions/leads";
+import { updateLeadStatusAction } from "@/server/actions/contacts";
 
 export function LeadStatusPill({
-  leadId,
+  contactId,
   status,
   editable = true,
 }: {
-  leadId: string;
+  contactId: string;
   status: LeadStatus;
   editable?: boolean;
 }) {
@@ -38,7 +38,7 @@ export function LeadStatusPill({
     if (next === status) return;
     startTransition(async () => {
       try {
-        await updateLeadStatusAction(leadId, next);
+        await updateLeadStatusAction(contactId, next);
         toast.success(`Moved to ${LEAD_STATUS_LABEL[next]}`);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Couldn't update status";

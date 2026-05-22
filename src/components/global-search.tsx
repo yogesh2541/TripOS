@@ -26,18 +26,18 @@ import type {
 import { cn } from "@/lib/utils";
 
 const ICON_BY_TYPE: Record<SearchResultType, React.ReactNode> = {
-  lead: <Sparkles className="h-3.5 w-3.5" />,
+  contact: <Sparkles className="h-3.5 w-3.5" />,
   trip: <Compass className="h-3.5 w-3.5" />,
   vendor: <Building2 className="h-3.5 w-3.5" />,
   voucher: <FileText className="h-3.5 w-3.5" />,
 };
 const LABEL_BY_TYPE: Record<SearchResultType, string> = {
-  lead: "Leads",
+  contact: "Leads",
   trip: "Trips",
   vendor: "Vendors",
   voucher: "Vouchers",
 };
-const TYPE_ORDER: SearchResultType[] = ["lead", "trip", "vendor", "voucher"];
+const TYPE_ORDER: SearchResultType[] = ["contact", "trip", "vendor", "voucher"];
 
 export function GlobalSearch() {
   const router = useRouter();
@@ -138,7 +138,7 @@ export function GlobalSearch() {
       arr.push(r);
       groups.set(r.type, arr);
     }
-    // Re-flatten in TYPE_ORDER so keyboard nav goes lead → trip → vendor → voucher
+    // Re-flatten in TYPE_ORDER so keyboard nav goes contact → trip → vendor → voucher
     const flat: SearchResult[] = [];
     for (const t of TYPE_ORDER) {
       for (const r of groups.get(t) ?? []) flat.push(r);
@@ -207,7 +207,7 @@ export function GlobalSearch() {
             role="dialog"
             aria-modal="true"
             aria-label="Search"
-            className="relative w-full max-w-2xl rounded-2xl border border-line bg-white shadow-lift overflow-hidden"
+            className="relative w-full max-w-2xl rounded-2xl border border-line bg-white shadow-pop overflow-hidden"
           >
             <div className="flex items-center gap-3 border-b border-line/70 px-4 py-3">
               {isLoading ? (
@@ -361,7 +361,7 @@ function Hint() {
         Use ↑/↓ to navigate, Enter to open.
       </p>
       <div className="mt-5 grid gap-2 grid-cols-2 max-w-md mx-auto">
-        <Suggest icon={<Sparkles className="h-3.5 w-3.5" />} label="Lead names" />
+        <Suggest icon={<Sparkles className="h-3.5 w-3.5" />} label="Contact names" />
         <Suggest icon={<Compass className="h-3.5 w-3.5" />} label="Destinations" />
         <Suggest icon={<Building2 className="h-3.5 w-3.5" />} label="Vendor names" />
         <Suggest icon={<FileText className="h-3.5 w-3.5" />} label="Voucher numbers" />

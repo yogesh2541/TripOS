@@ -49,8 +49,7 @@ const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 600;
 
 type LinkContext = {
-  leadId?: string | null;
-  customerId?: string | null;
+  contactId?: string | null;
   tripId?: string | null;
   invoiceId?: string | null;
   bookingId?: string | null;
@@ -122,8 +121,7 @@ async function recordQueued(args: DispatchBase): Promise<string> {
     data: {
       agencyId: args.agencyId,
       sentByUserId: args.sentByUserId ?? null,
-      leadId: link.leadId ?? null,
-      customerId: link.customerId ?? null,
+      contactId: link.contactId ?? null,
       tripId: link.tripId ?? null,
       invoiceId: link.invoiceId ?? null,
       bookingId: link.bookingId ?? null,

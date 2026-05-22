@@ -62,7 +62,7 @@ const ICONS: Record<ActivityType, React.ReactNode> = {
 };
 
 export type ActivityFeedItem = Activity & {
-  lead: { id: string; name: string };
+  contact: { id: string; name: string };
 };
 
 export function ActivityFeed({ activities }: { activities: ActivityFeedItem[] }) {
@@ -79,7 +79,7 @@ export function ActivityFeed({ activities }: { activities: ActivityFeedItem[] })
       {activities.map((a) => (
         <li key={a.id}>
           <Link
-            href={`/leads/${a.lead.id}`}
+            href={`/contacts/${a.contact.id}`}
             className="group rounded-2xl border border-line bg-white p-4 flex items-start gap-3 hover:shadow-soft transition-all"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ivory border border-line text-sand-700 flex-shrink-0">
@@ -95,7 +95,7 @@ export function ActivityFeed({ activities }: { activities: ActivityFeedItem[] })
                 </span>
               </div>
               <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-sand-700">
-                {a.lead.name}
+                {a.contact.name}
               </p>
               {a.body && (
                 <p className="mt-2 text-sm text-ink/70 line-clamp-2">

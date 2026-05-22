@@ -17,7 +17,7 @@ import { MessageStatusPill } from "./message-status-pill";
 import { retryWhatsappMessageAction } from "@/server/actions/whatsapp";
 
 export type WhatsappMessageRowData = WhatsappMessage & {
-  lead?: { id: string; name: string } | null;
+  contact?: { id: string; name: string } | null;
   trip?: { id: string; destination: string } | null;
   invoice?: { id: string; invoiceNumber: string | null } | null;
 };
@@ -54,12 +54,12 @@ export function WhatsappMessageRow({ m }: { m: WhatsappMessageRowData }) {
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-baseline gap-2">
           <p className="font-medium text-navy text-sm truncate">
-            {m.lead ? (
+            {m.contact ? (
               <Link
-                href={`/leads/${m.lead.id}`}
+                href={`/contacts/${m.contact.id}`}
                 className="hover:underline underline-offset-2"
               >
-                {m.lead.name}
+                {m.contact.name}
               </Link>
             ) : (
               <span className="text-muted-foreground">Unknown contact</span>

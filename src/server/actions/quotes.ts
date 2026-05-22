@@ -144,7 +144,7 @@ export async function deleteQuoteAction(quoteId: string) {
 export async function markQuoteSentAction(quoteId: string) {
   const quote = await prisma.quote.findUnique({
     where: { id: quoteId },
-    include: { trip: { select: { id: true, leadId: true, status: true } } },
+    include: { trip: { select: { id: true, contactId: true, status: true } } },
   });
   if (!quote) throw new Error("Quote not found");
   if (quote.status !== "DRAFT") {
@@ -164,13 +164,13 @@ export async function markQuoteSentAction(quoteId: string) {
     }),
   ]);
 
-  if (quote.trip.leadId) {
-    await prisma.lead.update({
-      where: { id: quote.trip.leadId },
+  if (quote.trip.contactId) {
+    await prisma.contact.update({
+      where: { id: quote.trip.contactId },
       data: { status: "QUOTED" },
     });
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "QUOTE_SENT",
       title: `Quote v${quote.version} marked sent`,
       metadata: { quoteId, tripId: quote.tripId, version: quote.version },
@@ -179,14 +179,14 @@ export async function markQuoteSentAction(quoteId: string) {
 
   revalidatePath(`/trips/${quote.tripId}`);
   revalidatePath(`/trips/${quote.tripId}/preview`);
-  if (quote.trip.leadId) revalidatePath(`/leads/${quote.trip.leadId}`);
+  if (quote.trip.contactId) revalidatePath(`/contacts/${quote.trip.contactId}`);
   return { ok: true as const };
 }
 
 export async function rejectQuoteAction(quoteId: string) {
   const quote = await prisma.quote.findUnique({
     where: { id: quoteId },
-    include: { trip: { select: { id: true, leadId: true } } },
+    include: { trip: { select: { id: true, contactId: true } } },
   });
   if (!quote) throw new Error("Quote not found");
 
@@ -195,9 +195,9 @@ export async function rejectQuoteAction(quoteId: string) {
     data: { status: "REJECTED" },
   });
 
-  if (quote.trip.leadId) {
+  if (quote.trip.contactId) {
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "STATUS_CHANGED",
       title: `Quote v${quote.version} rejected`,
       metadata: { quoteId, version: quote.version },
@@ -211,7 +211,7 @@ export async function rejectQuoteAction(quoteId: string) {
 export async function acceptQuoteAction(quoteId: string) {
   const quote = await prisma.quote.findUnique({
     where: { id: quoteId },
-    include: { trip: { select: { id: true, leadId: true } } },
+    include: { trip: { select: { id: true, contactId: true } } },
   });
   if (!quote) throw new Error("Quote not found");
   if (quote.status === "ACCEPTED") {
@@ -246,19 +246,19 @@ export async function acceptQuoteAction(quoteId: string) {
     });
   });
 
-  if (quote.trip.leadId) {
-    await prisma.lead.update({
-      where: { id: quote.trip.leadId },
+  if (quote.trip.contactId) {
+    await prisma.contact.update({
+      where: { id: quote.trip.contactId },
       data: { status: "WON" },
     });
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "QUOTE_ACCEPTED",
       title: `Quote v${quote.version} accepted`,
       metadata: { quoteId, version: quote.version },
     });
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "BOOKING_CREATED",
       title: "Booking created",
       metadata: { quoteId, tripId: quote.tripId },
@@ -267,7 +267,7 @@ export async function acceptQuoteAction(quoteId: string) {
 
   revalidatePath(`/trips/${quote.tripId}`);
   revalidatePath(`/trips/${quote.tripId}/preview`);
-  if (quote.trip.leadId) revalidatePath(`/leads/${quote.trip.leadId}`);
+  if (quote.trip.contactId) revalidatePath(`/contacts/${quote.trip.contactId}`);
   return { ok: true as const };
 }
 
@@ -275,7 +275,7 @@ export async function revertQuoteToDraftAction(quoteId: string) {
   const quote = await prisma.quote.findUnique({
     where: { id: quoteId },
     include: {
-      trip: { select: { id: true, leadId: true } },
+      trip: { select: { id: true, contactId: true } },
       booking: { include: { payments: { take: 1 } } },
     },
   });
@@ -285,7 +285,7 @@ export async function revertQuoteToDraftAction(quoteId: string) {
   const previousStatus = quote.status;
 
   // Reverting an ACCEPTED quote tears down the auto-created booking
-  // and walks the trip/lead status back. Block if any payments exist —
+  // and walks the trip/contact status back. Block if any payments exist —
   // the agent should clear those first so we don't silently lose money trail.
   if (quote.status === "ACCEPTED") {
     if (quote.booking && quote.booking.payments.length > 0) {
@@ -317,16 +317,16 @@ export async function revertQuoteToDraftAction(quoteId: string) {
       }
     });
 
-    if (quote.trip.leadId) {
-      // Walk Lead status back to QUOTED only if it's currently WON.
+    if (quote.trip.contactId) {
+      // Walk Contact status back to QUOTED only if it's currently WON.
       // Don't touch LOST or earlier states.
-      const lead = await prisma.lead.findUnique({
-        where: { id: quote.trip.leadId },
+      const contact = await prisma.contact.findUnique({
+        where: { id: quote.trip.contactId },
         select: { status: true },
       });
-      if (lead?.status === "WON") {
-        await prisma.lead.update({
-          where: { id: quote.trip.leadId },
+      if (contact?.status === "WON") {
+        await prisma.contact.update({
+          where: { id: quote.trip.contactId },
           data: { status: "QUOTED" },
         });
       }
@@ -339,9 +339,9 @@ export async function revertQuoteToDraftAction(quoteId: string) {
     });
   }
 
-  if (quote.trip.leadId) {
+  if (quote.trip.contactId) {
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "STATUS_CHANGED",
       title: `Quote v${quote.version} reverted to draft`,
       metadata: { quoteId, from: previousStatus, to: "DRAFT" },
@@ -351,7 +351,7 @@ export async function revertQuoteToDraftAction(quoteId: string) {
   revalidatePath(`/trips/${quote.tripId}`);
   revalidatePath(`/trips/${quote.tripId}/preview`);
   revalidatePath("/bookings");
-  if (quote.trip.leadId) revalidatePath(`/leads/${quote.trip.leadId}`);
+  if (quote.trip.contactId) revalidatePath(`/contacts/${quote.trip.contactId}`);
   return { ok: true as const };
 }
 
@@ -370,7 +370,7 @@ export async function acceptQuoteByTokenAction(token: string) {
 
   const quote = await prisma.quote.findUnique({
     where: { shareToken: token },
-    include: { trip: { select: { id: true, leadId: true } } },
+    include: { trip: { select: { id: true, contactId: true } } },
   });
   if (!quote) return { ok: false as const, error: "Quote not found" };
 
@@ -413,19 +413,19 @@ export async function acceptQuoteByTokenAction(token: string) {
     });
   });
 
-  if (quote.trip.leadId) {
-    await prisma.lead.update({
-      where: { id: quote.trip.leadId },
+  if (quote.trip.contactId) {
+    await prisma.contact.update({
+      where: { id: quote.trip.contactId },
       data: { status: "WON" },
     });
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "QUOTE_ACCEPTED",
       title: `Customer accepted quote v${quote.version} (via share link)`,
       metadata: { quoteId: quote.id, version: quote.version, source: "public_share" },
     });
     await logActivity({
-      leadId: quote.trip.leadId,
+      contactId: quote.trip.contactId,
       type: "BOOKING_CREATED",
       title: "Booking created from public accept",
       metadata: { quoteId: quote.id, tripId: quote.tripId },
@@ -434,7 +434,7 @@ export async function acceptQuoteByTokenAction(token: string) {
 
   revalidatePath(`/share/${token}`);
   revalidatePath(`/trips/${quote.tripId}`);
-  if (quote.trip.leadId) revalidatePath(`/leads/${quote.trip.leadId}`);
+  if (quote.trip.contactId) revalidatePath(`/contacts/${quote.trip.contactId}`);
   return { ok: true as const };
 }
 

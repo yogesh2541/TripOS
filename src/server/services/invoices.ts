@@ -49,7 +49,7 @@ export async function createOrRefreshDraftInvoice(
     include: {
       trip: {
         include: {
-          lead: {
+          contact: {
             select: {
               id: true,
               name: true,
@@ -166,19 +166,19 @@ export async function createOrRefreshDraftInvoice(
     invoiceNotes: settings.invoiceNotes,
   };
 
-  const lead = booking.trip.lead;
+  const contact = booking.trip.contact;
   const recipientSnapshot = {
-    leadId: lead?.id ?? null,
-    name: lead?.billingName?.trim() || lead?.name || "Walk-in customer",
-    gstin: lead?.gstin ?? null,
-    email: lead?.email ?? null,
-    phone: lead?.phone ?? null,
+    contactId: contact?.id ?? null,
+    name: contact?.billingName?.trim() || contact?.name || "Walk-in customer",
+    gstin: contact?.gstin ?? null,
+    email: contact?.email ?? null,
+    phone: contact?.phone ?? null,
     address: {
-      line1: lead?.billingAddress ?? null,
-      city: lead?.billingCity ?? null,
-      state: lead?.billingState ?? placeOfSupplyState,
-      stateCode: lead?.billingStateCode ?? placeOfSupplyStateCode,
-      pincode: lead?.billingPincode ?? null,
+      line1: contact?.billingAddress ?? null,
+      city: contact?.billingCity ?? null,
+      state: contact?.billingState ?? placeOfSupplyState,
+      stateCode: contact?.billingStateCode ?? placeOfSupplyStateCode,
+      pincode: contact?.billingPincode ?? null,
     },
   };
 
@@ -457,7 +457,7 @@ export async function getInvoiceById(id: string) {
               destination: true,
               days: true,
               startDate: true,
-              lead: { select: { id: true, name: true, phone: true } },
+              contact: { select: { id: true, name: true, phone: true } },
             },
           },
         },

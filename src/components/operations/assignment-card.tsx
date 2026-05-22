@@ -239,7 +239,6 @@ export function AssignmentCard({
       ? assignment.endDate.toISOString().slice(0, 10)
       : null,
     quantity: assignment.quantity,
-    unitCost: assignment.unitCost,
     totalCost: assignment.totalCost,
     sellingPrice: assignment.sellingPrice,
     confirmationNumber: assignment.confirmationNumber ?? "",

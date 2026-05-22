@@ -15,7 +15,7 @@ export async function generateVoucherAction(assignmentId: string) {
     where: { id: assignmentId },
     include: {
       vendor: { select: { id: true, name: true } },
-      trip: { select: { id: true, leadId: true } },
+      trip: { select: { id: true, contactId: true } },
     },
   });
   if (!assignment) throw new Error("Assignment not found");
@@ -44,7 +44,7 @@ export async function generateVoucherAction(assignmentId: string) {
   await logActivity({
     tripId: assignment.trip.id,
     vendorId: assignment.vendor.id,
-    leadId: assignment.trip.leadId,
+    contactId: assignment.trip.contactId,
     type: "VOUCHER_GENERATED",
     title: `Voucher ${snapshot.voucherNumber} · ${assignment.vendor.name}`,
     metadata: { voucherId: voucher.id, assignmentId },
@@ -69,7 +69,7 @@ export async function markVoucherSentAction(
       assignment: {
         include: {
           vendor: { select: { id: true, name: true } },
-          trip: { select: { id: true, leadId: true } },
+          trip: { select: { id: true, contactId: true } },
         },
       },
     },
@@ -90,7 +90,7 @@ export async function markVoucherSentAction(
   await logActivity({
     tripId: voucher.assignment.trip.id,
     vendorId: voucher.assignment.vendor.id,
-    leadId: voucher.assignment.trip.leadId,
+    contactId: voucher.assignment.trip.contactId,
     type: "VOUCHER_SENT",
     title: `Sent voucher ${voucher.voucherNumber} · ${voucher.assignment.vendor.name}`,
     metadata: { voucherId: voucher.id },
@@ -122,7 +122,7 @@ export async function regenerateVoucherAction(voucherId: string) {
           id: true,
           tripId: true,
           vendorId: true,
-          trip: { select: { leadId: true } },
+          trip: { select: { contactId: true } },
         },
       },
     },
@@ -143,7 +143,7 @@ export async function regenerateVoucherAction(voucherId: string) {
   await logActivity({
     tripId: voucher.assignment.tripId,
     vendorId: voucher.assignment.vendorId,
-    leadId: voucher.assignment.trip.leadId,
+    contactId: voucher.assignment.trip.contactId,
     type: "VOUCHER_GENERATED",
     title: `Voucher ${voucher.voucherNumber} regenerated`,
     metadata: { voucherId: voucher.id },

@@ -14,13 +14,13 @@ function daysBetween(start: Date | null, end: Date | null) {
 export default async function NewTripPage({
   searchParams,
 }: {
-  searchParams: { leadId?: string };
+  searchParams: { contactId?: string };
 }) {
   let prefill = undefined;
 
-  if (searchParams.leadId) {
-    const lead = await prisma.lead.findFirst({
-      where: { id: searchParams.leadId, deletedAt: null },
+  if (searchParams.contactId) {
+    const contact = await prisma.contact.findFirst({
+      where: { id: searchParams.contactId, deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -32,18 +32,18 @@ export default async function NewTripPage({
         notes: true,
       },
     });
-    if (lead) {
+    if (contact) {
       prefill = {
-        leadId: lead.id,
-        leadName: lead.name,
-        destination: lead.destination,
-        startDate: lead.travelStartDate
-          ? lead.travelStartDate.toISOString().slice(0, 10)
+        contactId: contact.id,
+        leadName: contact.name,
+        destination: contact.destination,
+        startDate: contact.travelStartDate
+          ? contact.travelStartDate.toISOString().slice(0, 10)
           : null,
-        days: daysBetween(lead.travelStartDate, lead.travelEndDate),
-        travelers: lead.adults,
-        budget: lead.budget,
-        notes: lead.notes,
+        days: daysBetween(contact.travelStartDate, contact.travelEndDate),
+        travelers: contact.adults,
+        budget: contact.budget,
+        notes: contact.notes,
       };
     }
   }

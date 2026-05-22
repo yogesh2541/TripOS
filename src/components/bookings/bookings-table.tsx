@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table-filters";
 import { InlineWhatsappBadge } from "@/components/whatsapp/inline-whatsapp-badge";
 import {
+  BOOKING_STATUS_ACCENT,
   BOOKING_STATUS_LABEL,
   BOOKING_STATUS_ORDER,
   BOOKING_STATUS_TONE,
@@ -192,6 +193,7 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
         rowHref={(r) => `/trips/${r.tripId}`}
         gridClassName="grid-cols-[1.8fr_0.9fr_1fr_1fr_1fr_0.9fr_auto]"
         initialSort={{ key: "created", dir: "desc" }}
+        rowAccent={(r) => BOOKING_STATUS_ACCENT[r.status]}
         empty={
           <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
             No bookings match these filters.

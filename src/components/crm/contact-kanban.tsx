@@ -18,13 +18,13 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import type { LeadStatus } from "@prisma/client";
-import { LeadCard, type LeadCardData } from "@/components/crm/lead-card";
+import { LeadCard, type LeadCardData } from "@/components/crm/contact-card";
 import {
   LEAD_STATUS_COLUMN_DESC,
   LEAD_STATUS_LABEL,
   LEAD_STATUS_ORDER,
 } from "@/lib/crm";
-import { updateLeadStatusAction } from "@/server/actions/leads";
+import { updateLeadStatusAction } from "@/server/actions/contacts";
 import { cn } from "@/lib/utils";
 
 export type KanbanLead = LeadCardData & { status: LeadStatus };
@@ -53,13 +53,13 @@ export function LeadKanban({ leads }: { leads: KanbanLead[] }) {
     const overId = e.over?.id ? String(e.over.id) : null;
     if (!overId) return;
 
-    const lead = optimisticLeads.find((l) => l.id === id);
-    if (!lead) return;
+    const contact = optimisticLeads.find((l) => l.id === id);
+    if (!contact) return;
 
     const targetStatus = isStatusId(overId)
       ? overId
       : optimisticLeads.find((l) => l.id === overId)?.status;
-    if (!targetStatus || targetStatus === lead.status) return;
+    if (!targetStatus || targetStatus === contact.status) return;
 
     startTransition(async () => {
       applyOptimistic({ id, status: targetStatus });
@@ -98,7 +98,7 @@ export function LeadKanban({ leads }: { leads: KanbanLead[] }) {
         })}
       </div>
       <DragOverlay>
-        {activeLead && <LeadCard lead={activeLead} />}
+        {activeLead && <LeadCard contact={activeLead} />}
       </DragOverlay>
     </DndContext>
   );
@@ -144,8 +144,8 @@ function Column({
               Empty
             </div>
           )}
-          {items.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} />
+          {items.map((contact) => (
+            <LeadCard key={contact.id} contact={contact} />
           ))}
         </div>
       </SortableContext>

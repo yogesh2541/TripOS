@@ -12,10 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { addNoteAction } from "@/server/actions/activities";
 
 export function LeadTimeline({
-  leadId,
+  contactId,
   activities,
 }: {
-  leadId: string;
+  contactId: string;
   activities: ActivityWithActor[];
 }) {
   const [note, setNote] = useState("");
@@ -26,7 +26,7 @@ export function LeadTimeline({
     if (!body) return;
     startTransition(async () => {
       try {
-        await addNoteAction({ leadId, body });
+        await addNoteAction({ contactId, body });
         setNote("");
         toast.success("Note added");
       } catch (e) {
@@ -41,7 +41,7 @@ export function LeadTimeline({
       <div className="rounded-2xl border border-line bg-white p-4">
         <Textarea
           rows={2}
-          placeholder="Add a note about this lead…"
+          placeholder="Add a note about this contact…"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           className="border-0 bg-transparent shadow-none focus-visible:ring-0 px-2 py-1"
@@ -65,7 +65,7 @@ export function LeadTimeline({
       {activities.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-line bg-white/60 p-12 text-center">
           <p className="text-sm text-muted-foreground">
-            No activity yet. Add a note, log a call, or move the lead through
+            No activity yet. Add a note, log a call, or move the contact through
             the pipeline.
           </p>
         </div>

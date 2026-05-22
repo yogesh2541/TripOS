@@ -15,10 +15,10 @@ import {
 import { cn, formatDate } from "@/lib/utils";
 
 export function TaskList({
-  leadId,
+  contactId,
   tasks,
 }: {
-  leadId: string;
+  contactId: string;
   tasks: Task[];
 }) {
   const [title, setTitle] = useState("");
@@ -32,7 +32,7 @@ export function TaskList({
     if (!t) return;
     startTransition(async () => {
       try {
-        await createTaskAction({ leadId, title: t, dueAt });
+        await createTaskAction({ contactId, title: t, dueAt });
         setTitle("");
         toast.success("Task added");
       } catch (e) {

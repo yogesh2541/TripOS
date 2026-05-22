@@ -85,7 +85,7 @@ export async function buildVoucherSnapshot(
       vendor: true,
       trip: {
         include: {
-          lead: {
+          contact: {
             select: { name: true, phone: true, email: true },
           },
         },
@@ -99,9 +99,9 @@ export async function buildVoucherSnapshot(
     generatedAt: new Date().toISOString(),
     agency: AGENCY,
     traveler: {
-      leadName: a.trip.lead?.name ?? null,
-      phone: a.trip.lead?.phone ?? null,
-      email: a.trip.lead?.email ?? null,
+      leadName: a.trip.contact?.name ?? null,
+      phone: a.trip.contact?.phone ?? null,
+      email: a.trip.contact?.email ?? null,
       travelers: a.trip.travelers,
     },
     trip: {

@@ -28,7 +28,6 @@ export type AssignmentRow = {
   startDate: Date | null;
   endDate: Date | null;
   quantity: number | null;
-  unitCost: number | null;
   totalCost: number | null;
   sellingPrice: number | null;
   confirmationNumber: string | null;
@@ -235,7 +234,6 @@ export async function getTripOperations(
     startDate: a.startDate,
     endDate: a.endDate,
     quantity: a.quantity,
-    unitCost: a.unitCost,
     totalCost: a.totalCost,
     sellingPrice: a.sellingPrice,
     confirmationNumber: a.confirmationNumber,

@@ -50,7 +50,7 @@ export default async function CommunicationsPage({
       orderBy: { createdAt: "desc" },
       take: PAGE_SIZE,
       include: {
-        lead: { select: { id: true, name: true } },
+        contact: { select: { id: true, name: true } },
         trip: { select: { id: true, destination: true } },
         invoice: { select: { id: true, invoiceNumber: true } },
       },
@@ -154,7 +154,7 @@ export default async function CommunicationsPage({
         {items.length === 0 ? (
           <EmptyState
             title="No messages match"
-            body="Try clearing filters or sending your first WhatsApp message from a lead."
+            body="Try clearing filters or sending your first WhatsApp message from a contact."
           />
         ) : (
           <ul className="space-y-2.5">

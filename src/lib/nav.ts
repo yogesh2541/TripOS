@@ -4,6 +4,7 @@
 // the two never drift apart.
 
 import {
+  BarChart3,
   Building2,
   CalendarClock,
   Compass,
@@ -32,12 +33,15 @@ export type NavGroup = {
 export const NAV_GROUPS: NavGroup[] = [
   {
     label: null,
-    items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
+    items: [
+      { href: "/", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/reports", label: "Reports", icon: BarChart3 },
+    ],
   },
   {
     label: "Pipeline",
     items: [
-      { href: "/leads", label: "Leads", icon: Users },
+      { href: "/contacts", label: "Contacts", icon: Users },
       { href: "/customers", label: "Customers", icon: Heart },
       { href: "/trips", label: "Trips", icon: Compass },
       { href: "/bookings", label: "Bookings", icon: Wallet },

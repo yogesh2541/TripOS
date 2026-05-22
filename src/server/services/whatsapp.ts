@@ -1,6 +1,6 @@
 // High-level orchestration. Server actions and the automation runner call
 // these functions instead of touching lib/whatsapp/send directly — they
-// add domain context (which lead, which agency, which template) and write
+// add domain context (which contact, which agency, which template) and write
 // the matching Activity rows.
 //
 // Everything here is single-tenant for now (operates on the demo user),
@@ -27,7 +27,7 @@ import {
 import type { TemplateVariableDef } from "@/lib/whatsapp/templates";
 
 export type EntityLink = {
-  leadId?: string | null;
+  contactId?: string | null;
   customerId?: string | null;
   tripId?: string | null;
   invoiceId?: string | null;
@@ -42,10 +42,10 @@ async function logComms(args: {
   metadata?: Prisma.InputJsonValue;
 }) {
   const { link } = args;
-  if (!link.leadId && !link.tripId && !link.invoiceId) return;
+  if (!link.contactId && !link.tripId && !link.invoiceId) return;
   await prisma.activity.create({
     data: {
-      leadId: link.leadId ?? null,
+      contactId: link.contactId ?? null,
       tripId: link.tripId ?? null,
       invoiceId: link.invoiceId ?? null,
       type: args.type,
@@ -256,14 +256,14 @@ export async function shareProposalOnWhatsapp(args: {
     include: {
       trip: {
         include: {
-          lead: { select: { id: true, name: true, phone: true } },
+          contact: { select: { id: true, name: true, phone: true } },
         },
       },
     },
   });
   if (!quote) throw new Error("Quote not found");
-  if (!quote.trip.lead) throw new Error("Trip has no lead — can't resolve recipient");
-  if (!quote.trip.lead.phone) throw new Error("Lead has no phone — add one first");
+  if (!quote.trip.contact) throw new Error("Trip has no contact — can't resolve recipient");
+  if (!quote.trip.contact.phone) throw new Error("Contact has no phone — add one first");
 
   // Make sure we have a public share token
   let shareToken = quote.shareToken;
@@ -279,23 +279,23 @@ export async function shareProposalOnWhatsapp(args: {
     args.agencyId,
     "proposal",
     quote.id,
-    quote.trip.lead.phone,
+    quote.trip.contact.phone,
     new Date().toISOString().slice(0, 10),
   ]);
 
   const { result, rendered } = await sendTemplatedOrText({
     agencyId: args.agencyId,
     sentByUserId: args.sentByUserId ?? null,
-    toPhone: quote.trip.lead.phone,
+    toPhone: quote.trip.contact.phone,
     templateMetaName: "tc_proposal_share",
     values: {
-      name: firstName(quote.trip.lead.name),
+      name: firstName(quote.trip.contact.name),
       destination: quote.trip.destination,
       proposal_link: previewUrl,
       agency,
     },
     link: {
-      leadId: quote.trip.lead.id,
+      contactId: quote.trip.contact.id,
       tripId: quote.trip.id,
       bookingId: null,
     },
@@ -303,7 +303,7 @@ export async function shareProposalOnWhatsapp(args: {
   });
 
   await logComms({
-    link: { leadId: quote.trip.lead.id, tripId: quote.trip.id },
+    link: { contactId: quote.trip.contact.id, tripId: quote.trip.id },
     type: "QUOTE_SENT_WHATSAPP",
     title: `Quote v${quote.version} shared on WhatsApp`,
     body: rendered.slice(0, 500),
@@ -328,15 +328,15 @@ export async function shareInvoiceOnWhatsapp(args: {
     include: {
       booking: {
         include: {
-          trip: { include: { lead: { select: { id: true, name: true, phone: true } } } },
+          trip: { include: { contact: { select: { id: true, name: true, phone: true } } } },
         },
       },
     },
   });
   if (!invoice) throw new Error("Invoice not found");
-  const lead = invoice.booking.trip.lead;
-  if (!lead) throw new Error("Invoice booking has no lead — can't resolve recipient");
-  if (!lead.phone) throw new Error("Lead has no phone — add one first");
+  const contact = invoice.booking.trip.contact;
+  if (!contact) throw new Error("Invoice booking has no contact — can't resolve recipient");
+  if (!contact.phone) throw new Error("Contact has no phone — add one first");
 
   if (!invoice.shareToken) {
     const { randomBytes } = await import("crypto");
@@ -369,12 +369,12 @@ export async function shareInvoiceOnWhatsapp(args: {
     args.agencyId,
     "invoice",
     invoice.id,
-    lead.phone,
+    contact.phone,
     new Date().toISOString().slice(0, 10),
   ]);
 
   const linkCtx: EntityLink = {
-    leadId: lead.id,
+    contactId: contact.id,
     tripId: invoice.booking.trip.id,
     invoiceId: invoice.id,
     bookingId: invoice.bookingId,
@@ -384,10 +384,10 @@ export async function shareInvoiceOnWhatsapp(args: {
   const { result, rendered } = await sendTemplatedOrText({
     agencyId: args.agencyId,
     sentByUserId: args.sentByUserId ?? null,
-    toPhone: lead.phone,
+    toPhone: contact.phone,
     templateMetaName: "tc_invoice_share",
     values: {
-      name: firstName(lead.name),
+      name: firstName(contact.name),
       invoice_number: invoice.invoiceNumber ?? `DRAFT-${invoice.id.slice(-6)}`,
       amount,
       due_status: balanceDue > 0 ? `Outstanding balance.` : "Fully paid — receipt attached.",
@@ -405,7 +405,7 @@ export async function shareInvoiceOnWhatsapp(args: {
     await sendDocumentMessage({
       agencyId: args.agencyId,
       sentByUserId: args.sentByUserId ?? null,
-      toPhone: lead.phone,
+      toPhone: contact.phone,
       documentUrl: resolvedDocumentUrl,
       filename: `${invoice.invoiceNumber ?? invoice.id}.pdf`,
       caption: `Invoice ${invoice.invoiceNumber ?? ""}`,
@@ -415,7 +415,7 @@ export async function shareInvoiceOnWhatsapp(args: {
         args.agencyId,
         "invoice-pdf",
         invoice.id,
-        lead.phone,
+        contact.phone,
         new Date().toISOString().slice(0, 10),
       ]),
       metadata: { invoiceId: invoice.id },
@@ -452,14 +452,14 @@ export async function sendPaymentReminder(args: {
       booking: {
         include: {
           payments: true,
-          trip: { include: { lead: true } },
+          trip: { include: { contact: true } },
         },
       },
     },
   });
   if (!invoice) throw new Error("Invoice not found");
-  const lead = invoice.booking.trip.lead;
-  if (!lead?.phone) throw new Error("Lead has no phone for reminder");
+  const contact = invoice.booking.trip.contact;
+  if (!contact?.phone) throw new Error("Contact has no phone for reminder");
 
   const paid = invoice.booking.payments.reduce((s, p) => s + p.amount, 0);
   const balance = invoice.grandTotal - paid;
@@ -489,7 +489,7 @@ export async function sendPaymentReminder(args: {
   ]);
 
   const linkCtx: EntityLink = {
-    leadId: lead.id,
+    contactId: contact.id,
     tripId: invoice.booking.trip.id,
     invoiceId: invoice.id,
     bookingId: invoice.bookingId,
@@ -498,10 +498,10 @@ export async function sendPaymentReminder(args: {
   const { result, rendered } = await sendTemplatedOrText({
     agencyId: args.agencyId,
     sentByUserId: args.sentByUserId ?? null,
-    toPhone: lead.phone,
+    toPhone: contact.phone,
     templateMetaName: templateMap[args.stage],
     values: {
-      name: firstName(lead.name),
+      name: firstName(contact.name),
       amount: amountStr,
       due_date: dueDate,
       invoice_link: invoiceLink,
@@ -525,7 +525,7 @@ export async function sendPaymentReminder(args: {
 export async function sendFollowUp(args: {
   agencyId: string;
   sentByUserId?: string | null;
-  leadId: string;
+  contactId: string;
   stage: "T_24H" | "T_3D" | "T_7D";
   automationRuleId?: string | null;
 }): Promise<DispatchResult> {
@@ -535,35 +535,35 @@ export async function sendFollowUp(args: {
     T_7D: "tc_followup_7d",
   } as const;
 
-  const lead = await prisma.lead.findUnique({
-    where: { id: args.leadId },
+  const contact = await prisma.contact.findUnique({
+    where: { id: args.contactId },
     include: { trips: { take: 1, orderBy: { createdAt: "desc" } } },
   });
-  if (!lead) throw new Error("Lead not found");
-  if (!lead.phone) throw new Error("Lead has no phone");
+  if (!contact) throw new Error("Contact not found");
+  if (!contact.phone) throw new Error("Contact has no phone");
 
   const agency = await getAgencyName(args.agencyId);
   const idem = buildIdempotencyKey([
     args.agencyId,
     "followup",
-    lead.id,
+    contact.id,
     args.stage,
     new Date().toISOString().slice(0, 10),
   ]);
 
   const linkCtx: EntityLink = {
-    leadId: lead.id,
-    tripId: lead.trips[0]?.id ?? null,
+    contactId: contact.id,
+    tripId: contact.trips[0]?.id ?? null,
   };
 
   const { result, rendered } = await sendTemplatedOrText({
     agencyId: args.agencyId,
     sentByUserId: args.sentByUserId ?? null,
-    toPhone: lead.phone,
+    toPhone: contact.phone,
     templateMetaName: templateMap[args.stage],
     values: {
-      name: firstName(lead.name),
-      destination: lead.destination ?? "your next trip",
+      name: firstName(contact.name),
+      destination: contact.destination ?? "your next trip",
       agency,
     },
     link: linkCtx,
@@ -598,11 +598,11 @@ export async function sendTripReminder(args: {
 
   const trip = await prisma.trip.findUnique({
     where: { id: args.tripId },
-    include: { lead: true },
+    include: { contact: true },
   });
   if (!trip) throw new Error("Trip not found");
-  const lead = trip.lead;
-  if (!lead?.phone) throw new Error("Trip lead has no phone");
+  const contact = trip.contact;
+  if (!contact?.phone) throw new Error("Trip contact has no phone");
 
   const agency = await getAgencyName(args.agencyId);
   const startDate = trip.startDate
@@ -618,17 +618,17 @@ export async function sendTripReminder(args: {
   ]);
 
   const linkCtx: EntityLink = {
-    leadId: lead.id,
+    contactId: contact.id,
     tripId: trip.id,
   };
 
   const { result, rendered } = await sendTemplatedOrText({
     agencyId: args.agencyId,
     sentByUserId: args.sentByUserId ?? null,
-    toPhone: lead.phone,
+    toPhone: contact.phone,
     templateMetaName: templateMap[args.stage],
     values: {
-      name: firstName(lead.name),
+      name: firstName(contact.name),
       destination: trip.destination,
       start_date: startDate,
       voucher_link: args.voucherLink ?? `${publicBase()}/trips/${trip.id}`,
@@ -663,15 +663,15 @@ export async function sendVoucherOnWhatsapp(args: {
       assignment: {
         include: {
           vendor: { select: { whatsapp: true, phone: true, name: true } },
-          trip: { include: { lead: true } },
+          trip: { include: { contact: true } },
         },
       },
     },
   });
   if (!voucher) throw new Error("Voucher not found");
   const trip = voucher.assignment.trip;
-  const lead = trip.lead;
-  if (!lead?.phone) throw new Error("Trip lead has no phone");
+  const contact = trip.contact;
+  if (!contact?.phone) throw new Error("Trip contact has no phone");
 
   const agency = await getAgencyName(args.agencyId);
   const link = `${publicBase()}/v/${voucher.shareToken}`;
@@ -679,18 +679,18 @@ export async function sendVoucherOnWhatsapp(args: {
     args.agencyId,
     "voucher",
     voucher.id,
-    lead.phone,
+    contact.phone,
     new Date().toISOString().slice(0, 10),
   ]);
-  const linkCtx: EntityLink = { leadId: lead.id, tripId: trip.id };
+  const linkCtx: EntityLink = { contactId: contact.id, tripId: trip.id };
 
   const { result, rendered } = await sendTemplatedOrText({
     agencyId: args.agencyId,
     sentByUserId: args.sentByUserId ?? null,
-    toPhone: lead.phone,
+    toPhone: contact.phone,
     templateMetaName: "tc_ops_voucher",
     values: {
-      name: firstName(lead.name),
+      name: firstName(contact.name),
       voucher_title: voucher.title,
       voucher_link: link,
       agency,
@@ -727,7 +727,7 @@ export async function sendVoucherOnWhatsapp(args: {
  */
 export async function getWhatsappStatsForEntities(args: {
   agencyId: string;
-  scope: "leadId" | "tripId" | "customerId" | "invoiceId" | "bookingId";
+  scope: "contactId" | "tripId" | "customerId" | "invoiceId" | "bookingId";
   ids: string[];
 }): Promise<
   Map<

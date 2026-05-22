@@ -5,7 +5,7 @@ import { PreviewRenderer } from "@/components/preview-renderer";
 import { AcceptQuoteButton } from "@/components/quotes/accept-quote-button";
 import { prisma } from "@/lib/prisma";
 import type { ItineraryContent } from "@/lib/ai";
-import type { LineItemCategory, PricingItem } from "@/types";
+import { buildProposalPricing, type LineItemCategory } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +37,10 @@ export default async function PublicQuotePage({
                   legalName: true,
                   tradeName: true,
                   logoUrl: true,
+                  phone: true,
+                  email: true,
+                  website: true,
+                  invoiceTerms: true,
                 },
               },
             },
@@ -54,24 +58,30 @@ export default async function PublicQuotePage({
   const agency = quote.trip.agency.settings;
   const agencyName = agency?.tradeName || agency?.legalName || "TripCraft";
 
-  const pricing = {
-    items: quote.items.map((it) => ({
-      id: it.id,
-      category: it.category as LineItemCategory,
-      label: it.label,
-      cost: it.cost,
-    })) as PricingItem[],
-    markupPct: quote.markupPct,
-    discountPct: quote.discountPct,
-    markupAmount: Math.round(quote.totalCost * (quote.markupPct / 100)),
-    discountAmount: Math.round(
-      quote.totalCost * (1 + quote.markupPct / 100) * (quote.discountPct / 100)
-    ),
-    totalCost: quote.totalCost,
-    sellingPrice: quote.sellingPrice,
-    profit: quote.profit,
-    version: quote.version,
-    status: quote.status,
+  // Customer-safe pricing — selling amounts only, no cost / markup / profit
+  // ever reaches the client.
+  const pricing =
+    quote.items.length > 0
+      ? buildProposalPricing({
+          items: quote.items.map((it) => ({
+            id: it.id,
+            category: it.category as LineItemCategory,
+            label: it.label,
+            cost: it.cost,
+          })),
+          markupPct: quote.markupPct,
+          discountPct: quote.discountPct,
+          travelers: quote.trip.travelers,
+        })
+      : null;
+
+  const proposalAgency = {
+    name: agencyName,
+    logoUrl: agency?.logoUrl ?? null,
+    phone: agency?.phone ?? null,
+    email: agency?.email ?? null,
+    website: agency?.website ?? null,
+    terms: agency?.invoiceTerms ?? null,
   };
 
   const canAccept =
@@ -121,6 +131,12 @@ export default async function PublicQuotePage({
           itinerary={itinerary}
           pricing={pricing}
           segments={quote.trip.travelSegments}
+          agency={proposalAgency}
+          meta={{
+            version: quote.version,
+            preparedAt: quote.updatedAt.toISOString(),
+            validityDays: 14,
+          }}
         />
 
         {canAccept ? (

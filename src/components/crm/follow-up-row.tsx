@@ -17,7 +17,7 @@ export type FollowUpRowData = {
   title: string;
   dueAt: Date | string;
   completedAt: Date | string | null;
-  lead: { id: string; name: string } | null;
+  contact: { id: string; name: string } | null;
 };
 
 export function FollowUpRow({ task }: { task: FollowUpRowData }) {
@@ -83,12 +83,12 @@ export function FollowUpRow({ task }: { task: FollowUpRowData }) {
           {task.title}
         </p>
         <div className="mt-0.5 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em]">
-          {task.lead ? (
+          {task.contact ? (
             <Link
-              href={`/leads/${task.lead.id}`}
+              href={`/contacts/${task.contact.id}`}
               className="text-sand-700 hover:text-navy transition-colors"
             >
-              {task.lead.name}
+              {task.contact.name}
             </Link>
           ) : (
             <span className="text-muted-foreground">Unlinked</span>
@@ -110,11 +110,11 @@ export function FollowUpRow({ task }: { task: FollowUpRowData }) {
           <Clock className="h-3.5 w-3.5" />
         </button>
       )}
-      {task.lead && (
+      {task.contact && (
         <Link
-          href={`/leads/${task.lead.id}`}
+          href={`/contacts/${task.contact.id}`}
           className="text-muted-foreground hover:text-navy transition-colors"
-          aria-label="Open lead"
+          aria-label="Open contact"
         >
           <ArrowUpRight className="h-3.5 w-3.5" />
         </Link>

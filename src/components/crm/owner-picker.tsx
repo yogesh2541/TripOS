@@ -10,13 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { assignLeadOwnerAction } from "@/server/actions/leads";
+import { assignLeadOwnerAction } from "@/server/actions/contacts";
 import { assignTripOwnerAction } from "@/server/actions/trips";
 
 type Member = { id: string; name: string };
 
 /**
- * Compact owner / assignee control for lead and trip detail headers.
+ * Compact owner / assignee control for contact and trip detail headers.
  * Imports the server actions directly (a Client Component can't receive a
  * plain wrapper function as a prop across the server boundary).
  */
@@ -27,7 +27,7 @@ export function OwnerPicker({
   members,
   canAssign,
 }: {
-  kind: "lead" | "trip";
+  kind: "contact" | "trip";
   entityId: string;
   currentOwnerId: string | null;
   members: Member[];
@@ -37,13 +37,13 @@ export function OwnerPicker({
   const [isPending, startTransition] = useTransition();
 
   const current = members.find((m) => m.id === currentOwnerId) ?? null;
-  const label = kind === "lead" ? "Owner" : "Ops owner";
+  const label = kind === "contact" ? "Owner" : "Ops owner";
 
   function set(ownerId: string | null) {
     startTransition(async () => {
       const res =
-        kind === "lead"
-          ? await assignLeadOwnerAction({ leadId: entityId, ownerId })
+        kind === "contact"
+          ? await assignLeadOwnerAction({ contactId: entityId, ownerId })
           : await assignTripOwnerAction({ tripId: entityId, ownerId });
       if (res.ok) {
         toast.success(ownerId ? "Owner updated" : "Owner cleared");

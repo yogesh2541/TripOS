@@ -11,9 +11,9 @@ export default async function FollowUpsPage() {
 
   const tasks = await prisma.task.findMany({
     where: {
-      lead: { agencyId, deletedAt: null },
+      contact: { agencyId, deletedAt: null },
     },
-    include: { lead: { select: { id: true, name: true } } },
+    include: { contact: { select: { id: true, name: true } } },
     orderBy: [{ completedAt: "asc" }, { dueAt: "asc" }],
   });
 
@@ -40,7 +40,7 @@ export default async function FollowUpsPage() {
       title: t.title,
       dueAt: t.dueAt,
       completedAt: t.completedAt,
-      lead: t.lead ? { id: t.lead.id, name: t.lead.name } : null,
+      contact: t.contact ? { id: t.contact.id, name: t.contact.name } : null,
     };
     if (t.completedAt) {
       completed.push(data);
@@ -98,7 +98,7 @@ export default async function FollowUpsPage() {
           <CalendarClock className="h-6 w-6 mx-auto text-muted-foreground mb-3" />
           <p className="font-display text-2xl text-navy">Nothing scheduled</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Add a follow-up from any lead's Tasks tab.
+            Add a follow-up from any contact's Tasks tab.
           </p>
         </div>
       )}

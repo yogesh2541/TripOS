@@ -48,7 +48,7 @@ const INTEREST_OPTIONS = [
 ];
 
 type PrefillFromLead = {
-  leadId: string;
+  contactId: string;
   leadName: string;
   destination?: string | null;
   startDate?: string | null;
@@ -74,7 +74,7 @@ export function TripWizard({ prefill }: { prefill?: PrefillFromLead }) {
     hotelType: "Boutique",
     interests: [],
     notes: prefill?.notes ?? null,
-    leadId: prefill?.leadId ?? null,
+    contactId: prefill?.contactId ?? null,
   });
 
   function update<K extends keyof CreateTripInput>(
@@ -129,7 +129,7 @@ export function TripWizard({ prefill }: { prefill?: PrefillFromLead }) {
       {prefill && (
         <div className="mb-6 flex items-center justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-            For lead
+            For contact
             <span className="text-navy font-medium normal-case tracking-normal">
               {prefill.leadName}
             </span>
