@@ -210,18 +210,18 @@ export function ItineraryEditor({
       {/* Header bar */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-sand-600">
+          <p className="tc-eyebrow gold">
             Itinerary
           </p>
-          <h2 className="font-display text-3xl text-navy">{destination}</h2>
+          <h2 className="font-display text-3xl text-ink mt-1">{destination}</h2>
         </div>
         <div className="flex items-center gap-2 pt-2 flex-shrink-0">
           {dirty ? (
-            <span className="rounded-full border border-sand-200 bg-sand-50 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-sand-800">
+            <span className="rounded-[6px] border border-[var(--gold-line)] bg-gold-soft px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-gold-deep">
               Unsaved
             </span>
           ) : savedAt ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted">
               Saved {savedAt}
             </span>
           ) : null}
@@ -261,7 +261,7 @@ export function ItineraryEditor({
                   .getElementById(`itin-day-${i}`)
                   ?.scrollIntoView({ behavior: "smooth", block: "start" })
               }
-              className="h-7 px-2.5 rounded-lg border border-line bg-white text-[11px] text-navy hover:border-sand hover:bg-ivory transition-colors"
+              className="h-7 px-2.5 rounded-[6px] border border-line bg-paper text-[11px] text-ink hover:border-[var(--gold-line)] hover:bg-paper-2 transition-colors"
               title={d.title || `Day ${i + 1}`}
             >
               Day {i + 1}
@@ -280,7 +280,7 @@ export function ItineraryEditor({
           value={view}
           onChange={(v) => setView(v)}
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           {view === "normal"
             ? "Compact view — title, summary, activities, stay & meals."
             : "Full view — adds inclusions, exclusions, transfers, image, food note and internal notes."}
@@ -288,7 +288,7 @@ export function ItineraryEditor({
       </div>
 
       {/* Trip-level header */}
-      <div className="rounded-2xl border border-line bg-white shadow-soft p-6 md:p-8 space-y-5">
+      <div className="rounded-lg border border-line bg-paper shadow-soft p-6 md:p-8 space-y-5">
         <div>
           <Label htmlFor="trip-summary">Trip overview</Label>
           <Textarea
@@ -296,7 +296,7 @@ export function ItineraryEditor({
             value={content.summary}
             onChange={(e) => updateSummary(e.target.value)}
             rows={3}
-            className="mt-2 border-0 bg-ivory/60"
+            className="mt-2 border-0 bg-paper-2/60"
             placeholder="A two-sentence pitch of the trip — sets the mood for the whole proposal."
           />
         </div>
@@ -438,22 +438,22 @@ function DayCard({
         duration: 0.4,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className="rounded-2xl border border-line bg-white shadow-soft overflow-hidden scroll-mt-24"
+      className="rounded-lg border border-line bg-paper shadow-soft overflow-hidden scroll-mt-24"
     >
       {/* Header */}
-      <header className="flex items-center gap-3 px-6 md:px-8 py-4 border-b border-line bg-ivory/30">
+      <header className="flex items-center gap-3 px-6 md:px-8 py-4 border-b border-line bg-paper-2">
         <span className="inline-flex items-center gap-2 rounded-full bg-navy text-ivory px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium">
           Day {index + 1}
         </span>
         {dateLabel && (
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-xs text-muted tabular-nums">
             {dateLabel}
           </span>
         )}
         <Input
           value={day.title}
           onChange={(e) => onChange({ ...day, title: e.target.value })}
-          className="border-0 shadow-none bg-transparent font-display text-xl md:text-2xl text-navy h-auto px-0 focus-visible:ring-0 flex-1 min-w-0"
+          className="border-0 shadow-none bg-transparent font-display text-xl md:text-2xl text-ink h-auto px-0 focus-visible:ring-0 flex-1 min-w-0"
           placeholder={`Day ${index + 1} — title`}
         />
         <button
@@ -465,7 +465,7 @@ function DayCard({
             )
           }
           disabled={busy}
-          className="h-8 px-3 rounded-xl text-xs text-sand-700 hover:text-navy hover:bg-white transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
+          className="h-8 px-3 rounded-[10px] text-xs text-gold-deep hover:text-ink hover:bg-paper-2 transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
           title="Rewrite this day with AI (saves your edits first)"
         >
           {busy ? (
@@ -478,7 +478,7 @@ function DayCard({
         <DropdownMenu>
           <DropdownMenuTrigger
             disabled={busy}
-            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-navy hover:bg-white transition-colors disabled:opacity-50 flex items-center justify-center flex-shrink-0"
+            className="h-8 w-8 rounded-[10px] text-muted hover:text-ink hover:bg-paper-2 transition-colors disabled:opacity-50 flex items-center justify-center flex-shrink-0"
             aria-label="Day actions"
           >
             <MoreHorizontal className="h-3.5 w-3.5" />
@@ -532,7 +532,7 @@ function DayCard({
                 );
               }}
               disabled={totalDays <= 1}
-              className="text-red-600 focus:bg-red-50"
+              className="text-bad focus:bg-bad-soft"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Delete day
@@ -588,7 +588,7 @@ function DayCard({
               type="button"
               onClick={suggestActivities}
               disabled={isSuggesting}
-              className="text-[10px] uppercase tracking-[0.18em] text-sand-700 hover:text-navy disabled:opacity-50 inline-flex items-center gap-1"
+              className="text-[10px] uppercase tracking-[0.18em] text-gold-deep hover:text-ink disabled:opacity-50 inline-flex items-center gap-1"
               title="AI suggestions for this city"
             >
               {isSuggesting ? (
@@ -616,7 +616,7 @@ function DayCard({
               <button
                 type="button"
                 onClick={copyStayFromPrevious}
-                className="text-[10px] uppercase tracking-[0.16em] text-sand-700 hover:text-navy inline-flex items-center gap-1"
+                className="text-[10px] uppercase tracking-[0.16em] text-gold-deep hover:text-ink inline-flex items-center gap-1"
                 title="Copy hotel + meal plan from previous day"
               >
                 <Copy className="h-3 w-3" />
@@ -750,7 +750,7 @@ function SectionLabel({
     <div
       className={cn(
         "flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] pt-2.5",
-        tone === "muted" ? "text-muted-foreground" : "text-sand-700"
+        tone === "muted" ? "text-muted" : "text-gold-deep"
       )}
     >
       {icon}
@@ -788,8 +788,8 @@ function MealToggles({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
               active
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : "border-line bg-white text-muted-foreground hover:border-sand-200"
+                ? "border-ok/30 bg-ok-soft text-[#3c6b48]"
+                : "border-line bg-paper text-muted hover:border-[var(--gold-line)]"
             )}
             aria-pressed={active}
           >
@@ -815,7 +815,7 @@ function InsertDayButton({
         type="button"
         onClick={onInsert}
         disabled={disabled}
-        className="h-7 px-3 rounded-full bg-white border border-dashed border-sand-300 text-[10px] uppercase tracking-[0.18em] text-sand-700 hover:bg-sand-50 hover:border-sand inline-flex items-center gap-1.5 disabled:opacity-50"
+        className="h-7 px-3 rounded-[8px] bg-paper border border-dashed border-[var(--gold-line)] text-[10px] uppercase tracking-[0.18em] text-gold-deep hover:bg-gold-soft/50 hover:border-[var(--gold-line)] inline-flex items-center gap-1.5 disabled:opacity-50"
       >
         <Plus className="h-3 w-3" />
         Insert day
@@ -838,12 +838,12 @@ function EmptyItinerary({
   isGenerating: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-dashed border-line bg-white/60 p-12 md:p-16 text-center">
-      <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
+    <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 md:p-16 text-center">
+      <p className="text-xs uppercase tracking-[0.3em] text-gold-deep">
         Itinerary
       </p>
-      <h2 className="mt-3 font-display text-3xl text-navy">{destination}</h2>
-      <p className="mt-3 max-w-md mx-auto text-sm text-muted-foreground">
+      <h2 className="mt-3 font-display text-3xl text-ink">{destination}</h2>
+      <p className="mt-3 max-w-md mx-auto text-sm text-muted">
         We haven't generated this itinerary yet. Click below to draft a
         day-by-day plan you can shape.
       </p>
@@ -873,7 +873,7 @@ export function ItinerarySkeleton() {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="rounded-2xl border border-line bg-white p-6 md:p-8 space-y-4"
+          className="rounded-lg border border-line bg-paper p-6 md:p-8 space-y-4"
         >
           <Skeleton className="h-6 w-1/2" />
           <Skeleton className="h-4 w-full" />

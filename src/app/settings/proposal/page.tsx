@@ -29,7 +29,7 @@ export default async function ProposalBrandingPage() {
       <div className="mb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Dashboard
@@ -37,13 +37,9 @@ export default async function ProposalBrandingPage() {
       </div>
 
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-          Settings
-        </p>
-        <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-          Proposal branding
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+        <p className="tc-eyebrow gold">Settings</p>
+        <h1 className="tc-page-title mt-2.5">Proposal branding</h1>
+        <p className="tc-page-sub max-w-2xl">
           Choose a template, set your accent colour, and decide which sections
           customers see. Your logo is stamped throughout — on the hero, every
           major section, and the closing — so your brand is what they remember.
@@ -51,14 +47,14 @@ export default async function ProposalBrandingPage() {
       </header>
 
       {!settings ? (
-        <div className="rounded-2xl border border-sand-200 bg-sand-50/40 p-6">
+        <div className="rounded-lg border border-[var(--gold-line)] bg-gold-soft/40 p-6">
           <div className="flex items-start gap-3">
-            <ShieldCheck className="h-5 w-5 mt-0.5 text-sand-700 shrink-0" />
+            <ShieldCheck className="h-5 w-5 mt-0.5 text-gold-deep shrink-0" />
             <div className="flex-1">
-              <p className="font-medium text-navy">
+              <p className="font-medium text-ink">
                 Set up your agency identity first
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-muted">
                 Add your legal name and logo under Settings → Agency. Once
                 that's saved, you can come back here to customise how
                 proposals look to your clients.

@@ -50,13 +50,13 @@ export default function HelpPage() {
   return (
     <PageShell>
       <header className="mb-8 text-center max-w-2xl mx-auto">
-        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-navy text-ivory mx-auto">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-[10px] bg-inkwash text-[var(--on-dark)] mx-auto">
           <LifeBuoy className="h-5 w-5" />
         </span>
-        <h1 className="mt-4 font-display text-4xl md:text-5xl text-navy leading-tight">
+        <h1 className="mt-4 font-display text-4xl md:text-5xl text-ink leading-tight">
           How can we help?
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted">
           Guides and fixes for everything in TripCraft. Search, or browse by
           topic.
         </p>
@@ -73,15 +73,15 @@ export default function HelpPage() {
           return (
             <div
               key={cat.id}
-              className="rounded-2xl border border-line bg-white p-5 shadow-soft"
+              className="rounded-lg border border-line bg-paper p-5 shadow-soft"
             >
               <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ivory border border-line text-sand-700">
+                <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-paper-2 border border-line text-gold-deep">
                   <Icon className="h-4 w-4" />
                 </span>
-                <h2 className="font-display text-lg text-navy">{cat.title}</h2>
+                <h2 className="font-display text-lg text-ink">{cat.title}</h2>
               </div>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-xs text-muted">
                 {cat.description}
               </p>
               <ul className="mt-4 space-y-1.5">
@@ -89,7 +89,7 @@ export default function HelpPage() {
                   <li key={a.slug}>
                     <Link
                       href={`/help/${a.slug}`}
-                      className="group flex items-center justify-between gap-2 text-sm text-ink/80 hover:text-navy transition-colors"
+                      className="group flex items-center justify-between gap-2 text-sm text-ink/80 hover:text-ink transition-colors"
                     >
                       <span className="truncate">{a.title}</span>
                       <ArrowRight className="h-3.5 w-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -104,18 +104,18 @@ export default function HelpPage() {
 
       {/* Troubleshooting */}
       <section className="mt-12">
-        <h2 className="font-display text-2xl text-navy mb-5">
+        <h2 className="font-display text-2xl text-ink mb-5">
           Stuck? Common fixes
         </h2>
         <div className="space-y-2.5">
           {HELP_FAQS.map((f) => (
             <details
               key={f.q}
-              className="group rounded-2xl border border-line bg-white px-5 py-4 [&_summary]:cursor-pointer"
+              className="group rounded-lg border border-line bg-paper px-5 py-4 [&_summary]:cursor-pointer"
             >
-              <summary className="flex items-center justify-between gap-3 text-sm font-medium text-navy list-none">
+              <summary className="flex items-center justify-between gap-3 text-sm font-medium text-ink list-none">
                 {f.q}
-                <span className="text-muted-foreground transition-transform group-open:rotate-45 text-lg leading-none">
+                <span className="text-muted transition-transform group-open:rotate-45 text-lg leading-none">
                   +
                 </span>
               </summary>
@@ -126,21 +126,21 @@ export default function HelpPage() {
       </section>
 
       {/* New here? */}
-      <section className="mt-12 rounded-2xl border border-sand-200 bg-sand-50/50 p-5 flex flex-wrap items-center justify-between gap-3">
+      <section className="mt-12 rounded-lg border border-[var(--gold-line)] bg-gold-soft p-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white border border-line text-sand-700">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-paper border border-line text-gold-deep">
             <Rocket className="h-4 w-4" />
           </span>
           <div>
-            <p className="text-sm font-medium text-navy">New to TripCraft?</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm font-medium text-ink">New to TripCraft?</p>
+            <p className="text-xs text-muted">
               Replay the quick welcome walkthrough.
             </p>
           </div>
         </div>
         <Link
           href="/?tour=1"
-          className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-sm font-medium text-navy hover:border-navy/40 transition-colors"
+          className="inline-flex items-center gap-2 rounded-[8px] border border-line bg-paper px-4 py-2 text-sm font-medium text-ink hover:border-line-2 transition-colors"
         >
           Replay the tour
           <ArrowRight className="h-4 w-4" />
@@ -148,15 +148,15 @@ export default function HelpPage() {
       </section>
 
       {/* Contact */}
-      <section className="mt-6 rounded-3xl border border-line bg-navy text-ivory p-8 text-center">
+      <section className="mt-6 rounded-lg border border-line bg-inkwash text-[var(--on-dark)] p-8 text-center">
         <h2 className="font-display text-2xl">Still need a hand?</h2>
-        <p className="mt-2 text-sm text-ivory/75 max-w-md mx-auto">
+        <p className="mt-2 text-sm text-[var(--on-dark)]/75 max-w-md mx-auto">
           Can&apos;t find what you&apos;re looking for? Our team is one message
           away.
         </p>
         <a
           href="mailto:support@tripcraft.app"
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-ivory px-5 py-2.5 text-sm font-medium text-navy hover:bg-white transition-colors"
+          className="mt-5 inline-flex items-center gap-2 rounded-[8px] bg-paper px-5 py-2.5 text-sm font-medium text-ink hover:bg-paper-2 transition-colors"
         >
           <MessageCircle className="h-4 w-4" />
           Email support

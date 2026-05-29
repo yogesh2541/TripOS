@@ -68,37 +68,37 @@ export type ActivityFeedItem = Activity & {
 export function ActivityFeed({ activities }: { activities: ActivityFeedItem[] }) {
   if (activities.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-white/60 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-line bg-paper-2 p-8 text-center text-sm text-muted-foreground">
         No activity yet. Pipeline events show up here.
       </div>
     );
   }
 
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-2.5">
       {activities.map((a) => (
         <li key={a.id}>
           <Link
             href={`/contacts/${a.contact.id}`}
-            className="group rounded-2xl border border-line bg-white p-4 flex items-start gap-3 hover:shadow-soft transition-all"
+            className="group flex items-start gap-3 rounded-lg border border-line bg-paper p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:border-[var(--gold-line)] hover:shadow-lift"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ivory border border-line text-sand-700 flex-shrink-0">
+            <span className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-[8px] border border-line bg-paper-2 text-gold-deep">
               {ICONS[a.type]}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-3">
-                <p className="font-medium text-navy text-sm truncate">
+                <p className="truncate text-sm font-medium text-ink">
                   {a.title}
                 </p>
-                <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground whitespace-nowrap">
+                <span className="whitespace-nowrap font-mono text-[11px] text-faint">
                   {formatDistanceToNow(a.createdAt, { addSuffix: true })}
                 </span>
               </div>
-              <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-sand-700">
+              <p className="mt-0.5 text-[11.5px] text-muted">
                 {a.contact.name}
               </p>
               {a.body && (
-                <p className="mt-2 text-sm text-ink/70 line-clamp-2">
+                <p className="mt-2 line-clamp-2 text-sm text-ink-2">
                   {a.body}
                 </p>
               )}

@@ -14,23 +14,23 @@ export async function MarketingShell({
   const user = await getSessionUser();
 
   return (
-    <div className="min-h-screen bg-ivory text-ink flex flex-col">
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-ivory/85 backdrop-blur-md">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
+      <header className="sticky top-0 z-30 border-b border-line bg-canvas/90 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-5 md:px-10 h-16 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-ivory">
+            <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-inkwash text-[var(--on-dark)]">
               <Compass className="h-4 w-4" />
             </span>
-            <span className="font-display text-xl tracking-tight text-navy">
+            <span className="font-display text-xl tracking-tight text-ink">
               TripCraft
             </span>
           </Link>
 
-          <nav className="hidden sm:flex items-center gap-7 text-sm text-navy/80">
-            <Link href="/#features" className="hover:text-navy transition-colors">
+          <nav className="hidden sm:flex items-center gap-7 text-sm text-ink/70">
+            <Link href="/#features" className="hover:text-ink transition-colors">
               Features
             </Link>
-            <Link href="/pricing" className="hover:text-navy transition-colors">
+            <Link href="/pricing" className="hover:text-ink transition-colors">
               Pricing
             </Link>
           </nav>
@@ -39,7 +39,7 @@ export async function MarketingShell({
             {user ? (
               <Link
                 href="/"
-                className="rounded-full bg-navy px-4 py-2 text-sm font-medium text-ivory hover:bg-navy/90 transition-colors"
+                className="rounded-[8px] bg-inkwash px-4 py-2 text-sm font-medium text-[var(--on-dark)] hover:bg-inkwash/90 transition-colors"
               >
                 Go to dashboard
               </Link>
@@ -47,13 +47,13 @@ export async function MarketingShell({
               <>
                 <Link
                   href="/login"
-                  className="hidden sm:inline text-sm text-navy/80 hover:text-navy transition-colors"
+                  className="hidden sm:inline text-sm text-ink/70 hover:text-ink transition-colors"
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/signup"
-                  className="rounded-full bg-navy px-4 py-2 text-sm font-medium text-ivory hover:bg-navy/90 transition-colors"
+                  className="rounded-[8px] bg-inkwash px-4 py-2 text-sm font-medium text-[var(--on-dark)] hover:bg-inkwash/90 transition-colors"
                 >
                   Start free trial
                 </Link>
@@ -65,18 +65,18 @@ export async function MarketingShell({
 
       <main className="flex-1">{children}</main>
 
-      <footer className="border-t border-line/70 bg-white">
+      <footer className="border-t border-line bg-paper">
         <div className="mx-auto max-w-6xl px-5 md:px-10 py-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-ivory">
+              <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-inkwash text-[var(--on-dark)]">
                 <Compass className="h-4 w-4" />
               </span>
-              <span className="font-display text-xl tracking-tight text-navy">
+              <span className="font-display text-xl tracking-tight text-ink">
                 TripCraft
               </span>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground max-w-xs">
+            <p className="mt-3 text-sm text-muted max-w-xs">
               The all-in-one platform for modern travel agencies — itineraries,
               proposals, payments and operations.
             </p>
@@ -108,7 +108,7 @@ export async function MarketingShell({
           />
         </div>
         <div className="border-t border-line/60">
-          <div className="mx-auto max-w-6xl px-5 md:px-10 h-14 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="mx-auto max-w-6xl px-5 md:px-10 h-14 flex items-center justify-between text-xs text-muted">
             <span>© {new Date().getFullYear()} TripCraft</span>
             <span className="uppercase tracking-[0.2em] hidden sm:inline">
               Crafted for premium travel
@@ -129,7 +129,7 @@ function FooterCol({
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.22em] text-sand-700 mb-3">
+      <p className="text-[10px] uppercase tracking-[0.22em] text-gold-deep mb-3">
         {title}
       </p>
       <ul className="space-y-2">
@@ -137,7 +137,7 @@ function FooterCol({
           <li key={l.label}>
             <Link
               href={l.href}
-              className="text-sm text-muted-foreground hover:text-navy transition-colors"
+              className="text-sm text-muted hover:text-ink transition-colors"
             >
               {l.label}
             </Link>

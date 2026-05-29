@@ -82,13 +82,13 @@ export function ImageUpload({
             }
           }}
           className={cn(
-            "relative group rounded-2xl bg-cover bg-center border border-line cursor-pointer overflow-hidden",
+            "relative group rounded-[10px] bg-cover bg-center border border-line cursor-pointer overflow-hidden",
             height
           )}
           style={{ backgroundImage: `url(${value})` }}
         >
-          <div className="absolute inset-0 bg-navy/0 group-hover:bg-navy/45 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-            <span className="h-9 px-3 rounded-xl bg-white text-navy text-xs uppercase tracking-[0.16em] inline-flex items-center gap-1.5 shadow-soft">
+          <div className="absolute inset-0 bg-inkwash/0 group-hover:bg-inkwash/45 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+            <span className="h-9 px-3 rounded-[8px] bg-paper text-ink text-xs uppercase tracking-[0.16em] inline-flex items-center gap-1.5 shadow-soft">
               {isUploading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
@@ -99,7 +99,7 @@ export function ImageUpload({
             <button
               type="button"
               onClick={clear}
-              className="h-9 w-9 rounded-xl bg-white text-red-600 inline-flex items-center justify-center shadow-soft hover:bg-red-50"
+              className="h-9 w-9 rounded-[8px] bg-paper text-bad inline-flex items-center justify-center shadow-soft hover:bg-bad-soft"
               aria-label="Remove image"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -123,11 +123,11 @@ export function ImageUpload({
           }}
           disabled={isUploading}
           className={cn(
-            "w-full rounded-2xl border-2 border-dashed bg-white/60 transition-all",
-            "flex flex-col items-center justify-center gap-2 text-muted-foreground",
-            "hover:border-sand hover:bg-white",
+            "w-full rounded-[10px] border-2 border-dashed bg-paper-2 transition-all",
+            "flex flex-col items-center justify-center gap-2 text-muted",
+            "hover:border-[var(--gold-line)] hover:bg-paper",
             isDragging
-              ? "border-sand bg-sand-50/50 text-sand-700"
+              ? "border-[var(--gold-line)] bg-gold-soft/50 text-gold-deep"
               : "border-line",
             isUploading && "opacity-60 cursor-wait",
             height

@@ -25,18 +25,23 @@ import type {
 export function verifyChallenge(
   mode: string | null,
   token: string | null,
-  challenge: string | null
+  challenge: string | null,
+  expectedOverride?: string | null
 ): { ok: boolean; response?: string } {
   if (mode !== "subscribe") return { ok: false };
-  const expected = process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
+  const expected = expectedOverride ?? process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN;
   if (!expected) return { ok: false };
   if (!token || !challenge) return { ok: false };
   if (token !== expected) return { ok: false };
   return { ok: true, response: challenge };
 }
 
-export function verifySignature(rawBody: string, signatureHeader: string | null): boolean {
-  const appSecret = process.env.WHATSAPP_APP_SECRET;
+export function verifySignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  appSecretOverride?: string | null
+): boolean {
+  const appSecret = appSecretOverride ?? process.env.WHATSAPP_APP_SECRET;
   // When app secret isn't configured we accept the request but log it — useful
   // for local dev. In production WHATSAPP_APP_SECRET should always be set.
   if (!appSecret) {
@@ -273,8 +278,11 @@ async function resolveAgencyIdForWebhook(): Promise<string | null> {
   return agency?.id ?? null;
 }
 
-export async function processWebhookPayload(payload: WaWebhookPayload) {
-  const agencyId = await resolveAgencyIdForWebhook();
+export async function processWebhookPayload(
+  payload: WaWebhookPayload,
+  agencyIdOverride?: string
+) {
+  const agencyId = agencyIdOverride ?? (await resolveAgencyIdForWebhook());
   if (!agencyId) {
     console.warn("[whatsapp/webhook] no agency configured — dropping event");
     return;

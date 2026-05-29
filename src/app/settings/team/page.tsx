@@ -47,7 +47,7 @@ export default async function TeamPage() {
       <div className="mb-6">
         <Link
           href="/settings/agency"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Agency settings
@@ -56,13 +56,9 @@ export default async function TeamPage() {
 
       <header className="flex flex-wrap items-end justify-between gap-3 mb-8">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Settings
-          </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Team
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground max-w-xl">
+          <p className="tc-eyebrow gold">Settings</p>
+          <h1 className="tc-page-title mt-2.5">Team</h1>
+          <p className="tc-page-sub max-w-xl">
             Invite teammates to {agency?.name ?? "your agency"} and pick how
             much they can do. Staff handle leads, trips and WhatsApp; Viewers
             can only read.
@@ -73,10 +69,10 @@ export default async function TeamPage() {
 
       <section className="mb-10">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-2xl text-navy inline-flex items-center gap-2">
-            <Users className="h-5 w-5 text-sand-700" />
+          <h2 className="font-display text-2xl text-ink inline-flex items-center gap-2">
+            <Users className="h-5 w-5 text-gold-deep" />
             Members
-            <span className="text-xs text-muted-foreground font-sans">
+            <span className="text-xs text-muted font-sans font-mono tabular-nums">
               {members.length}
             </span>
           </h2>
@@ -106,10 +102,10 @@ export default async function TeamPage() {
 
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-2xl text-navy inline-flex items-center gap-2">
-            <Mail className="h-5 w-5 text-sand-700" />
+          <h2 className="font-display text-2xl text-ink inline-flex items-center gap-2">
+            <Mail className="h-5 w-5 text-gold-deep" />
             Pending invites
-            <span className="text-xs text-muted-foreground font-sans">
+            <span className="text-xs text-muted font-sans font-mono tabular-nums">
               {invites.length}
             </span>
           </h2>
@@ -139,7 +135,7 @@ export default async function TeamPage() {
         )}
       </section>
 
-      <p className="mt-10 text-[10px] uppercase tracking-[0.18em] text-muted-foreground inline-flex items-center gap-1.5">
+      <p className="mt-10 text-[10px] uppercase tracking-[0.18em] text-muted inline-flex items-center gap-1.5">
         <ShieldCheck className="h-3 w-3" />
         Role changes audit · {formatDate(new Date())}
       </p>

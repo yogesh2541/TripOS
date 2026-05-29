@@ -1,28 +1,31 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sparkline } from "@/components/charts";
 
 export type StatTone = "default" | "navy" | "accent" | "success" | "danger";
 
-// Surface + border per tone. `navy` is the one inverted (dark) tile;
-// the rest are light tints so a row of tiles is scannable at a glance
-// rather than five identical white boxes.
-const SURFACE: Record<StatTone, string> = {
-  default: "border-line bg-white",
-  navy: "border-navy bg-navy text-ivory",
-  accent: "border-sand-200 bg-sand-50",
-  success: "border-emerald-100 bg-emerald-50/70",
-  danger: "border-red-100 bg-red-50/70",
+// Icon-chip tone for the new stat tile. The chip is the colour cue now
+// (rather than the whole surface), so a row of tiles stays calm white.
+const CHIP: Record<StatTone, string> = {
+  default: "tc-stat-ic",
+  accent: "tc-stat-ic",
+  navy: "tc-stat-ic navy",
+  success: "tc-stat-ic sage",
+  danger: "tc-stat-ic clay",
 };
 
-const LABEL: Record<StatTone, string> = {
-  default: "text-sand-700",
-  navy: "text-sand",
-  accent: "text-sand-800",
-  success: "text-emerald-700",
-  danger: "text-red-700",
+const SPARK_COLOR: Record<StatTone, string> = {
+  default: "var(--gold)",
+  accent: "var(--gold)",
+  navy: "var(--gold)",
+  success: "var(--dv-sage)",
+  danger: "var(--dv-clay)",
 };
 
+// "Atelier Pro" stat tile: white card, gold-soft (or navy/sage/clay) icon chip,
+// uppercase micro-label, Playfair value, and either a delta (mono) or a
+// sparkline. Hover lifts. Backwards-compatible with the prior prop set.
 export function StatTile({
   label,
   value,
@@ -30,6 +33,9 @@ export function StatTile({
   href,
   tone = "default",
   icon,
+  delta,
+  deltaUp,
+  spark,
 }: {
   label: string;
   value: string;
@@ -37,52 +43,36 @@ export function StatTile({
   href?: string;
   tone?: StatTone;
   icon?: React.ReactNode;
+  /** Optional mono delta chip, e.g. "+24%". */
+  delta?: string;
+  deltaUp?: boolean;
+  /** Optional sparkline series. */
+  spark?: number[];
 }) {
   const inner = (
-    <div
-      className={cn(
-        "h-full rounded-2xl border p-5 transition-all",
-        SURFACE[tone],
-        href && "hover:shadow-soft hover:-translate-y-0.5 cursor-pointer group"
-      )}
-    >
-      <div className="flex items-center justify-between">
-        <p
-          className={cn(
-            "text-[10px] uppercase tracking-[0.22em] flex items-center gap-1.5",
-            LABEL[tone]
-          )}
-        >
-          {icon}
-          {label}
-        </p>
-        {href && (
-          <ArrowUpRight
-            className={cn(
-              "h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity",
-              tone === "navy" ? "text-ivory" : "text-navy"
+    <div className={cn("tc-stat h-full", href && "cursor-pointer")}>
+      <div className="tc-stat-top">
+        {icon ? <span className={CHIP[tone]}>{icon}</span> : <span />}
+        {delta != null ? (
+          <span className={cn("tc-delta", deltaUp ? "up" : "down")}>
+            {deltaUp ? (
+              <ArrowUpRight className="h-[11px] w-[11px]" />
+            ) : (
+              <ArrowDownRight className="h-[11px] w-[11px]" />
             )}
-          />
-        )}
+            {delta}
+          </span>
+        ) : null}
       </div>
-      <p
-        className={cn(
-          "mt-3 font-display text-4xl tracking-tight",
-          tone === "navy" ? "text-ivory" : "text-navy"
-        )}
-      >
-        {value}
-      </p>
-      {hint && (
-        <p
-          className={cn(
-            "mt-1 text-xs",
-            tone === "navy" ? "text-ivory/60" : "text-muted-foreground"
-          )}
-        >
-          {hint}
-        </p>
-      )}
+      <div className="tc-stat-label">{label}</div>
+      <div className="tc-stat-val tnum">{value}</div>
+      {spark && spark.length > 1 ? (
+        <div className="mt-2.5">
+          <Sparkline data={spark} color={SPARK_COLOR[tone]} w={150} h={30} />
+        </div>
+      ) : hint ? (
+        <div className="tc-stat-foot">{hint}</div>
+      ) : null}
     </div>
   );
 

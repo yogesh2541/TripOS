@@ -21,21 +21,21 @@ export function EmptyState({
 }) {
   const base =
     variant === "card"
-      ? "rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center"
+      ? "rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center"
       : variant === "inline"
-        ? "rounded-xl border border-dashed border-line/70 bg-ivory p-6 text-center"
-        : "rounded-3xl border border-dashed border-line bg-white/60 p-12 md:p-16 text-center";
+        ? "rounded-[10px] border border-dashed border-line bg-paper-2 p-6 text-center"
+        : "rounded-lg border border-dashed border-line bg-paper-2 p-12 md:p-16 text-center";
 
   return (
     <div className={cn(base, className)}>
       {icon ? (
-        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full border border-line bg-ivory text-sand-700">
+        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] border border-line bg-paper text-gold-deep">
           {icon}
         </div>
       ) : null}
       <p
         className={cn(
-          "font-display text-navy",
+          "font-display text-ink",
           variant === "inline" ? "text-base" : "text-2xl"
         )}
       >
@@ -44,7 +44,7 @@ export function EmptyState({
       {body ? (
         <p
           className={cn(
-            "mt-2 text-muted-foreground max-w-md mx-auto",
+            "mt-2 text-muted max-w-md mx-auto",
             variant === "inline" ? "text-xs" : "text-sm"
           )}
         >
@@ -53,7 +53,7 @@ export function EmptyState({
       ) : null}
       {action ? <div className="mt-6 inline-flex">{action}</div> : null}
       {hint ? (
-        <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+        <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-muted">
           {hint}
         </p>
       ) : null}

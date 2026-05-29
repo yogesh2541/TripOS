@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Breadcrumb } from "@/components/breadcrumb";
 import { GlobalSearch } from "@/components/global-search";
 import { MobileNav } from "@/components/mobile-nav";
 import { NotificationBell } from "@/components/notification-bell";
 import { UserMenu } from "@/components/user-menu";
 import { getSessionUser } from "@/lib/session";
+import { isPlatformAdminEmail } from "@/lib/platform-admin";
 import { getEffectivePlan } from "@/server/services/subscription";
 import { cn } from "@/lib/utils";
 
@@ -20,14 +22,19 @@ export async function PageShell({
   const plan = user ? await getEffectivePlan(user.activeAgencyId) : null;
 
   return (
-    <div className={cn("min-h-screen bg-ivory text-ink flex", className)}>
-      {user ? <AppSidebar agencyName={user.activeAgencyName} /> : null}
+    <div className={cn("min-h-screen bg-canvas text-ink flex", className)}>
+      {user ? (
+        <AppSidebar
+          agencyName={user.activeAgencyName}
+          userName={user.name ?? undefined}
+        />
+      ) : null}
 
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar user={user} />
         {plan ? <PlanBanner plan={plan} /> : null}
         <main className="flex-1">
-          <div className="mx-auto max-w-6xl px-5 md:px-10 py-9 md:py-12">
+          <div className="mx-auto w-full max-w-[1180px] px-5 md:px-8 pt-7 md:pt-[30px] pb-16">
             {children}
           </div>
         </main>
@@ -101,32 +108,35 @@ function TopBar({
   user: Awaited<ReturnType<typeof getSessionUser>>;
 }) {
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-line/70 bg-ivory/80 backdrop-blur-md print:hidden">
-      <div className="h-full px-5 md:px-10 flex items-center gap-3">
-        {/* Mobile: hamburger opens the nav drawer. Desktop: sidebar covers it. */}
-        <div className="md:hidden">
-          <MobileNav />
-        </div>
-        <div className="flex-1" />
-        <GlobalSearch />
-        {user ? <NotificationBell /> : null}
-        {user ? (
-          <UserMenu
-            name={user.name}
-            email={user.email}
-            agencyName={user.activeAgencyName}
-            role={user.activeAgencyRole}
-          />
-        ) : null}
+    <header
+      className="sticky top-0 z-30 flex items-center gap-3.5 border-b border-line bg-[rgba(244,242,236,.82)] px-5 md:px-[22px] backdrop-blur-md print:hidden"
+      style={{ height: "var(--top-h)" }}
+    >
+      {/* Mobile: hamburger opens the nav drawer. Desktop: sidebar covers it. */}
+      <div className="md:hidden">
+        <MobileNav />
       </div>
+      <Breadcrumb />
+      <div className="flex-1" />
+      <GlobalSearch />
+      {user ? <NotificationBell /> : null}
+      {user ? (
+        <UserMenu
+          name={user.name}
+          email={user.email}
+          agencyName={user.activeAgencyName}
+          role={user.activeAgencyRole}
+          isPlatformAdmin={isPlatformAdminEmail(user.email)}
+        />
+      ) : null}
     </header>
   );
 }
 
 function SiteFooter() {
   return (
-    <footer className="border-t border-line/70 bg-ivory print:hidden">
-      <div className="px-5 md:px-10 flex h-14 items-center justify-between text-xs text-muted-foreground">
+    <footer className="border-t border-line bg-canvas print:hidden">
+      <div className="px-5 md:px-8 flex h-14 items-center justify-between text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} TripCraft</span>
         <span className="tracking-widest uppercase hidden sm:inline">
           Crafted for premium travel

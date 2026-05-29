@@ -51,7 +51,7 @@ import {
 import type { ItineraryContent } from "@/lib/ai";
 import { ShareDialog } from "@/components/quotes/share-dialog";
 import { SuccessFlash } from "@/components/ui/success-flash";
-import { ShareOnWhatsappButton } from "@/components/whatsapp/share-on-whatsapp-button";
+import { SendProposalDialog } from "@/components/quotes/send-proposal-dialog";
 import {
   acceptQuoteAction,
   deleteQuoteAction,
@@ -169,12 +169,19 @@ export function QuoteBuilder({
   quotes,
   itinerary,
   segments,
+  destination,
+  recipient,
+  agencyName,
 }: {
   tripId: string;
   travelers: number;
   quotes: QuoteData[];
   itinerary: ItineraryContent | null;
   segments: TravelSegment[];
+  /** Optional context for the send-proposal composer. */
+  destination?: string;
+  recipient?: { name?: string | null; phone?: string | null; email?: string | null } | null;
+  agencyName?: string;
 }) {
   const router = useRouter();
 
@@ -520,10 +527,7 @@ export function QuoteBuilder({
   return (
     <section
       className={cn(
-        "flex flex-col rounded-2xl border border-line bg-white shadow-soft",
-        // Constrain the panel to the viewport (minus the sticky top offset)
-        // at lg+ so the action footer is always in view. Mobile uses
-        // natural height since the panel isn't sticky there anyway.
+        "flex flex-col rounded-lg border border-line bg-paper shadow-soft",
         "lg:max-h-[calc(100vh-7rem)]"
       )}
     >
@@ -536,10 +540,8 @@ export function QuoteBuilder({
       <div className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6">
       <header className="flex items-start justify-between gap-3 mb-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-sand-600">
-            Quotation
-          </p>
-          <h2 className="font-display text-2xl text-navy">
+          <p className="tc-eyebrow">Quotation</p>
+          <h2 className="font-display text-2xl text-ink">
             {activeQuote
               ? `Version ${activeQuote.version}`
               : isNew
@@ -568,10 +570,10 @@ export function QuoteBuilder({
                 key={q.id}
                 onClick={() => setActiveId(q.id)}
                 className={cn(
-                  "h-8 px-3 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5",
+                  "h-8 px-3 rounded-[8px] text-xs font-medium transition-colors flex items-center gap-1.5",
                   isActive
-                    ? "bg-navy text-ivory"
-                    : "text-muted-foreground hover:text-navy hover:bg-ivory"
+                    ? "bg-inkwash text-[var(--on-dark)]"
+                    : "text-muted hover:text-ink hover:bg-paper-2"
                 )}
               >
                 v{q.version}
@@ -579,25 +581,25 @@ export function QuoteBuilder({
                   className={cn(
                     "h-1.5 w-1.5 rounded-full",
                     q.status === "ACCEPTED"
-                      ? "bg-emerald-500"
+                      ? "bg-ok"
                       : q.status === "SENT"
-                        ? "bg-sand-500"
+                        ? "bg-gold-deep"
                         : q.status === "REJECTED"
-                          ? "bg-red-400"
+                          ? "bg-bad"
                           : isActive
-                            ? "bg-ivory/60"
+                            ? "bg-[var(--on-dark)]/60"
                             : "bg-line"
                   )}
                 />
                 {delta !== null && delta !== 0 && (
                   <span
                     className={cn(
-                      "text-[10px] tabular-nums",
+                      "text-[10px] tabular-nums font-mono",
                       isActive
-                        ? "text-ivory/80"
+                        ? "text-[var(--on-dark)]/80"
                         : delta > 0
-                          ? "text-emerald-700"
-                          : "text-red-600"
+                          ? "text-ok"
+                          : "text-bad"
                     )}
                   >
                     {delta > 0 ? "+" : "−"}
@@ -610,7 +612,7 @@ export function QuoteBuilder({
           <button
             onClick={addVersion}
             disabled={isMutating}
-            className="h-8 w-8 rounded-xl border border-dashed border-line text-muted-foreground hover:text-navy hover:border-sand transition-colors flex items-center justify-center disabled:opacity-50"
+            className="h-8 w-8 rounded-[8px] border border-dashed border-line text-muted hover:text-ink hover:border-[var(--gold-line)] transition-colors flex items-center justify-center disabled:opacity-50"
             title="New version"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -621,16 +623,16 @@ export function QuoteBuilder({
       {/* Pull-from-itinerary banner — appears when the trip has content the
           agent hasn't pulled into this quote yet. */}
       {editable && pullable.length > 0 && draft.items.every((i) => !i.label) && (
-        <div className="mb-4 rounded-xl border border-sand-200 bg-sand-50/40 p-3.5 flex items-start gap-2.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sand-100 text-sand-800">
+        <div className="mb-4 rounded-[10px] border border-[var(--gold-line)] bg-gold-soft p-3.5 flex items-start gap-2.5">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] bg-paper text-gold-deep">
             <Wand2 className="h-3.5 w-3.5" />
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-navy">
+            <p className="text-sm font-medium text-ink">
               Pull {pullable.length} item
               {pullable.length === 1 ? "" : "s"} from the itinerary
             </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="text-xs text-muted mt-0.5">
               Hotels, activities, and flights already on the trip. Costs stay
               blank for you to fill in.
             </p>
@@ -650,7 +652,7 @@ export function QuoteBuilder({
       {/* Line items, grouped by category with subtotals */}
       <div className="space-y-4">
         {groups.length === 0 && editable && (
-          <p className="text-sm text-muted-foreground italic">
+          <p className="text-sm text-muted italic">
             No line items yet — add one below or pull from the itinerary.
           </p>
         )}
@@ -663,27 +665,27 @@ export function QuoteBuilder({
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="rounded-2xl border border-line/70 bg-ivory/30 overflow-hidden"
+                className="rounded-lg border border-line bg-paper-2 overflow-hidden"
               >
                 <button
                   type="button"
                   onClick={() => toggleGroup(g.category)}
-                  className="w-full flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-ivory/60 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-paper-2 transition-colors"
                 >
                   <span className="flex items-center gap-2">
                     {isCollapsed ? (
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      <ChevronRight className="h-3.5 w-3.5 text-muted" />
                     ) : (
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                      <ChevronDown className="h-3.5 w-3.5 text-muted" />
                     )}
-                    <span className="text-[11px] uppercase tracking-[0.22em] text-sand-700">
+                    <span className="text-[11px] uppercase tracking-[0.22em] text-gold-deep">
                       {CATEGORY_LABEL[g.category]}
                     </span>
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-muted">
                       {g.items.length}
                     </span>
                   </span>
-                  <span className="text-sm font-medium text-navy tabular-nums">
+                  <span className="text-sm font-medium text-ink tabular-nums font-mono">
                     {formatINR(g.subtotal)}
                   </span>
                 </button>
@@ -732,7 +734,7 @@ export function QuoteBuilder({
                     className="flex items-center justify-between"
                   >
                     <span>{c.label}</span>
-                    <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                    <span className="text-[10px] uppercase tracking-[0.16em] text-muted">
                       {c.category}
                     </span>
                   </DropdownMenuItem>
@@ -775,15 +777,15 @@ export function QuoteBuilder({
             <Label htmlFor="discount">
               Discount {discountMode === "PCT" ? "%" : "₹"}
             </Label>
-            <div className="flex rounded-lg border border-line bg-white p-0.5">
+            <div className="flex rounded-[6px] border border-line bg-paper p-0.5">
               <button
                 type="button"
                 onClick={() => setDiscountMode("PCT")}
                 className={cn(
-                  "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-md transition-colors",
+                  "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-[4px] transition-colors",
                   discountMode === "PCT"
-                    ? "bg-navy text-ivory"
-                    : "text-muted-foreground hover:text-navy"
+                    ? "bg-inkwash text-[var(--on-dark)]"
+                    : "text-muted hover:text-ink"
                 )}
               >
                 %
@@ -792,10 +794,10 @@ export function QuoteBuilder({
                 type="button"
                 onClick={() => setDiscountMode("AMOUNT")}
                 className={cn(
-                  "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-md transition-colors",
+                  "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-[4px] transition-colors",
                   discountMode === "AMOUNT"
-                    ? "bg-navy text-ivory"
-                    : "text-muted-foreground hover:text-navy"
+                    ? "bg-inkwash text-[var(--on-dark)]"
+                    : "text-muted hover:text-ink"
                 )}
               >
                 ₹
@@ -832,20 +834,20 @@ export function QuoteBuilder({
       </div>
 
       {/* Summary */}
-      <div className="mt-4 rounded-2xl bg-navy text-ivory px-5 py-4">
+      <div className="mt-4 rounded-lg bg-inkwash text-[var(--on-dark)] px-5 py-4">
         <div className="flex items-center justify-between mb-2.5">
-          <span className="text-[10px] uppercase tracking-[0.22em] text-ivory/60">
+          <span className="text-[10px] uppercase tracking-[0.22em] text-[var(--on-dark)]/60">
             Pricing summary
           </span>
-          <div className="flex rounded-lg border border-ivory/15 p-0.5">
+          <div className="flex rounded-[6px] border border-[var(--on-dark)]/15 p-0.5">
             <button
               type="button"
               onClick={() => setPerPerson(false)}
               className={cn(
-                "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-md transition-colors",
+                "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-[4px] transition-colors",
                 !perPerson
-                  ? "bg-ivory text-navy"
-                  : "text-ivory/60 hover:text-ivory"
+                  ? "bg-paper text-ink"
+                  : "text-[var(--on-dark)]/60 hover:text-[var(--on-dark)]"
               )}
             >
               Total
@@ -855,10 +857,10 @@ export function QuoteBuilder({
               onClick={() => setPerPerson(true)}
               disabled={travelers <= 1}
               className={cn(
-                "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-md transition-colors disabled:opacity-30",
+                "px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] rounded-[4px] transition-colors disabled:opacity-30",
                 perPerson
-                  ? "bg-ivory text-navy"
-                  : "text-ivory/60 hover:text-ivory"
+                  ? "bg-paper text-ink"
+                  : "text-[var(--on-dark)]/60 hover:text-[var(--on-dark)]"
               )}
             >
               Per person
@@ -878,14 +880,14 @@ export function QuoteBuilder({
             muted
           />
         )}
-        <div className="my-3 h-px bg-ivory/15" />
+        <div className="my-3 h-px bg-[var(--on-dark)]/15" />
         <Row
           label={perPerson ? "Selling — per person" : "Selling price"}
           value={formatINR(perPerson ? perPersonSelling : summary.sellingPrice)}
           emphasis
         />
         {!perPerson && travelers > 1 && (
-          <p className="text-[11px] text-ivory/55 -mt-1">
+          <p className="text-[11px] text-[var(--on-dark)]/55 -mt-1 font-mono tabular-nums">
             {formatINR(perPersonSelling)} × {travelers} travellers
           </p>
         )}
@@ -899,8 +901,8 @@ export function QuoteBuilder({
       {/* Internal notes (operator-only) */}
       <div className="mt-4 space-y-1.5">
         <div className="flex items-center gap-1.5">
-          <Info className="h-3 w-3 text-muted-foreground" />
-          <Label htmlFor="internal-notes" className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <Info className="h-3 w-3 text-muted" />
+          <Label htmlFor="internal-notes" className="text-[11px] uppercase tracking-[0.18em] text-muted">
             Internal notes (operator-only)
           </Label>
         </div>
@@ -915,11 +917,20 @@ export function QuoteBuilder({
         />
       </div>
 
+      {activeQuote && (
+        <div className="mt-5">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted mb-3">
+            Delivery status
+          </p>
+          <DeliveryTimeline status={activeQuote.status} />
+        </div>
+      )}
+
       </div>
 
       {/* Sticky footer — Save / Send / Accept stay visible regardless of
           how much content the panel holds. */}
-      <div className="border-t border-line bg-white px-4 py-3 md:px-5 md:py-3 rounded-b-2xl flex flex-wrap items-center justify-between gap-3 shadow-[0_-4px_12px_-8px_rgba(0,0,0,0.08)]">
+      <div className="border-t border-line bg-paper px-4 py-3 md:px-5 md:py-3 rounded-b-lg flex flex-wrap items-center justify-between gap-3 shadow-[0_-4px_12px_-8px_rgba(0,0,0,0.08)]">
         <SaveIndicator
           status={saveStatus}
           isDirty={isDirty}
@@ -940,17 +951,31 @@ export function QuoteBuilder({
             />
           )}
 
-          {/* When a quote is SENT, the dominant action is to push it on
-              WhatsApp — that's how customers actually receive it. */}
+          {/* The dominant action — open the focused send composer (WhatsApp /
+              Email / Link) with a live preview. */}
           {activeQuote &&
             (activeQuote.status === "DRAFT" || activeQuote.status === "SENT") && (
-              <ShareOnWhatsappButton
-                kind="proposal"
+              <SendProposalDialog
                 tripId={tripId}
                 quoteId={activeQuote.id}
-                label={activeQuote.status === "SENT" ? "Resend on WhatsApp" : "Send on WhatsApp"}
-                variant={activeQuote.status === "SENT" ? "default" : "accent"}
-                size="sm"
+                destination={destination}
+                recipientName={recipient?.name ?? null}
+                recipientPhone={recipient?.phone ?? null}
+                recipientEmail={recipient?.email ?? null}
+                agencyName={agencyName}
+                total={summary.sellingPrice}
+                perPerson={perPersonSelling}
+                version={activeQuote.version}
+                shareToken={activeQuote.shareToken}
+                trigger={
+                  <Button
+                    size="sm"
+                    variant={activeQuote.status === "SENT" ? "default" : "accent"}
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    {activeQuote.status === "SENT" ? "Resend" : "Send proposal"}
+                  </Button>
+                }
               />
             )}
 
@@ -1036,6 +1061,67 @@ export function QuoteBuilder({
   );
 }
 
+// --- delivery timeline ---------------------------------------------------
+
+function DeliveryTimeline({ status }: { status: QuoteStatus }) {
+  const steps = ["Drafted", "Sent", "Viewed", "Accepted"] as const;
+  // done = count of completed steps; current = the step with the gold ring.
+  const { done, current } =
+    status === "ACCEPTED"
+      ? { done: 4, current: -1 }
+      : status === "SENT"
+        ? { done: 2, current: 2 }
+        : status === "REJECTED" || status === "EXPIRED"
+          ? { done: 2, current: -1 }
+          : { done: 1, current: 1 }; // DRAFT
+
+  return (
+    <div className="flex items-start">
+      {steps.map((label, i) => {
+        const isDone = i < done;
+        const isCurrent = i === current;
+        return (
+          <div
+            key={label}
+            className="relative flex flex-1 flex-col items-center"
+          >
+            {i < steps.length - 1 && (
+              <span
+                className={cn(
+                  "absolute top-[6px] left-1/2 h-0.5 w-full",
+                  i < done - 1 || (isDone && i < done) ? "bg-ok" : "bg-line"
+                )}
+              />
+            )}
+            <span
+              className={cn(
+                "relative z-10 h-[13px] w-[13px] rounded-full border-2",
+                isDone
+                  ? "bg-ok border-ok"
+                  : isCurrent
+                    ? "bg-gold border-gold ring-4 ring-[var(--gold-line)]"
+                    : "bg-paper border-line"
+              )}
+            />
+            <span
+              className={cn(
+                "mt-2 text-[9.5px] font-semibold uppercase tracking-[0.12em]",
+                isCurrent
+                  ? "text-gold-deep"
+                  : isDone
+                    ? "text-ink-2"
+                    : "text-muted"
+              )}
+            >
+              {label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // --- line item -----------------------------------------------------------
 
 function LineItem({
@@ -1055,7 +1141,7 @@ function LineItem({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, height: 0, marginTop: 0 }}
       transition={{ duration: 0.2 }}
-      className="rounded-xl border border-line bg-white p-2.5 space-y-2"
+      className="rounded-[10px] border border-line bg-paper p-2.5 space-y-2"
     >
       <div className="flex items-center gap-2">
         <Select
@@ -1091,7 +1177,7 @@ function LineItem({
           type="button"
           onClick={() => onRemove(item.id)}
           disabled={!editable}
-          className="h-9 w-9 shrink-0 rounded-xl border border-line text-muted-foreground hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center disabled:opacity-30"
+          className="h-9 w-9 shrink-0 rounded-[8px] border border-line text-muted hover:text-bad hover:border-bad-soft transition-colors flex items-center justify-center disabled:opacity-30"
           aria-label="Remove line item"
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -1123,7 +1209,7 @@ function SaveIndicator({
 }) {
   if (!editable) {
     return (
-      <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+      <span className="text-xs text-muted inline-flex items-center gap-1.5">
         <Cloud className="h-3 w-3" />
         Read-only
       </span>
@@ -1131,7 +1217,7 @@ function SaveIndicator({
   }
   if (status === "saving") {
     return (
-      <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+      <span className="text-xs text-muted inline-flex items-center gap-1.5">
         <Loader2 className="h-3 w-3 animate-spin" />
         Saving…
       </span>
@@ -1139,7 +1225,7 @@ function SaveIndicator({
   }
   if (status === "error") {
     return (
-      <span className="text-xs text-red-600 inline-flex items-center gap-1.5">
+      <span className="text-xs text-bad inline-flex items-center gap-1.5">
         <CloudOff className="h-3 w-3" />
         Save failed — retry
       </span>
@@ -1147,22 +1233,22 @@ function SaveIndicator({
   }
   if (isDirty) {
     return (
-      <span className="text-xs text-amber-700 inline-flex items-center gap-1.5">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+      <span className="text-xs text-warn inline-flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-warn" />
         Unsaved changes
       </span>
     );
   }
   if (lastSavedAt) {
     return (
-      <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
-        <Check className="h-3 w-3 text-emerald-600" />
+      <span className="text-xs text-muted inline-flex items-center gap-1.5">
+        <Check className="h-3 w-3 text-ok" />
         Saved {timeAgo(lastSavedAt)}
       </span>
     );
   }
   return (
-    <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+    <span className="text-xs text-muted inline-flex items-center gap-1.5">
       <Cloud className="h-3 w-3" />
       Idle
     </span>
@@ -1260,7 +1346,7 @@ function Row({
       <span
         className={cn(
           "text-xs uppercase tracking-[0.18em]",
-          muted ? "text-ivory/50" : "text-ivory/70"
+          muted ? "text-[var(--on-dark)]/50" : "text-[var(--on-dark)]/70"
         )}
       >
         {label}
@@ -1268,8 +1354,8 @@ function Row({
       <span
         className={cn(
           emphasis
-            ? "font-display text-sand text-2xl"
-            : "font-medium text-ivory tabular-nums"
+            ? "font-display text-gold-deep text-2xl font-semibold tabular-nums font-mono"
+            : "font-medium text-[var(--on-dark)] tabular-nums font-mono"
         )}
       >
         {value}

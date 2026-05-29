@@ -55,11 +55,11 @@ export function FollowUpRow({ task }: { task: FollowUpRowData }) {
   return (
     <li
       className={cn(
-        "rounded-2xl border bg-white px-4 py-3 flex items-center gap-3 transition-colors",
+        "rounded-lg border bg-paper px-4 py-3 flex items-center gap-3 shadow-soft transition-colors",
         done
           ? "border-line/60 opacity-60"
           : overdue
-            ? "border-red-100 bg-red-50/40"
+            ? "border-bad/30 bg-bad-soft/40"
             : "border-line"
       )}
     >
@@ -67,10 +67,10 @@ export function FollowUpRow({ task }: { task: FollowUpRowData }) {
         onClick={toggleComplete}
         disabled={isPending}
         className={cn(
-          "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0",
+          "h-5 w-5 rounded-[6px] border-2 flex items-center justify-center transition-colors flex-shrink-0",
           done
-            ? "bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600"
-            : "border-line hover:border-navy"
+            ? "bg-ok border-ok text-white hover:brightness-95"
+            : "border-line hover:border-inkwash"
         )}
         aria-label={done ? "Reopen task" : "Complete task"}
         title={done ? "Click to reopen" : "Click to complete"}
@@ -82,18 +82,18 @@ export function FollowUpRow({ task }: { task: FollowUpRowData }) {
         <p className={cn("text-sm", done ? "line-through text-muted-foreground" : "text-ink")}>
           {task.title}
         </p>
-        <div className="mt-0.5 flex items-center gap-3 text-[10px] uppercase tracking-[0.18em]">
+        <div className="mt-0.5 flex items-center gap-3 text-[11px]">
           {task.contact ? (
             <Link
               href={`/contacts/${task.contact.id}`}
-              className="text-sand-700 hover:text-navy transition-colors"
+              className="text-gold-deep hover:text-inkwash transition-colors"
             >
               {task.contact.name}
             </Link>
           ) : (
             <span className="text-muted-foreground">Unlinked</span>
           )}
-          <span className={cn(overdue ? "text-red-700" : "text-muted-foreground")}>
+          <span className={cn("font-mono", overdue ? "text-bad" : "text-faint")}>
             {formatDate(task.dueAt)}
             {overdue && " · Overdue"}
           </span>

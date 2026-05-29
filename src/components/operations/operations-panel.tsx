@@ -9,7 +9,7 @@ export async function OperationsPanel({ tripId }: { tripId: string }) {
   const snapshot = await getTripOperations(tripId);
   if (!snapshot) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-white/60 p-8 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-line bg-paper-2 p-8 text-center text-sm text-muted">
         Trip not found.
       </div>
     );
@@ -21,10 +21,10 @@ export async function OperationsPanel({ tripId }: { tripId: string }) {
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl text-navy">
+          <h2 className="font-display text-2xl text-ink">
             Vendor assignments
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted">
             Suppliers booked for this trip, grouped by service.
           </p>
         </div>

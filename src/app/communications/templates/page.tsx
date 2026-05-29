@@ -24,11 +24,11 @@ export default async function CommsTemplatesPage() {
         <div>
           <Link
             href="/communications"
-            className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-navy inline-flex items-center gap-1"
+            className="text-xs uppercase tracking-[0.18em] text-muted hover:text-ink inline-flex items-center gap-1"
           >
             <ArrowLeft className="h-3 w-3" /> Communications
           </Link>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl text-navy tracking-tight leading-tight">
+          <h1 className="mt-2 tc-page-title">
             Templates
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -52,12 +52,12 @@ export default async function CommsTemplatesPage() {
           {templates.map((t) => (
             <li
               key={t.id}
-              className="rounded-2xl border border-line bg-white p-5"
+              className="rounded-lg border border-line bg-paper p-5 shadow-soft"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-display text-lg text-navy">{t.name}</p>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+                  <p className="font-display text-lg text-ink">{t.name}</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted mt-0.5 font-mono">
                     {t.templateId} · {t.language.toUpperCase()}
                   </p>
                 </div>
@@ -70,7 +70,7 @@ export default async function CommsTemplatesPage() {
                   </Badge>
                 </div>
               </div>
-              <pre className="mt-3 rounded-xl border border-line bg-ivory px-3.5 py-2.5 text-[12px] leading-relaxed text-ink whitespace-pre-wrap font-sans">
+              <pre className="mt-3 rounded-[8px] border border-line bg-paper-2 px-3.5 py-2.5 text-[12px] leading-relaxed text-ink whitespace-pre-wrap font-sans">
                 {t.bodyPreview}
               </pre>
               <div className="mt-3 flex items-center justify-end">

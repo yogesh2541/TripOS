@@ -181,20 +181,20 @@ export default async function DashboardPage({
         the app — even from inside a trip workspace.
       </OneTimeHint>
 
-      <section className="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <section className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700 flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5" />
+          <p className="tc-eyebrow gold">
+            <Sparkles className="h-[13px] w-[13px]" />
             {monthLabel}, {now.getFullYear()}
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-[1.08] text-balance">
+          <h1 className="tc-page-title mt-2.5 text-balance">
             {mine
               ? firstName
                 ? `${firstName}'s pipeline.`
                 : "Your pipeline."
               : "Agency pipeline."}
           </h1>
-          <p className="mt-3 max-w-xl text-sm md:text-base text-ink/70 leading-relaxed">
+          <p className="tc-page-sub">
             {mine
               ? "Leads you own, follow-ups on your plate, and the revenue you're closing this month."
               : "Everything across the agency — every teammate's leads, follow-ups and revenue."}
@@ -234,7 +234,7 @@ export default async function DashboardPage({
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-12">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 mb-8">
         <StatTile
           icon={<Users className="h-3 w-3" />}
           label="Active leads"
@@ -292,7 +292,7 @@ export default async function DashboardPage({
             cta={{ label: "All follow-ups", href: "/follow-ups" }}
           />
           {followUps.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-line bg-white/60 p-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border border-dashed border-line bg-paper-2 p-8 text-center text-sm text-muted-foreground">
               Nothing scheduled. Add a follow-up from any contact.
             </div>
           ) : (
@@ -316,13 +316,10 @@ function SectionHeading({
   cta?: { label: string; href: string };
 }) {
   return (
-    <div className="mb-4 flex items-baseline justify-between">
-      <h2 className="font-display text-2xl text-navy">{title}</h2>
+    <div className="tc-sec-head">
+      <h2>{title}</h2>
       {cta && (
-        <Link
-          href={cta.href}
-          className="text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-navy transition-colors"
-        >
+        <Link href={cta.href} className="lnk">
           {cta.label}
         </Link>
       )}

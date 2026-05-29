@@ -61,8 +61,8 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
       sortValue: (r) => r.destination.toLowerCase(),
       render: (r) => (
         <div className="min-w-0">
-          <p className="font-medium text-navy truncate">{r.destination}</p>
-          <p className="text-[11px] text-muted-foreground truncate">
+          <p className="font-medium text-ink truncate">{r.destination}</p>
+          <p className="text-[11px] text-muted truncate">
             {r.leadName ?? "Direct"} · Quote v{r.quoteVersion}
           </p>
         </div>
@@ -84,7 +84,7 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
       align: "right",
       sortValue: (r) => r.totalAmount,
       render: (r) => (
-        <span className="tabular-nums text-navy">
+        <span className="tabular-nums text-ink font-mono font-semibold">
           {formatINR(r.totalAmount)}
         </span>
       ),
@@ -102,10 +102,10 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
             : 0;
         return (
           <div className="text-right">
-            <span className="tabular-nums text-ink/80">
+            <span className="tabular-nums text-ink font-mono">
               {formatINR(r.paidAmount)}
             </span>
-            <span className="ml-1.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            <span className="ml-1.5 text-[10px] uppercase tracking-[0.14em] text-muted font-mono tabular-nums">
               {pct}%
             </span>
           </div>
@@ -123,8 +123,8 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
         return (
           <span
             className={
-              "tabular-nums " +
-              (pending > 0 ? "text-red-700" : "text-emerald-700")
+              "tabular-nums font-mono " +
+              (pending > 0 ? "text-bad" : "text-ok")
             }
           >
             {pending > 0 ? formatINR(pending) : "Settled"}
@@ -138,7 +138,7 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
       sortValue: (r) => new Date(r.createdAt),
       className: "hidden lg:block",
       render: (r) => (
-        <span className="text-xs text-ink/70">{formatDate(r.createdAt)}</span>
+        <span className="text-xs text-muted font-mono tabular-nums">{formatDate(r.createdAt)}</span>
       ),
     },
     {
@@ -153,7 +153,7 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
             lastDirection={r.wa.lastDirection}
           />
         ) : (
-          <span className="text-muted-foreground text-xs">—</span>
+          <span className="text-muted text-xs">—</span>
         ),
     },
   ];
@@ -195,7 +195,7 @@ export function BookingsTable({ bookings }: { bookings: BookingRow[] }) {
         initialSort={{ key: "created", dir: "desc" }}
         rowAccent={(r) => BOOKING_STATUS_ACCENT[r.status]}
         empty={
-          <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center text-sm text-muted">
             No bookings match these filters.
           </div>
         }

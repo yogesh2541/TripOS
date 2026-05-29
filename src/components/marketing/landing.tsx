@@ -31,11 +31,11 @@ function Hero() {
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,169,106,0.12),transparent_55%)]" />
       <div className="relative mx-auto max-w-6xl px-5 md:px-10 pt-20 md:pt-28 pb-16 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3.5 py-1.5 text-[11px] uppercase tracking-[0.2em] text-sand-700">
+        <span className="inline-flex items-center gap-2 rounded-[6px] border border-[var(--gold-line)] bg-gold-soft px-3.5 py-1.5 text-[11px] uppercase tracking-[0.2em] text-gold-deep">
           <Sparkles className="h-3.5 w-3.5" />
           AI-powered travel CRM
         </span>
-        <h1 className="mt-6 font-display text-5xl md:text-7xl leading-[0.98] tracking-tight text-navy">
+        <h1 className="mt-6 font-display text-5xl md:text-7xl leading-[0.98] tracking-tight text-ink">
           Run your travel agency
           <br className="hidden md:block" /> on one beautiful platform.
         </h1>
@@ -47,19 +47,19 @@ function Hero() {
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-medium text-ivory hover:bg-navy/90 transition-colors shadow-soft"
+            className="inline-flex items-center gap-2 rounded-[8px] bg-inkwash px-6 py-3 text-sm font-medium text-[var(--on-dark)] hover:bg-inkwash/90 transition-colors shadow-soft"
           >
             Start your {TRIAL_DAYS}-day free trial
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
             href="/pricing"
-            className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-6 py-3 text-sm font-medium text-navy hover:border-navy/40 transition-colors"
+            className="inline-flex items-center gap-2 rounded-[8px] border border-line bg-paper px-6 py-3 text-sm font-medium text-ink hover:border-line-2 transition-colors"
           >
             See pricing
           </Link>
         </div>
-        <p className="mt-4 text-xs text-muted-foreground">
+        <p className="mt-4 text-xs text-muted">
           No card required · Set up in minutes · Made for Indian agencies
         </p>
       </div>
@@ -106,10 +106,8 @@ function Features() {
   return (
     <section id="features" className="mx-auto max-w-6xl px-5 md:px-10 py-20">
       <div className="text-center mb-12">
-        <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-          Everything in one place
-        </p>
-        <h2 className="mt-3 font-display text-4xl md:text-5xl text-navy">
+        <p className="tc-eyebrow gold">Everything in one place</p>
+        <h2 className="mt-3 font-display text-4xl md:text-5xl text-ink">
           Built for how agencies actually work
         </h2>
       </div>
@@ -117,12 +115,12 @@ function Features() {
         {FEATURES.map((f) => (
           <div
             key={f.title}
-            className="rounded-2xl border border-line bg-white p-6 shadow-soft hover:shadow-lift transition-all"
+            className="rounded-lg border border-line bg-paper p-6 shadow-soft hover:shadow-lift transition-all"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-ivory border border-line text-sand-700">
+            <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-paper-2 border border-line text-gold-deep">
               <f.icon className="h-5 w-5" />
             </span>
-            <h3 className="mt-4 font-display text-xl text-navy">{f.title}</h3>
+            <h3 className="mt-4 font-display text-xl text-ink">{f.title}</h3>
             <p className="mt-2 text-sm text-ink/75 leading-relaxed">{f.body}</p>
           </div>
         ))}
@@ -158,12 +156,10 @@ const STEPS = [
 
 function HowItWorks() {
   return (
-    <section className="bg-navy text-ivory">
+    <section className="bg-inkwash text-[var(--on-dark)]">
       <div className="mx-auto max-w-6xl px-5 md:px-10 py-20">
         <div className="text-center mb-12">
-          <p className="text-xs uppercase tracking-[0.3em] text-sand">
-            From inquiry to booking
-          </p>
+          <p className="tc-eyebrow gold">From inquiry to booking</p>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
             One flow, start to finish
           </h2>
@@ -171,9 +167,9 @@ function HowItWorks() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((s) => (
             <div key={s.n}>
-              <p className="font-display text-3xl text-sand">{s.n}</p>
+              <p className="font-display text-3xl text-gold-deep font-mono tabular-nums">{s.n}</p>
               <h3 className="mt-3 font-display text-xl">{s.title}</h3>
-              <p className="mt-2 text-sm text-ivory/70 leading-relaxed">
+              <p className="mt-2 text-sm text-[var(--on-dark)]/70 leading-relaxed">
                 {s.body}
               </p>
             </div>
@@ -190,13 +186,11 @@ function PricingTeaser() {
   return (
     <section className="mx-auto max-w-5xl px-5 md:px-10 py-20">
       <div className="text-center mb-12">
-        <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-          Simple pricing
-        </p>
-        <h2 className="mt-3 font-display text-4xl md:text-5xl text-navy">
+        <p className="tc-eyebrow gold">Simple pricing</p>
+        <h2 className="mt-3 font-display text-4xl md:text-5xl text-ink">
           Plans that grow with you
         </h2>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-sm text-muted">
           Start free for {TRIAL_DAYS} days. No card required.
         </p>
       </div>
@@ -208,25 +202,27 @@ function PricingTeaser() {
             <div
               key={tier}
               className={
-                "rounded-2xl border bg-white p-6 shadow-soft flex flex-col " +
-                (featured ? "border-navy ring-1 ring-navy/15" : "border-line")
+                "rounded-lg border bg-paper p-6 shadow-soft flex flex-col " +
+                (featured
+                  ? "border-[var(--gold-line)] ring-1 ring-[var(--gold-line)]/40"
+                  : "border-line")
               }
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-2xl text-navy">{def.name}</h3>
+                <h3 className="font-display text-2xl text-ink">{def.name}</h3>
                 {featured && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-navy px-2.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-ivory">
+                  <span className="inline-flex items-center gap-1 rounded-[6px] bg-gold-soft border border-[var(--gold-line)] px-2.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-gold-deep">
                     <Sparkles className="h-3 w-3" />
                     Popular
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{def.tagline}</p>
+              <p className="mt-1 text-sm text-muted">{def.tagline}</p>
               <p className="mt-4">
-                <span className="font-display text-4xl text-navy">
+                <span className="font-display text-4xl text-ink font-mono tabular-nums">
                   {formatPlanPrice(def.priceMonthly)}
                 </span>
-                <span className="text-sm text-muted-foreground"> / month</span>
+                <span className="text-sm text-muted"> / month</span>
               </p>
               <ul className="mt-5 space-y-2 flex-1">
                 {def.highlights.map((h, i) => (
@@ -234,7 +230,7 @@ function PricingTeaser() {
                     key={i}
                     className="flex items-start gap-2 text-sm text-ink/85"
                   >
-                    <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <Check className="h-4 w-4 text-ok mt-0.5 shrink-0" />
                     {h}
                   </li>
                 ))}
@@ -242,10 +238,10 @@ function PricingTeaser() {
               <Link
                 href="/signup"
                 className={
-                  "mt-6 inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors " +
+                  "mt-6 inline-flex items-center justify-center gap-2 rounded-[8px] px-5 py-2.5 text-sm font-medium transition-colors " +
                   (featured
-                    ? "bg-navy text-ivory hover:bg-navy/90"
-                    : "border border-line text-navy hover:border-navy/40")
+                    ? "bg-inkwash text-[var(--on-dark)] hover:bg-inkwash/90"
+                    : "border border-line text-ink hover:border-line-2")
                 }
               >
                 Start free trial
@@ -256,7 +252,7 @@ function PricingTeaser() {
         })}
       </div>
       <p className="mt-6 text-center text-sm">
-        <Link href="/pricing" className="text-navy underline">
+        <Link href="/pricing" className="text-ink underline">
           Compare plans in detail
         </Link>
       </p>
@@ -269,20 +265,20 @@ function PricingTeaser() {
 function ClosingCta() {
   return (
     <section className="mx-auto max-w-6xl px-5 md:px-10 pb-24">
-      <div className="rounded-3xl bg-navy text-ivory px-8 py-16 text-center relative overflow-hidden">
+      <div className="rounded-lg bg-inkwash text-[var(--on-dark)] px-8 py-16 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,169,106,0.18),transparent_60%)]" />
         <div className="relative">
           <h2 className="font-display text-4xl md:text-5xl">
             Ready to craft better trips?
           </h2>
-          <p className="mt-4 text-ivory/75 max-w-xl mx-auto">
+          <p className="mt-4 text-[var(--on-dark)]/75 max-w-xl mx-auto">
             Join agencies running their entire business on TripCraft. Your free
             {" "}
             {TRIAL_DAYS}-day trial starts the moment you sign up.
           </p>
           <Link
             href="/signup"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-ivory px-6 py-3 text-sm font-medium text-navy hover:bg-white transition-colors"
+            className="mt-8 inline-flex items-center gap-2 rounded-[8px] bg-paper px-6 py-3 text-sm font-medium text-ink hover:bg-paper-2 transition-colors"
           >
             Start your free trial
             <ArrowRight className="h-4 w-4" />

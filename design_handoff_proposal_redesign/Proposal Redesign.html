@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TripCraft · Proposal Redesign</title>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#0C1620" />
+    <text x="50" y="62" font-family="Georgia, serif" font-size="40" fill="#C8A96A" text-anchor="middle">W</text>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@400;450;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tripcraft.css" />
+<link rel="stylesheet" href="proposal.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #ECE7DC; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="image-slot.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="trip-data.jsx"></script>
+<script type="text/babel" src="proposal-web.jsx"></script>
+<script type="text/babel" src="proposal-pdf.jsx"></script>
+<script type="text/babel" src="builder-screen.jsx"></script>
+<script type="text/babel" src="send-composer.jsx"></script>
+
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  function App() {
+    return (
+      <DesignCanvas>
+        <DCSection id="builder" title="Operator builder" subtitle="Crafting the quote · stronger send & share">
+          <DCArtboard id="bd" label="Quote builder + live preview" width={1440} height={940}>
+            <window.BuilderScreen />
+          </DCArtboard>
+          <DCArtboard id="sc" label="Send proposal composer" width={860} height={880}>
+            <window.SendComposer />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="web" title="Customer proposal · web" subtitle="The editorial page your client opens from the share link">
+          <DCArtboard id="ppweb" label="Bali proposal — full page" width={960} height={9400}>
+            <window.ProposalWeb />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="pdf" title="Proposal PDF · A4" subtitle="Same design, paginated for the downloadable document">
+          <DCArtboard id="p1" label="01 · Cover" width={794} height={1123}><window.PdfCover /></DCArtboard>
+          <DCArtboard id="p2" label="02 · At a glance" width={794} height={1123}><window.PdfGlance /></DCArtboard>
+          <DCArtboard id="p3" label="03 · Day by day" width={794} height={1123}><window.PdfDays1 /></DCArtboard>
+          <DCArtboard id="p4" label="04 · Day by day" width={794} height={1123}><window.PdfDays2 /></DCArtboard>
+          <DCArtboard id="p5" label="05 · Inclusions & price" width={794} height={1123}><window.PdfPricing /></DCArtboard>
+          <DCArtboard id="p6" label="06 · Closing" width={794} height={1123}><window.PdfClosing /></DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

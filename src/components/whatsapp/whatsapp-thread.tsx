@@ -34,14 +34,14 @@ export function WhatsappThread({
 }) {
   if (messages.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-white/60 p-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-line bg-paper-2 p-6 text-center text-sm text-muted">
         No WhatsApp messages yet.
       </div>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-line bg-[#E5DDD5] p-4">
+    <div className="rounded-[10px] border border-line bg-[#E5DDD5] p-4">
       <ul className="space-y-2.5">
         {messages.map((m) => (
           <MessageBubble key={m.id} m={m} />
@@ -72,10 +72,10 @@ function MessageBubble({
       <div className="max-w-[78%]">
         <div
           className={
-            "rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed shadow-soft whitespace-pre-wrap " +
+            "rounded-[14px] px-3.5 py-2.5 text-[13px] leading-relaxed shadow-soft whitespace-pre-wrap " +
             (outbound
-              ? "bg-[#DCF8C6] text-ink rounded-br-md"
-              : "bg-white text-ink rounded-bl-md")
+              ? "bg-gold-soft text-ink rounded-br-md"
+              : "bg-paper text-ink border border-line rounded-bl-md")
           }
         >
           {m.kind === "DOCUMENT" && m.mediaUrl ? (
@@ -116,7 +116,7 @@ function MessageBubble({
           ) : null}
         </div>
         {outbound && m.status === "FAILED" && m.failedReason ? (
-          <p className="mt-1 px-1 text-[10px] text-red-700">{m.failedReason}</p>
+          <p className="mt-1 px-1 text-[10px] text-bad">{m.failedReason}</p>
         ) : null}
       </div>
     </li>

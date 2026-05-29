@@ -2,17 +2,22 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
+// "Atelier Pro" status pills — soft tint fills, 6px radius, 11px / 550.
+// Variant names are preserved so existing call-sites keep working; the
+// look maps onto the design's functional palette.
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em] transition-colors",
+  "inline-flex items-center gap-1.5 rounded-[6px] h-[21px] px-2 text-[11px] font-[550] tracking-[0.01em] whitespace-nowrap transition-colors",
   {
     variants: {
       variant: {
-        default: "bg-navy text-ivory",
-        outline: "border border-line bg-white text-navy",
-        accent: "bg-sand-100 text-sand-800 border border-sand-200",
-        muted: "bg-ivory text-muted-foreground border border-line",
-        danger: "bg-red-50 text-red-700 border border-red-100",
-        success: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+        default: "bg-inkwash text-[var(--on-dark)]",
+        outline: "border border-line bg-paper text-ink-2",
+        accent: "bg-gold-soft text-gold-deep",
+        muted: "bg-[#EFEDE6] text-ink-2",
+        danger: "bg-bad-soft text-[#9a4234]",
+        success: "bg-ok-soft text-[#3c6b48]",
+        warn: "bg-warn-soft text-[#8a6418]",
+        info: "bg-info-soft text-[#46587a]",
       },
     },
     defaultVariants: { variant: "default" },

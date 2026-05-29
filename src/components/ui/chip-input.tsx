@@ -35,20 +35,20 @@ export function ChipInput({
   return (
     <div
       className={cn(
-        "flex flex-wrap gap-1.5 rounded-2xl border border-line bg-white px-2 py-1.5 min-h-[42px] focus-within:border-sand focus-within:ring-2 focus-within:ring-sand/40 transition-all",
+        "flex flex-wrap gap-1.5 rounded-[10px] border border-line bg-paper px-2 py-1.5 min-h-[42px] focus-within:border-[var(--gold-line)] focus-within:ring-2 focus-within:ring-[var(--gold-line)] transition-all",
         className
       )}
     >
       {value.map((v, i) => (
         <span
           key={`${v}-${i}`}
-          className="inline-flex items-center gap-1.5 h-7 pl-3 pr-1 bg-ivory border border-line rounded-full text-xs text-ink"
+          className="inline-flex items-center gap-1.5 h-7 pl-3 pr-1 bg-paper-2 border border-line rounded-[6px] text-xs text-ink"
         >
           {v}
           <button
             type="button"
             onClick={() => remove(i)}
-            className="h-5 w-5 rounded-full hover:bg-line/50 flex items-center justify-center text-muted-foreground hover:text-red-600 transition-colors"
+            className="h-5 w-5 rounded-[5px] hover:bg-line/50 flex items-center justify-center text-muted hover:text-bad transition-colors"
             aria-label={`Remove ${v}`}
           >
             <X className="h-3 w-3" />
@@ -70,7 +70,7 @@ export function ChipInput({
         }}
         onBlur={() => commit(draft)}
         placeholder={value.length === 0 ? placeholder : ""}
-        className="flex-1 min-w-[120px] h-7 px-2 outline-none bg-transparent text-sm placeholder:text-muted-foreground"
+        className="flex-1 min-w-[120px] h-7 px-2 outline-none bg-transparent text-sm placeholder:text-muted"
       />
     </div>
   );

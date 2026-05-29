@@ -45,7 +45,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   if (done) {
     return (
       <div className="text-center space-y-3">
-        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-[10px] bg-ok-soft text-ok border border-ok/20">
           <CheckCircle2 className="h-5 w-5" />
         </span>
         <p className="text-sm text-ink">
@@ -59,7 +59,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     return (
       <div className="text-center space-y-3">
         <p className="text-sm text-ink">This reset link is missing its token.</p>
-        <Link href="/forgot-password" className="text-xs text-navy underline">
+        <Link href="/forgot-password" className="text-xs text-ink underline">
           Request a new link
         </Link>
       </div>
@@ -90,12 +90,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
           onChange={(e) => setConfirm(e.target.value)}
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" variant="accent" className="w-full" disabled={isPending}>
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         Set new password
       </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        <Link href="/login" className="text-navy underline">
+      <p className="text-center text-xs text-muted">
+        <Link href="/login" className="text-ink underline">
           Back to sign in
         </Link>
       </p>

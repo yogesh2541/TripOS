@@ -9,27 +9,27 @@ const META: Record<
   QUEUED: {
     label: "Queued",
     icon: <Clock className="h-3 w-3" />,
-    tone: "bg-ivory text-muted-foreground border border-line",
+    tone: "bg-paper-2 text-muted border border-line",
   },
   SENT: {
     label: "Sent",
     icon: <Check className="h-3 w-3" />,
-    tone: "bg-white text-navy border border-line",
+    tone: "bg-paper text-ink border border-line",
   },
   DELIVERED: {
     label: "Delivered",
     icon: <CheckCheck className="h-3 w-3" />,
-    tone: "bg-sand-50 text-sand-800 border border-sand-200",
+    tone: "bg-ok-soft text-ok border border-ok/30",
   },
   READ: {
     label: "Read",
     icon: <Eye className="h-3 w-3" />,
-    tone: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+    tone: "bg-ok-soft text-ok border border-ok/30",
   },
   FAILED: {
     label: "Failed",
     icon: <AlertCircle className="h-3 w-3" />,
-    tone: "bg-red-50 text-red-700 border border-red-100",
+    tone: "bg-bad-soft text-bad border border-bad/30",
   },
 };
 
@@ -44,7 +44,7 @@ export function MessageStatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]",
+        "inline-flex items-center gap-1 rounded-[6px] px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]",
         m.tone,
         className
       )}

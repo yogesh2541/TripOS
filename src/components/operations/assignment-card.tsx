@@ -257,9 +257,9 @@ export function AssignmentCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "group rounded-2xl border bg-white p-4 shadow-soft transition-all",
-        isConfirmed && "border-emerald-200/70",
-        isCancelled && "border-red-200/70 opacity-70",
+        "group rounded-lg border bg-paper p-4 shadow-soft transition-all",
+        isConfirmed && "border-ok/30",
+        isCancelled && "border-bad/30 opacity-70",
         !isConfirmed && !isCancelled && "border-line"
       )}
     >
@@ -270,18 +270,18 @@ export function AssignmentCard({
               <>
                 <Link
                   href={`/vendors/${assignment.vendor.id}`}
-                  className="font-medium text-navy hover:text-sand-800 truncate"
+                  className="font-medium text-ink hover:text-gold-deep truncate"
                 >
                   {assignment.vendor.name}
                 </Link>
                 {assignment.vendor.isPreferred ? (
-                  <Star className="h-3 w-3 fill-sand text-sand shrink-0" />
+                  <Star className="h-3 w-3 fill-gold-deep text-gold-deep shrink-0" />
                 ) : null}
               </>
             ) : (
               // Draft seeded from a quote — vendor not yet assigned.
-              <span className="inline-flex items-center gap-1.5 text-amber-800">
-                <Star className="h-3 w-3 fill-amber-300 text-amber-500 shrink-0" />
+              <span className="inline-flex items-center gap-1.5 text-warn">
+                <Star className="h-3 w-3 fill-warn text-warn shrink-0" />
                 <span className="font-medium">Vendor not assigned</span>
               </span>
             )}
@@ -319,13 +319,13 @@ export function AssignmentCard({
               ) : null}
               {!isConfirmed && !isCancelled ? (
                 <DropdownMenuItem onSelect={() => setConfirmOpen(true)}>
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-ok" />
                   Confirm…
                 </DropdownMenuItem>
               ) : null}
               {assignment.status === "CONFIRMED" ? (
                 <DropdownMenuItem onSelect={() => transition("COMPLETED")}>
-                  <CheckCheck className="h-3.5 w-3.5 text-emerald-700" />
+                  <CheckCheck className="h-3.5 w-3.5 text-ok" />
                   Mark completed
                 </DropdownMenuItem>
               ) : null}
@@ -366,7 +366,7 @@ export function AssignmentCard({
                         <DropdownMenuItem
                           onSelect={() => markVoucherSent(latestVoucher.id)}
                         >
-                          <Send className="h-3.5 w-3.5 text-sand-700" />
+                          <Send className="h-3.5 w-3.5 text-gold-deep" />
                           Mark sent
                         </DropdownMenuItem>
                       ) : null}
@@ -383,7 +383,7 @@ export function AssignmentCard({
                             latestVoucher.voucherNumber
                           )
                         }
-                        className="text-red-700 focus:bg-red-50"
+                        className="text-bad focus:bg-bad-soft"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete voucher
@@ -391,7 +391,7 @@ export function AssignmentCard({
                     </>
                   ) : (
                     <DropdownMenuItem onSelect={generateVoucher}>
-                      <FileText className="h-3.5 w-3.5 text-sand-700" />
+                      <FileText className="h-3.5 w-3.5 text-gold-deep" />
                       Generate voucher
                     </DropdownMenuItem>
                   )}
@@ -399,7 +399,7 @@ export function AssignmentCard({
               ) : null}
               {!isCancelled ? (
                 <DropdownMenuItem onSelect={() => transition("CANCELLED")}>
-                  <XCircle className="h-3.5 w-3.5 text-red-600" />
+                  <XCircle className="h-3.5 w-3.5 text-bad" />
                   Cancel
                 </DropdownMenuItem>
               ) : (
@@ -410,7 +410,7 @@ export function AssignmentCard({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={remove}
-                className="text-red-700 focus:bg-red-50"
+                className="text-bad focus:bg-bad-soft"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Delete
@@ -420,7 +420,7 @@ export function AssignmentCard({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
         {assignment.startDate ? (
           <span className="inline-flex items-center gap-1">
             <CalendarRange className="h-3 w-3" />
@@ -437,7 +437,7 @@ export function AssignmentCard({
           </span>
         ) : null}
         {assignment.totalCost !== null ? (
-          <span className="inline-flex items-center gap-1 text-navy">
+          <span className="inline-flex items-center gap-1 text-ink font-mono tabular-nums">
             <Tag className="h-3 w-3" />
             {formatINR(assignment.totalCost)}
             {assignment.sellingPrice !== null
@@ -466,7 +466,7 @@ export function AssignmentCard({
           {assignment.vendor.phone ? (
             <a
               href={`tel:${assignment.vendor.phone}`}
-              className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2 py-0.5 text-[11px] text-navy hover:border-sand-200"
+              className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2 py-0.5 text-[11px] text-ink hover:border-[var(--gold-line)]"
             >
               <Phone className="h-3 w-3" />
               Call
@@ -480,7 +480,7 @@ export function AssignmentCard({
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2 py-0.5 text-[11px] text-emerald-700 hover:border-emerald-200"
+              className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2 py-0.5 text-[11px] text-ok hover:border-ok/40"
             >
               <MessageCircle className="h-3 w-3" />
               WhatsApp
@@ -489,7 +489,7 @@ export function AssignmentCard({
           {assignment.vendor.email ? (
             <a
               href={`mailto:${assignment.vendor.email}`}
-              className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2 py-0.5 text-[11px] text-navy hover:border-sand-200"
+              className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2 py-0.5 text-[11px] text-ink hover:border-[var(--gold-line)]"
             >
               <Mail className="h-3 w-3" />
               Email
@@ -499,10 +499,10 @@ export function AssignmentCard({
       ) : null}
 
       {latestVoucher ? (
-        <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-sand-200/70 bg-sand-50/40 px-3 py-2">
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-[8px] border border-[var(--gold-line)] bg-gold-soft/40 px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
-            <FileText className="h-3.5 w-3.5 text-sand-800 shrink-0" />
-            <span className="text-xs font-medium text-navy truncate">
+            <FileText className="h-3.5 w-3.5 text-gold-deep shrink-0" />
+            <span className="text-xs font-medium text-ink font-mono tabular-nums truncate">
               {latestVoucher.voucherNumber}
             </span>
             {latestVoucher.sentAt ? (
@@ -521,7 +521,7 @@ export function AssignmentCard({
               href={`/api/vouchers/${latestVoucher.id}/pdf`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-navy hover:bg-white"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-ink hover:bg-paper"
               title="Download PDF"
             >
               <Download className="h-3.5 w-3.5" />
@@ -530,7 +530,7 @@ export function AssignmentCard({
               href={`/v/${latestVoucher.shareToken}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-navy hover:bg-white"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-ink hover:bg-paper"
               title="Open share page"
             >
               <ExternalLink className="h-3.5 w-3.5" />
@@ -538,7 +538,7 @@ export function AssignmentCard({
             <button
               type="button"
               onClick={() => copyShareLink(latestVoucher.shareToken)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-navy hover:bg-white"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-[6px] text-ink hover:bg-paper"
               title="Copy share link"
             >
               <Copy className="h-3.5 w-3.5" />

@@ -15,9 +15,12 @@ export function isRazorpayConfigured(): boolean {
   );
 }
 
-function authHeader(): string {
-  const id = process.env.RAZORPAY_KEY_ID ?? "";
-  const secret = process.env.RAZORPAY_KEY_SECRET ?? "";
+/** Per-agency keys, when supplied; otherwise the platform env keys. */
+export type RazorpayKeys = { keyId: string; keySecret: string };
+
+function authHeader(creds?: RazorpayKeys): string {
+  const id = creds?.keyId ?? process.env.RAZORPAY_KEY_ID ?? "";
+  const secret = creds?.keySecret ?? process.env.RAZORPAY_KEY_SECRET ?? "";
   return "Basic " + Buffer.from(`${id}:${secret}`).toString("base64");
 }
 
@@ -49,11 +52,12 @@ function normalizePhone(raw?: string | null): string | undefined {
 }
 
 export async function createRazorpayPaymentLink(
-  args: CreateLinkArgs
+  args: CreateLinkArgs,
+  creds?: RazorpayKeys
 ): Promise<CreatedLink> {
-  if (!isRazorpayConfigured()) {
+  if (!creds && !isRazorpayConfigured()) {
     throw new Error(
-      "Online payments aren't configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable payment links."
+      "Online payments aren't connected. Add your Razorpay keys in Settings → Integrations."
     );
   }
   const body = {
@@ -78,7 +82,7 @@ export async function createRazorpayPaymentLink(
   const res = await fetch(`${API_BASE}/payment_links`, {
     method: "POST",
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(creds),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
@@ -97,11 +101,42 @@ export async function createRazorpayPaymentLink(
   return { id: json.id, shortUrl: json.short_url, status: json.status };
 }
 
-export async function cancelRazorpayPaymentLink(linkId: string): Promise<void> {
-  if (!isRazorpayConfigured()) return;
+/**
+ * Lightweight credential check — a cheap authenticated GET. 401 means the
+ * key/secret pair is wrong; 200 means they're valid and reachable.
+ */
+export async function verifyRazorpayKeys(
+  creds: RazorpayKeys
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/payment_links?count=1`, {
+      headers: { Authorization: authHeader(creds) },
+      cache: "no-store",
+    });
+    if (res.status === 401) {
+      return {
+        ok: false,
+        error: "Authentication failed — check your Key ID and Key Secret.",
+      };
+    }
+    if (!res.ok) return { ok: false, error: `Razorpay returned HTTP ${res.status}.` };
+    return { ok: true };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Couldn't reach Razorpay.",
+    };
+  }
+}
+
+export async function cancelRazorpayPaymentLink(
+  linkId: string,
+  creds?: RazorpayKeys
+): Promise<void> {
+  if (!creds && !isRazorpayConfigured()) return;
   const res = await fetch(`${API_BASE}/payment_links/${linkId}/cancel`, {
     method: "POST",
-    headers: { Authorization: authHeader() },
+    headers: { Authorization: authHeader(creds) },
   });
   // A link that's already paid/cancelled returns an error — non-fatal, the
   // webhook/status is the source of truth.
@@ -116,9 +151,10 @@ export async function cancelRazorpayPaymentLink(linkId: string): Promise<void> {
  */
 export function verifyRazorpayWebhook(
   rawBody: string,
-  signature: string | null
+  signature: string | null,
+  secretOverride?: string | null
 ): boolean {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  const secret = secretOverride ?? process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret || !signature) return false;
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   const a = Buffer.from(expected);

@@ -338,12 +338,12 @@ function SearchTrigger({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="hidden md:inline-flex items-center gap-2 rounded-full border border-line bg-white/80 px-3 py-1.5 text-xs text-muted-foreground hover:border-sand-200 hover:text-navy transition-colors"
+      className="hidden md:inline-flex h-[34px] min-w-[230px] items-center gap-2 rounded-[9px] border border-line bg-paper px-[11px] text-[12.5px] text-muted-foreground transition-colors hover:border-[var(--gold-line)]"
       aria-label="Open search (Cmd+K)"
     >
       <Search className="h-3.5 w-3.5" />
-      <span>Search</span>
-      <kbd className="ml-1 inline-flex h-4 items-center rounded border border-line bg-ivory px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span>Search trips, leads, vendors…</span>
+      <kbd className="ml-auto inline-flex items-center rounded-[5px] border border-line bg-paper-2 px-1.5 py-px font-mono text-[10px] text-faint">
         ⌘K
       </kbd>
     </button>

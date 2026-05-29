@@ -245,7 +245,7 @@ export function SegmentFormDialog({
               min={form.departureTime || undefined}
               onChange={(e) => update("arrivalTime", e.target.value)}
               className={
-                timeError ? "border-red-300 focus-visible:ring-red-200" : ""
+                timeError ? "border-bad/50 focus-visible:ring-bad/20" : ""
               }
             />
           </div>
@@ -257,13 +257,13 @@ export function SegmentFormDialog({
             {tripStartDate ? (
               <div
                 className={cn(
-                  "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm",
+                  "flex items-center gap-2 rounded-[10px] border px-3 py-2.5 text-sm",
                   outOfRange
-                    ? "border-red-200 bg-red-50/60 text-red-800"
-                    : "border-sand-200 bg-sand-50/60 text-navy"
+                    ? "border-bad/30 bg-bad-soft/60 text-bad"
+                    : "border-[var(--gold-line)] bg-gold-soft/60 text-ink"
                 )}
               >
-                <CalendarClock className="h-4 w-4 shrink-0 text-sand-700" />
+                <CalendarClock className="h-4 w-4 shrink-0 text-gold-deep" />
                 {form.departureTime ? (
                   <span>
                     Lands on{" "}
@@ -271,7 +271,7 @@ export function SegmentFormDialog({
                     {" · "}
                     {fmtDayDate(tripStartDate, clampedDay)}
                     {outOfRange ? (
-                      <span className="ml-1.5 text-red-700">
+                      <span className="ml-1.5 text-bad">
                         — departure is outside the trip window; clamped to the
                         nearest day.
                       </span>
@@ -378,7 +378,7 @@ export function SegmentFormDialog({
         </div>
 
         {timeError ? (
-          <p className="mt-1 text-xs text-red-700 inline-flex items-center gap-1.5">
+          <p className="mt-1 text-xs text-bad inline-flex items-center gap-1.5">
             <AlertTriangle className="h-3.5 w-3.5" />
             {timeError}
           </p>
@@ -416,10 +416,10 @@ function TypeButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "h-11 rounded-2xl border text-sm transition-all flex items-center justify-center gap-2",
+        "h-11 rounded-[10px] border text-sm transition-all flex items-center justify-center gap-2",
         active
-          ? "border-navy bg-navy text-ivory shadow-soft"
-          : "border-line bg-white text-navy hover:border-sand"
+          ? "border-inkwash bg-inkwash text-[var(--on-dark)] shadow-soft"
+          : "border-line bg-paper text-ink hover:border-[var(--gold-line)]"
       )}
     >
       {children}

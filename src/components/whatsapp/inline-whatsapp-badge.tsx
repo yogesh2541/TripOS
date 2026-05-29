@@ -25,10 +25,10 @@ export function InlineWhatsappBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]",
+        "inline-flex items-center gap-1 rounded-[6px] border px-2 py-0.5 text-[10px] uppercase tracking-[0.16em]",
         inboundLatest
-          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-          : "border-line bg-white text-muted-foreground",
+          ? "border-ok/30 bg-ok-soft text-ok"
+          : "border-line bg-paper text-muted",
         className
       )}
       title={
@@ -41,11 +41,11 @@ export function InlineWhatsappBadge({
         <MessageCircle
           className={cn(
             "h-3 w-3",
-            inboundLatest ? "text-emerald-600" : "text-muted-foreground"
+            inboundLatest ? "text-ok" : "text-muted"
           )}
         />
         {unreadInbound > 0 ? (
-          <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-ok animate-pulse" />
         ) : null}
       </span>
       {unreadInbound > 0 ? unreadInbound : count}

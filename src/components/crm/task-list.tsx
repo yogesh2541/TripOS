@@ -44,7 +44,7 @@ export function TaskList({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-line bg-white p-4 grid grid-cols-[1fr_160px_auto] gap-2">
+      <div className="rounded-lg border border-line bg-paper p-4 grid grid-cols-[1fr_160px_auto] gap-2">
         <Input
           placeholder="Follow up about pricing"
           value={title}
@@ -70,7 +70,7 @@ export function TaskList({
       </div>
 
       {tasks.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center text-sm text-muted">
           No tasks yet.
         </div>
       ) : (
@@ -109,11 +109,11 @@ function TaskRow({ task }: { task: Task }) {
   return (
     <li
       className={cn(
-        "rounded-2xl border bg-white px-4 py-3 flex items-center gap-3 transition-colors",
+        "rounded-lg border bg-paper px-4 py-3 flex items-center gap-3 transition-colors",
         done
           ? "border-line/60 opacity-60"
           : overdue
-            ? "border-red-100 bg-red-50/40"
+            ? "border-bad-soft bg-bad-soft/40"
             : "border-line"
       )}
     >
@@ -123,8 +123,8 @@ function TaskRow({ task }: { task: Task }) {
         className={cn(
           "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors",
           done
-            ? "bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600"
-            : "border-line hover:border-navy"
+            ? "bg-ok border-ok text-white hover:opacity-80"
+            : "border-line hover:border-[var(--gold-line)]"
         )}
         aria-label={done ? "Reopen task" : "Complete task"}
         title={done ? "Click to reopen" : "Click to complete"}
@@ -143,7 +143,7 @@ function TaskRow({ task }: { task: Task }) {
         <p
           className={cn(
             "text-[10px] uppercase tracking-[0.18em] mt-0.5",
-            overdue ? "text-red-700" : "text-muted-foreground"
+            overdue ? "text-bad" : "text-muted"
           )}
         >
           Due {formatDate(task.dueAt)}
@@ -153,7 +153,7 @@ function TaskRow({ task }: { task: Task }) {
       <button
         onClick={remove}
         disabled={isPending}
-        className="text-muted-foreground hover:text-red-600 transition-colors"
+        className="text-muted hover:text-bad transition-colors"
         aria-label="Delete task"
       >
         <Trash2 className="h-3.5 w-3.5" />

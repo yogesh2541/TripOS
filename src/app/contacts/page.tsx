@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles, Users } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { LeadKanban, type KanbanLead } from "@/components/crm/contact-kanban";
 import { LeadsTable, type LeadRow } from "@/components/crm/contacts-table";
@@ -90,15 +90,14 @@ export default async function LeadsPage({
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
+          <p className="tc-eyebrow gold">
+            <Users className="h-[13px] w-[13px]" />
             Pipeline
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Contacts
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="tc-page-title mt-2.5">Contacts</h1>
+          <p className="tc-page-sub">
             {view === "board"
               ? "Drag a card across columns to move it through your pipeline."
               : "Sort and scan your whole pipeline — click a row to open."}

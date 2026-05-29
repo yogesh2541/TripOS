@@ -46,15 +46,15 @@ export function CustomerPreferencesPanel({
     !prefs.dietary && !prefs.hotels && !prefs.travelStyle && !prefs.other;
 
   return (
-    <section className="rounded-2xl border border-line bg-white p-5 space-y-3">
+    <section className="rounded-lg border border-line bg-paper p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-sand-700">
+        <p className="tc-eyebrow gold">
           Preferences
         </p>
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1"
+            className="text-xs text-muted hover:text-ink transition-colors flex items-center gap-1"
           >
             <Pencil className="h-3 w-3" />
             Edit
@@ -66,7 +66,7 @@ export function CustomerPreferencesPanel({
                 setPrefs(initial);
                 setEditing(false);
               }}
-              className="text-xs text-muted-foreground hover:text-navy transition-colors flex items-center gap-1"
+              className="text-xs text-muted hover:text-ink transition-colors flex items-center gap-1"
             >
               <X className="h-3 w-3" />
               Cancel
@@ -74,7 +74,7 @@ export function CustomerPreferencesPanel({
             <button
               onClick={save}
               disabled={isPending}
-              className="text-xs text-navy hover:text-sand-700 transition-colors flex items-center gap-1 disabled:opacity-50"
+              className="text-xs text-ink hover:text-gold-deep transition-colors flex items-center gap-1 disabled:opacity-50"
             >
               {isPending ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
@@ -117,7 +117,7 @@ export function CustomerPreferencesPanel({
           </div>
         </div>
       ) : empty ? (
-        <p className="text-xs text-muted-foreground italic">
+        <p className="text-xs text-muted italic">
           No preferences captured.
         </p>
       ) : (
@@ -131,7 +131,7 @@ export function CustomerPreferencesPanel({
           )}
           {prefs.other && (
             <div>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-0.5">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-muted mb-0.5">
                 Other
               </p>
               <p className="text-sm text-ink/80 whitespace-pre-line leading-relaxed">
@@ -165,7 +165,7 @@ function Field({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid grid-cols-[80px_1fr] gap-2">
-      <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground pt-0.5">
+      <span className="text-[10px] uppercase tracking-[0.18em] text-muted pt-0.5">
         {label}
       </span>
       <span className="text-ink/80">{value}</span>

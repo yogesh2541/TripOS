@@ -33,19 +33,19 @@ export function ForgotPasswordForm() {
   if (sent) {
     return (
       <div className="text-center space-y-3">
-        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-[10px] bg-ok-soft text-ok border border-ok/20">
           <MailCheck className="h-5 w-5" />
         </span>
         <p className="text-sm text-ink">
           If an account exists for <span className="font-medium">{email}</span>,
           a reset link is on its way. It expires in 1 hour.
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           Check your spam folder if it doesn&apos;t arrive in a few minutes.
         </p>
         <Link
           href="/login"
-          className="inline-block text-xs text-navy underline pt-2"
+          className="inline-block text-xs text-ink underline pt-2"
         >
           Back to sign in
         </Link>
@@ -67,13 +67,13 @@ export function ForgotPasswordForm() {
           autoFocus
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" variant="accent" className="w-full" disabled={isPending}>
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         Send reset link
       </Button>
-      <p className="text-center text-xs text-muted-foreground">
+      <p className="text-center text-xs text-muted">
         Remembered it?{" "}
-        <Link href="/login" className="text-navy underline">
+        <Link href="/login" className="text-ink underline">
           Back to sign in
         </Link>
       </p>

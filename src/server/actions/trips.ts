@@ -9,6 +9,21 @@ import { generateItineraryAI, generateTripFromBriefAI } from "@/lib/ai";
 import { logActivity } from "@/server/helpers/log-activity";
 import { recomputeContactStatus } from "@/server/helpers/contact-status";
 
+// Per-day plan the wizard assembles from the agent's route (city + nights),
+// meal plan, and day-tagged activities. Fed to the AI as authoritative facts
+// and overlaid back onto the generated days so the proposal shows the exact
+// cities + meal chips.
+const dayPlanSchema = z.object({
+  city: z.string().nullable().optional(),
+  hotel: z.string().nullable().optional(),
+  roomType: z.string().nullable().optional(),
+  mealPlan: z.string().nullable().optional(),
+  activities: z.array(z.string()).optional(),
+  inclusions: z.array(z.string()).optional(),
+  exclusions: z.array(z.string()).optional(),
+  transferNote: z.string().nullable().optional(),
+});
+
 const tripSchema = z.object({
   destination: z.string().min(2, "Destination is required").max(80),
   days: z.coerce.number().int().min(1).max(30),
@@ -21,8 +36,10 @@ const tripSchema = z.object({
     .enum(["Boutique", "Luxury Resort", "Heritage", "Villa", "Standard"])
     .default("Boutique"),
   interests: z.array(z.string()).default([]),
-  notes: z.string().max(1000).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
   contactId: z.string().optional().nullable(),
+  /** Optional per-day route/meal/activity plan from the Quick wizard. */
+  dayPlans: z.array(dayPlanSchema).max(30).optional(),
 });
 
 export type CreateTripInput = z.infer<typeof tripSchema>;
@@ -87,12 +104,39 @@ export async function createTripAction(input: CreateTripInput) {
       hotelType: trip.hotelType,
       interests: trip.interests,
       notes: trip.notes,
+      dayPlans: data.dayPlans,
     });
+
+    // Overlay the agent's structured facts (city + meal plan + planned
+    // activities) back onto the AI's prose days. The model writes title /
+    // summary / activities but never echoes agent-owned facts — without this
+    // the proposal would lose the exact cities and meal chips the agent set.
+    const plans = data.dayPlans;
+    const merged =
+      plans && plans.length > 0
+        ? {
+            ...content,
+            days: content.days.map((day, i) => {
+              const plan = plans[i];
+              if (!plan) return day;
+              return {
+                ...day,
+                city: plan.city ?? day.city ?? null,
+                mealPlan: plan.mealPlan ?? day.mealPlan ?? null,
+                // Activities are STRICTLY the agent's input — never the AI's.
+                // The model is told not to invent any, but we overwrite here
+                // too so a misbehaving model can't slip extras onto the trip.
+                activities: plan.activities ?? [],
+              };
+            }),
+          }
+        : content;
+
     await prisma.itinerary.create({
       data: {
         tripId: trip.id,
         version: 1,
-        content: content as unknown as object,
+        content: merged as unknown as object,
       },
     });
   } catch (e) {

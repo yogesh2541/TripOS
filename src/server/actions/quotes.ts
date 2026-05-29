@@ -313,7 +313,12 @@ export async function revertQuoteToDraftAction(quoteId: string) {
     where: { id: quoteId, trip: { agencyId } },
     include: {
       trip: { select: { id: true, contactId: true } },
-      booking: { include: { payments: { take: 1 } } },
+      booking: {
+        include: {
+          payments: { take: 1 },
+          invoice: { select: { id: true, status: true, invoiceNumber: true } },
+        },
+      },
     },
   });
   if (!quote) throw new Error("Quote not found");
@@ -330,8 +335,28 @@ export async function revertQuoteToDraftAction(quoteId: string) {
         "Can't revert — this booking has recorded payments. Delete the payments first."
       );
     }
+    // Only a LIVE (issued) tax invoice blocks the revert — it's a legal
+    // document with a number that mustn't vanish silently. A draft or an
+    // already-cancelled invoice is safe to remove, which we must do anyway:
+    // the booking's FK is onDelete: Restrict, so the invoice has to go before
+    // the booking can be deleted. (InvoiceItems cascade from the invoice;
+    // activities referencing it cascade / null out.)
+    const invoice = quote.booking?.invoice ?? null;
+    if (invoice && invoice.status === "ISSUED") {
+      throw new Error(
+        `Can't revert — tax invoice ${
+          invoice.invoiceNumber ?? ""
+        }`.trim() +
+          " is issued for this booking. Cancel the invoice first, then revert."
+      );
+    }
     await prisma.$transaction(async (tx) => {
       if (quote.booking) {
+        // Draft or cancelled invoice → delete it first so the booking FK
+        // (Invoice_bookingId_fkey, Restrict) no longer blocks the delete.
+        if (invoice) {
+          await tx.invoice.delete({ where: { id: invoice.id } });
+        }
         await tx.booking.delete({ where: { id: quote.booking.id } });
       }
       await tx.quote.update({

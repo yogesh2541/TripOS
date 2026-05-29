@@ -30,9 +30,9 @@ const TONE: Record<InvoiceStatus, "outline" | "success" | "danger"> = {
 };
 
 const ACCENT: Record<InvoiceStatus, string> = {
-  DRAFT: "border-l-sand-300",
-  ISSUED: "border-l-emerald-500",
-  CANCELLED: "border-l-red-300",
+  DRAFT: "border-l-gold",
+  ISSUED: "border-l-ok",
+  CANCELLED: "border-l-bad",
 };
 
 export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
@@ -65,12 +65,10 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
       sortValue: (r) => r.invoiceNumber ?? "zzz-draft",
       render: (r) => (
         <div className="min-w-0">
-          <p className="font-medium text-navy truncate">
-            {r.invoiceNumber ?? (
-              <span className="text-muted-foreground">Draft</span>
-            )}
+          <p className="font-mono text-[12px] font-semibold text-ink truncate">
+            {r.invoiceNumber ?? <span className="text-muted">Draft</span>}
           </p>
-          <p className="text-[11px] text-muted-foreground truncate">
+          <p className="t-mut truncate">
             {r.destination ?? "—"}
             {r.customerName ? ` · ${r.customerName}` : ""}
           </p>
@@ -109,7 +107,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
       align: "right",
       sortValue: (r) => r.grandTotal,
       render: (r) => (
-        <span className="tabular-nums font-medium text-navy">
+        <span className="font-mono tabular-nums font-semibold text-ink">
           {formatINR(r.grandTotal)}
         </span>
       ),
@@ -152,7 +150,7 @@ export function InvoicesTable({ invoices }: { invoices: InvoiceRow[] }) {
         initialSort={{ key: "date", dir: "desc" }}
         rowAccent={(r) => ACCENT[r.status]}
         empty={
-          <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center text-sm text-muted-foreground">
             No invoices match these filters.
           </div>
         }

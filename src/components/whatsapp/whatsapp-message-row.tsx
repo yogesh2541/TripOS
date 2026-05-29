@@ -35,13 +35,13 @@ export function WhatsappMessageRow({ m }: { m: WhatsappMessageRowData }) {
   }
 
   return (
-    <li className="rounded-2xl border border-line bg-white p-4 flex items-start gap-3 hover:shadow-soft transition-all">
+    <li className="rounded-lg border border-line bg-paper p-4 flex items-start gap-3 hover:shadow-lift transition-all">
       <span
         className={
-          "flex h-8 w-8 items-center justify-center rounded-full text-[11px] " +
+          "flex h-8 w-8 items-center justify-center rounded-[8px] text-[11px] " +
           (outbound
-            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-            : "bg-sand-50 text-sand-800 border border-sand-200")
+            ? "bg-ok-soft text-ok border border-ok/20"
+            : "bg-gold-soft text-gold-deep border border-[var(--gold-line)]")
         }
       >
         {outbound ? (
@@ -53,7 +53,7 @@ export function WhatsappMessageRow({ m }: { m: WhatsappMessageRowData }) {
 
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-baseline gap-2">
-          <p className="font-medium text-navy text-sm truncate">
+          <p className="font-medium text-ink text-sm truncate">
             {m.contact ? (
               <Link
                 href={`/contacts/${m.contact.id}`}
@@ -90,7 +90,7 @@ export function WhatsappMessageRow({ m }: { m: WhatsappMessageRowData }) {
           {m.trip ? (
             <Link
               href={`/trips/${m.trip.id}`}
-              className="inline-flex items-center gap-1 hover:text-navy"
+              className="inline-flex items-center gap-1 hover:text-ink"
             >
               <span className="uppercase tracking-[0.16em]">trip</span>
               · {m.trip.destination}
@@ -99,7 +99,7 @@ export function WhatsappMessageRow({ m }: { m: WhatsappMessageRowData }) {
           {m.invoice ? (
             <Link
               href={`/invoices/${m.invoice.id}`}
-              className="inline-flex items-center gap-1 hover:text-navy"
+              className="inline-flex items-center gap-1 hover:text-ink"
             >
               <FileText className="h-3 w-3" />
               {m.invoice.invoiceNumber ?? "Draft invoice"}
@@ -110,14 +110,14 @@ export function WhatsappMessageRow({ m }: { m: WhatsappMessageRowData }) {
               href={m.mediaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 hover:text-navy"
+              className="inline-flex items-center gap-1 hover:text-ink"
             >
               <FileText className="h-3 w-3" />
               {m.mediaFilename ?? "Attachment"}
             </a>
           ) : null}
           {m.failedReason ? (
-            <span className="text-red-700">· {m.failedReason}</span>
+            <span className="text-bad">· {m.failedReason}</span>
           ) : null}
           {outbound && m.status === "FAILED" ? (
             <Button

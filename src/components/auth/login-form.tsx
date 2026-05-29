@@ -50,7 +50,7 @@ export function LoginForm() {
           <Label htmlFor="password">Password</Label>
           <Link
             href="/forgot-password"
-            className="text-xs text-muted-foreground hover:text-navy transition-colors"
+            className="text-xs text-muted hover:text-ink transition-colors"
           >
             Forgot password?
           </Link>
@@ -63,7 +63,7 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" variant="accent" className="w-full" disabled={isPending}>
         {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         Sign in
       </Button>

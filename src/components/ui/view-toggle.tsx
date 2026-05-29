@@ -54,7 +54,7 @@ export function ViewToggle({
   }
 
   return (
-    <div className="inline-flex items-center rounded-full border border-line bg-white p-0.5">
+    <div className="inline-flex items-center rounded-[9px] border border-line bg-paper-2 p-[3px]">
       {options.map((opt) => {
         const active = opt.value === current;
         const Icon = ICONS[opt.icon];
@@ -65,10 +65,10 @@ export function ViewToggle({
             onClick={() => select(opt.value)}
             disabled={isPending}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors",
+              "inline-flex items-center gap-1.5 rounded-[7px] px-3 py-1.5 text-[12.5px] font-[550] transition-colors",
               active
-                ? "bg-navy text-ivory"
-                : "text-muted-foreground hover:text-navy"
+                ? "bg-paper text-ink shadow-soft"
+                : "text-muted hover:text-ink"
             )}
           >
             {isPending && active ? (

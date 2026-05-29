@@ -109,24 +109,24 @@ export function BookingPanel({
   return (
     <section
       className={cn(
-        "rounded-3xl border p-6 md:p-8 mb-12 transition-colors",
+        "rounded-lg border p-6 md:p-8 mb-12 transition-colors",
         cancelled
-          ? "border-line bg-white/60"
+          ? "border-line bg-paper-2"
           : completed
-            ? "border-emerald-100 bg-emerald-50/40"
-            : "border-line bg-white shadow-soft"
+            ? "border-ok/20 bg-ok-soft"
+            : "border-line bg-paper shadow-soft"
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-sand-700 flex items-center gap-2">
+          <p className="tc-eyebrow flex items-center gap-2">
             <Wallet className="h-3.5 w-3.5" />
             Booking · v{booking.quoteVersion}
           </p>
-          <h2 className="mt-2 font-display text-3xl text-navy">
+          <h2 className="mt-2 font-display text-3xl text-ink font-mono tabular-nums">
             {formatINR(booking.totalAmount)}
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted">
             Created {formatDate(booking.createdAt)}
           </p>
         </div>
@@ -164,20 +164,20 @@ export function BookingPanel({
       </div>
 
       <div className="mt-6 space-y-2">
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-muted font-mono tabular-nums">
           <span>Paid {formatINR(booking.paidAmount)}</span>
           <span>{pct}%</span>
           <span>Pending {formatINR(pending)}</span>
         </div>
-        <div className="h-2 w-full bg-ivory rounded-full overflow-hidden border border-line/60">
+        <div className="h-2 w-full bg-paper-2 rounded-[4px] overflow-hidden border border-line">
           <div
             className={cn(
-              "h-full transition-all rounded-full",
+              "h-full transition-all rounded-[4px]",
               cancelled
                 ? "bg-line"
                 : pct >= 100
-                  ? "bg-emerald-500"
-                  : "bg-navy"
+                  ? "bg-ok"
+                  : "bg-inkwash"
             )}
             style={{ width: `${Math.min(100, pct)}%` }}
           />
@@ -189,7 +189,7 @@ export function BookingPanel({
           <button
             type="button"
             onClick={() => setShowHistory((s) => !s)}
-            className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-navy transition-colors"
+            className="text-xs uppercase tracking-[0.18em] text-muted hover:text-ink transition-colors"
           >
             {showHistory ? "Hide" : "Show"} payment history (
             {booking.payments.length})
@@ -214,31 +214,31 @@ export function BookingPanel({
       )}
 
       {pct >= 100 && !completed && !cancelled && (
-        <div className="mt-5 rounded-2xl bg-emerald-50 border border-emerald-100 p-3 flex items-center gap-2 text-sm text-emerald-800">
+        <div className="mt-5 rounded-lg bg-ok-soft border border-ok/20 p-3 flex items-center gap-2 text-sm text-ok">
           <CheckCircle2 className="h-4 w-4" />
           Fully paid. Mark this booking as completed when the trip wraps.
         </div>
       )}
 
       {/* Tax invoice */}
-      <div className="mt-5 rounded-2xl border border-line bg-ivory/60 p-4 flex items-center justify-between gap-3 flex-wrap">
+      <div className="mt-5 rounded-lg border border-line bg-paper-2 p-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-line text-sand-700">
+          <span className="flex h-8 w-8 items-center justify-center rounded-[6px] bg-paper border border-line text-gold-deep">
             <FileText className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted">
               Tax invoice
             </p>
             {booking.invoice ? (
-              <p className="text-sm text-navy mt-0.5 truncate">
+              <p className="text-sm text-ink mt-0.5 truncate font-mono">
                 {booking.invoice.invoiceNumber ?? "Draft"}
-                <span className="ml-2 text-xs text-muted-foreground">
+                <span className="ml-2 text-xs text-muted tabular-nums">
                   {formatINR(booking.invoice.grandTotal)}
                 </span>
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-sm text-muted mt-0.5">
                 Not generated yet
               </p>
             )}
@@ -309,27 +309,27 @@ function PaymentRow({
   }
 
   return (
-    <li className="rounded-2xl border border-line bg-white px-4 py-3 flex items-center gap-4">
+    <li className="rounded-lg border border-line bg-paper px-4 py-3 flex items-center gap-4">
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2">
-          <span className="text-[10px] uppercase tracking-[0.18em] text-sand-700">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-gold-deep">
             {PAYMENT_TYPE_LABEL[payment.type]}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted font-mono tabular-nums">
             {formatDate(payment.paidAt)}
           </span>
         </div>
         <p className="mt-0.5 text-sm text-ink truncate">
           {payment.method ? `via ${payment.method}` : "—"}
           {payment.reference && (
-            <span className="text-muted-foreground">
+            <span className="text-muted">
               {" · "}
               {payment.reference}
             </span>
           )}
         </p>
       </div>
-      <span className="font-medium text-navy tabular-nums">
+      <span className="font-medium text-ink tabular-nums font-mono">
         {formatINR(payment.amount)}
       </span>
       {!disabled && (
@@ -337,7 +337,7 @@ function PaymentRow({
           type="button"
           onClick={remove}
           disabled={isPending}
-          className="text-muted-foreground hover:text-red-600 transition-colors disabled:opacity-30"
+          className="text-muted hover:text-bad transition-colors disabled:opacity-30"
           aria-label="Delete payment"
         >
           <Trash2 className="h-3.5 w-3.5" />

@@ -13,7 +13,7 @@ import {
 import { WhatsappComposer } from "@/components/whatsapp/whatsapp-composer";
 import { prisma } from "@/lib/prisma";
 import { requireAgency } from "@/lib/session";
-import { isWhatsappConfigured } from "@/lib/whatsapp/client";
+import { isWhatsappConfiguredForAgency } from "@/server/services/integrations";
 
 export const dynamic = "force-dynamic";
 
@@ -72,22 +72,18 @@ export default async function CommunicationsPage({
   for (const t of totals)
     totalsByStatus[t.status as WhatsappStatus] = t._count._all;
 
-  const configured = isWhatsappConfigured();
+  const configured = await isWhatsappConfiguredForAgency(agencyId);
 
   return (
     <PageShell>
       <header className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            Communications
-          </p>
-          <div className="flex items-center gap-3 mt-1">
-            <h1 className="font-display text-4xl md:text-5xl text-navy tracking-tight leading-tight">
-              WhatsApp activity
-            </h1>
+          <p className="tc-eyebrow gold">Communications</p>
+          <div className="flex items-center gap-3 mt-1.5">
+            <h1 className="tc-page-title">WhatsApp activity</h1>
             <CommsAutoRefresh />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1.5">
             Every outbound message, delivery receipt and customer reply — one
             calm view.
           </p>
@@ -117,20 +113,20 @@ export default async function CommunicationsPage({
       </header>
 
       {!configured ? (
-        <div className="mb-5 rounded-2xl border border-sand-200 bg-sand-50/60 px-4 py-3 text-xs text-sand-800">
+        <div className="mb-5 rounded-lg border border-[var(--gold-line)] bg-gold-soft px-4 py-3 text-xs text-gold-deep">
           WhatsApp Cloud API isn't configured yet. Add{" "}
-          <code className="rounded bg-white px-1 py-0.5">
+          <code className="rounded-[4px] bg-paper px-1 py-0.5 font-mono">
             WHATSAPP_PHONE_NUMBER_ID
           </code>
           ,{" "}
-          <code className="rounded bg-white px-1 py-0.5">
+          <code className="rounded-[4px] bg-paper px-1 py-0.5 font-mono">
             WHATSAPP_ACCESS_TOKEN
           </code>{" "}
           and{" "}
-          <code className="rounded bg-white px-1 py-0.5">
+          <code className="rounded-[4px] bg-paper px-1 py-0.5 font-mono">
             WHATSAPP_WEBHOOK_VERIFY_TOKEN
           </code>{" "}
-          to <code className="rounded bg-white px-1 py-0.5">.env</code>. Until
+          to <code className="rounded-[4px] bg-paper px-1 py-0.5 font-mono">.env</code>. Until
           then, sends are queued and recorded as failed; the wa.me fallback
           link still works.
         </div>
@@ -178,18 +174,18 @@ function StatusTile({
   tone: "muted" | "outline" | "accent" | "success" | "danger";
 }) {
   const toneClass = {
-    muted: "border-line bg-white",
-    outline: "border-line bg-white",
-    accent: "border-sand-200 bg-sand-50/70",
-    success: "border-emerald-100 bg-emerald-50/70",
-    danger: "border-red-100 bg-red-50/70",
+    muted: "border-line bg-paper",
+    outline: "border-line bg-paper",
+    accent: "border-[var(--gold-line)] bg-gold-soft",
+    success: "border-ok/30 bg-ok-soft",
+    danger: "border-bad/30 bg-bad-soft",
   }[tone];
   return (
-    <div className={`rounded-2xl border ${toneClass} p-4`}>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+    <div className={`rounded-lg border ${toneClass} p-4`}>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
-      <p className="font-display text-3xl text-navy mt-1">{value}</p>
+      <p className="font-display text-3xl text-ink font-mono tabular-nums mt-1">{value}</p>
     </div>
   );
 }

@@ -124,18 +124,18 @@ export function OperationsChecklist({
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-white p-5 shadow-soft space-y-4">
+    <section className="rounded-lg border border-line bg-paper p-5 shadow-soft space-y-4">
       <header className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-display text-xl text-navy">
+            <h3 className="font-display text-xl text-ink">
               Operations checklist
             </h3>
             <Badge variant="muted">
               {completedCount}/{optimistic.length}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             Auto-seeded on first vendor assignment. Add custom items as needed.
           </p>
         </div>
@@ -144,20 +144,20 @@ export function OperationsChecklist({
 
       <div className="h-1.5 w-full rounded-full bg-line/80 overflow-hidden">
         <div
-          className="h-full bg-emerald-500 transition-all duration-500"
+          className="h-full bg-ok transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
 
       {optimistic.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-line/70 bg-ivory p-6 text-center">
-          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-sand-700">
+        <div className="rounded-[10px] border border-dashed border-line/70 bg-paper-2 p-6 text-center">
+          <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-line bg-paper text-gold-deep">
             <Sparkles className="h-4 w-4" />
           </div>
-          <p className="text-sm font-medium text-navy">
+          <p className="text-sm font-medium text-ink">
             Checklist seeds itself
           </p>
-          <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+          <p className="text-xs text-muted mt-1 max-w-xs mx-auto">
             Assign your first vendor and we'll auto-add 5 standard ops tasks
             (hotel confirms, balance collection, vouchers, documents).
           </p>
@@ -201,10 +201,10 @@ function ChecklistRow({
       exit={{ opacity: 0, x: -8 }}
       transition={{ duration: 0.18 }}
       className={cn(
-        "group flex items-center gap-3 rounded-xl border p-3 transition-colors",
+        "group flex items-center gap-3 rounded-[10px] border p-3 transition-colors",
         isDone
-          ? "border-emerald-200/70 bg-emerald-50/40"
-          : "border-line bg-white hover:border-sand-200"
+          ? "border-ok/30 bg-ok-soft/40"
+          : "border-line bg-paper hover:border-[var(--gold-line)]"
       )}
     >
       <button
@@ -213,8 +213,8 @@ function ChecklistRow({
         className={cn(
           "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all shrink-0",
           isDone
-            ? "border-emerald-500 bg-emerald-500 text-white"
-            : "border-line hover:border-sand text-transparent hover:text-sand"
+            ? "border-ok bg-ok text-[var(--on-dark)]"
+            : "border-line hover:border-[var(--gold-line)] text-transparent hover:text-gold-deep"
         )}
         aria-label={isDone ? "Mark incomplete" : "Mark complete"}
       >
@@ -227,8 +227,8 @@ function ChecklistRow({
             className={cn(
               "text-sm font-medium",
               isDone
-                ? "text-muted-foreground line-through"
-                : "text-navy"
+                ? "text-muted line-through"
+                : "text-ink"
             )}
           >
             {item.title}
@@ -244,7 +244,7 @@ function ChecklistRow({
             </Badge>
           ) : null}
           {overdue ? (
-            <span className="inline-flex items-center gap-1 text-[11px] text-red-700">
+            <span className="inline-flex items-center gap-1 text-[11px] text-bad">
               <AlertTriangle className="h-3 w-3" />
               Overdue
             </span>
@@ -254,13 +254,13 @@ function ChecklistRow({
           <p
             className={cn(
               "text-xs mt-0.5",
-              isDone ? "text-muted-foreground/70" : "text-muted-foreground"
+              isDone ? "text-faint" : "text-muted"
             )}
           >
             {item.description}
           </p>
         ) : null}
-        <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
+        <div className="mt-1 flex items-center gap-3 text-[11px] text-faint font-mono tabular-nums">
           {item.dueDate ? <span>Due {formatDate(item.dueDate)}</span> : null}
           {item.completedAt ? (
             <span>Completed {formatDate(item.completedAt)}</span>
@@ -271,7 +271,7 @@ function ChecklistRow({
       <button
         type="button"
         onClick={onRemove}
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50"
+        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-[6px] text-muted hover:text-bad hover:bg-bad-soft"
         aria-label="Remove task"
       >
         <Trash2 className="h-3.5 w-3.5" />

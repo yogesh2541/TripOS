@@ -250,7 +250,7 @@ export function VendorFormDialog({
               type="checkbox"
               checked={form.isPreferred ?? false}
               onChange={(e) => update("isPreferred", e.target.checked)}
-              className="h-4 w-4 accent-sand-700"
+              className="h-4 w-4 accent-[var(--gold-line)]"
             />
             Mark as preferred
           </label>
@@ -260,7 +260,7 @@ export function VendorFormDialog({
               type="checkbox"
               checked={form.isActive ?? true}
               onChange={(e) => update("isActive", e.target.checked)}
-              className="h-4 w-4 accent-sand-700"
+              className="h-4 w-4 accent-[var(--gold-line)]"
             />
             Active vendor
           </label>

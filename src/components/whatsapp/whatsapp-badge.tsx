@@ -49,13 +49,13 @@ export async function WhatsappBadge({
   const body = (
     <span
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-xs text-navy",
+        "inline-flex items-center gap-2 rounded-[8px] border border-line bg-paper px-3 py-1.5 text-xs text-ink",
         className
       )}
     >
-      <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+      <MessageCircle className="h-3.5 w-3.5 text-ok" />
       <span className="font-medium">{count}</span>
-      <span className="text-muted-foreground text-[10px] uppercase tracking-[0.16em]">
+      <span className="text-muted text-[10px] uppercase tracking-[0.16em]">
         WhatsApp
       </span>
       {last ? (

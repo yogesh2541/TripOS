@@ -207,7 +207,7 @@ function inferMealsFromPlan(plan?: string | null): DayMeals {
 // AI generation
 // ---------------------------------------------------------------------------
 
-const SYSTEM = `You are a senior luxury travel curator. You write calm, premium, evocative copy. Avoid clichés and exclamation marks. Be concise but vivid. When given specific facts (hotel names, activities, inclusions), you treat them as authoritative — never substitute, invent, or omit them. Your job is to write prose that wraps those facts gracefully.`;
+const SYSTEM = `You are a senior luxury travel curator. You write calm, premium, evocative copy. Avoid clichés and exclamation marks. Be concise but vivid. When given specific facts (hotel names, activities, inclusions), you treat them as authoritative — never substitute, invent, or omit them. Your job is to write prose that wraps those facts gracefully. You NEVER invent activities, sights, or experiences the agent did not provide: the "activities" array for a day must contain only the activities the agent listed for that day (verbatim), and stay empty when none were listed.`;
 
 function budgetTier(input: GenerateInput) {
   if (!input.budget) return "Mid-range to premium";
@@ -281,7 +281,8 @@ Rules when day briefs are present:
 - If a transfer note is provided, surface it in the "notes" field along with logistics.
 - If meal plan implies a meal at the hotel, mention it in the "foodNote" field accurately
   (B&B = breakfast at hotel; MAP/Half-board = breakfast and dinner; AP/Full-board = all meals; AI = all-inclusive).
-- For days WITHOUT structured input, use your creative judgment based on the destination, pace, and interests.`;
+- NEVER invent activities. The "activities" array must list ONLY the activities the agent provided for that day, verbatim. Do not add, substitute, or pad.
+- For days WITHOUT listed activities, return an empty "activities" array and write a calm, general summary (a free day to explore the city at leisure) WITHOUT naming specific attractions, sights, or experiences.`;
 }
 
 function buildPrompt(input: GenerateInput) {
@@ -317,7 +318,7 @@ Output requirements (return JSON ONLY, no commentary):
     {
       "title": "Day 1: Arrival & welcome",
       "summary": "A single calm paragraph (3-5 sentences) describing the day's flow — what they'll experience, the mood, the highlights. Do NOT split into morning/afternoon/evening.",
-      "activities": ["Specific place 1", "Specific experience 2", "..."],
+      "activities": ["ONLY the activities the agent listed for this day, verbatim — empty array if none"],
       "foodNote": "Specific dining recommendation or meal-plan note (1 sentence).",
       "notes": "Logistics + insider tips: transfers, distances, what to carry, hidden gems."
     }
@@ -325,8 +326,8 @@ Output requirements (return JSON ONLY, no commentary):
 }
 
 Produce exactly ${input.days} day(s).
-For activities: list 3-6 SPECIFIC named places or experiences per day (e.g. "Sunset at Tanah Lot", not "see a temple"). Each item must be specific enough to Google.
-Keep summary prose vivid but tight. No overpacking. Group nearby experiences. Mention rest where the pace warrants it.
+Activities — STRICT: the "activities" array must contain ONLY the activities the agent listed for that day in the per-day briefs, copied verbatim. NEVER invent, add, substitute, or pad activities. If a day has no listed activities, return an empty "activities" array and let the summary describe a relaxed free day WITHOUT naming any specific attraction.
+Keep summary prose vivid but tight. No overpacking. Mention rest where the pace warrants it.
 Personalize for traveler type: Honeymoon → romantic; Family → kid-friendly; Luxury → premium; Solo → flexible.`;
 }
 

@@ -15,7 +15,7 @@ export default async function AgencySettingsPage() {
       <div className="mb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Dashboard
@@ -23,13 +23,9 @@ export default async function AgencySettingsPage() {
       </div>
 
       <header className="mb-8">
-        <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-          Settings
-        </p>
-        <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-          Agency
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+        <p className="tc-eyebrow gold">Settings</p>
+        <h1 className="tc-page-title mt-2.5">Agency</h1>
+        <p className="tc-page-sub max-w-2xl">
           Your agency identity, GSTIN and invoice defaults. These details are
           frozen onto every invoice at issue time, so changes here only affect
           new invoices going forward.
@@ -48,7 +44,7 @@ export default async function AgencySettingsPage() {
       </OneTimeHint>
 
       {!existing ? (
-        <div className="mb-6 rounded-2xl border border-sand-200 bg-sand-50/40 p-4 text-sm text-sand-800 inline-flex items-start gap-3">
+        <div className="mb-6 rounded-lg border border-[var(--gold-line)] bg-gold-soft/40 p-4 text-sm text-gold-deep inline-flex items-start gap-3">
           <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
           <span>
             <span className="font-medium">No settings on file yet.</span>{" "}

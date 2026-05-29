@@ -132,11 +132,11 @@ export function InvoiceEditPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-white shadow-soft">
-      <header className="border-b border-line/70 px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
+    <section className="rounded-lg border border-line bg-paper shadow-soft">
+      <header className="border-b border-line px-5 py-4 flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h3 className="font-display text-xl text-navy">Edit draft</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h3 className="font-display text-xl text-ink">Edit draft</h3>
+          <p className="text-xs text-muted mt-0.5">
             Live preview totals on the right. Save to persist; only DRAFT
             invoices can be edited.
           </p>
@@ -201,7 +201,7 @@ export function InvoiceEditPanel({
         {/* Lines */}
         <div>
           <header className="flex items-center justify-between mb-2">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted">
               Line items
             </p>
             <Button variant="outline" size="sm" onClick={addLine}>
@@ -212,7 +212,7 @@ export function InvoiceEditPanel({
 
           <div className="space-y-2">
             {lines.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-line/70 bg-ivory p-6 text-center text-xs text-muted-foreground">
+              <div className="rounded-[10px] border border-dashed border-line bg-paper-2 p-6 text-center text-xs text-muted">
                 No line items yet. Add one to start.
               </div>
             ) : (
@@ -230,8 +230,8 @@ export function InvoiceEditPanel({
         </div>
 
         {/* Live preview */}
-        <div className="rounded-xl border border-line bg-ivory/40 p-4 grid gap-2 text-sm">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-1">
+        <div className="rounded-[10px] border border-line bg-paper-2 p-4 grid gap-2 text-sm">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-muted mb-1">
             Live preview · Won't persist until you save
           </p>
           <PreviewRow label="Subtotal (taxable)" value={preview.subtotal} />
@@ -254,14 +254,14 @@ export function InvoiceEditPanel({
             />
           ) : null}
           <div className="flex items-center justify-between pt-2 border-t border-line">
-            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted">
               Grand total
             </span>
-            <span className="font-display text-xl text-navy tabular-nums">
+            <span className="font-display text-xl text-ink tabular-nums font-mono font-semibold">
               {formatINR(preview.grandTotal)}
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-muted">
             {preview.isIntra
               ? `Intra-state — supplier and place of supply both ${INDIA_STATES.find((s) => s.code === preview.supplierCode)?.name ?? "—"}.`
               : preview.supplierCode && posCode
@@ -286,7 +286,7 @@ function LineRow({
   onRemove: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-line bg-white p-3 space-y-2">
+    <div className="rounded-[10px] border border-line bg-paper p-3 space-y-2">
       <div className="grid gap-2 grid-cols-1 md:grid-cols-[3fr_1fr_auto]">
         <Input
           value={line.description}
@@ -304,7 +304,7 @@ function LineRow({
           size="icon"
           onClick={onRemove}
           aria-label="Remove line"
-          className="h-9 w-9 text-muted-foreground hover:text-red-600"
+          className="h-9 w-9 text-muted hover:text-bad"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -348,7 +348,7 @@ function NumField({
 }) {
   return (
     <label className="block">
-      <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <span className="text-[10px] uppercase tracking-[0.18em] text-muted">
         {label}
       </span>
       <Input
@@ -380,8 +380,8 @@ function Field({
 function PreviewRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="tabular-nums text-navy">{formatINR(value)}</span>
+      <span className="text-muted">{label}</span>
+      <span className="tabular-nums text-ink font-mono">{formatINR(value)}</span>
     </div>
   );
 }

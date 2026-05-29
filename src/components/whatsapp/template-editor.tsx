@@ -238,7 +238,7 @@ export function TemplateEditor({
                       <Input
                         value={v.key}
                         readOnly
-                        className="bg-ivory text-muted-foreground"
+                        className="bg-paper-2 text-muted"
                       />
                       <Input
                         value={v.label}
@@ -257,7 +257,7 @@ export function TemplateEditor({
                         onClick={() =>
                           setVariables((vs) => vs.filter((_, i) => i !== idx))
                         }
-                        className="text-muted-foreground hover:text-red-700"
+                        className="text-muted hover:text-bad"
                         aria-label="Remove variable"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -290,9 +290,9 @@ export function TemplateEditor({
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18 }}
-              className="mt-1.5 rounded-2xl border border-line bg-[#E5DDD5] p-3 min-h-[12rem]"
+              className="mt-1.5 rounded-[10px] border border-line bg-[#E5DDD5] p-3 min-h-[12rem]"
             >
-              <div className="rounded-2xl bg-white px-3.5 py-2.5 shadow-soft text-[13px] leading-relaxed text-ink whitespace-pre-wrap max-w-[36ch]">
+              <div className="rounded-[14px] bg-gold-soft px-3.5 py-2.5 shadow-soft text-[13px] leading-relaxed text-ink whitespace-pre-wrap max-w-[36ch]">
                 {rendered || (
                   <span className="italic text-muted-foreground">
                     Body preview

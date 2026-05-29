@@ -157,7 +157,7 @@ export function WhatsappComposer({
       <DialogTrigger asChild>
         {trigger ?? (
           <Button variant="outline" size="sm">
-            <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+            <MessageCircle className="h-3.5 w-3.5 text-ok" />
             WhatsApp
           </Button>
         )}
@@ -260,9 +260,9 @@ export function WhatsappComposer({
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18 }}
-              className="mt-1.5 rounded-2xl border border-line bg-[#E5DDD5] p-3 min-h-[26vh]"
+              className="mt-1.5 rounded-[10px] border border-line bg-[#E5DDD5] p-3 min-h-[26vh]"
             >
-              <div className="rounded-2xl bg-white px-3.5 py-2.5 shadow-soft text-[13px] leading-relaxed text-ink whitespace-pre-wrap max-w-[36ch]">
+              <div className="rounded-[14px] bg-gold-soft px-3.5 py-2.5 shadow-soft text-[13px] leading-relaxed text-ink whitespace-pre-wrap max-w-[36ch]">
                 {renderedBody || (
                   <span className="text-muted-foreground italic">
                     Your message will appear here
@@ -284,7 +284,7 @@ export function WhatsappComposer({
               href={fallbackHref}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-navy"
+              className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink"
             >
               <ExternalLink className="h-3 w-3" />
               Open in WhatsApp Web instead

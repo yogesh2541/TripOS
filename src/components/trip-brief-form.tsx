@@ -55,28 +55,28 @@ export function TripBriefForm({
     <div className="mx-auto max-w-2xl">
       {contactId && contactName && (
         <div className="mb-6 flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <span className="inline-flex items-center gap-2 rounded-[6px] border border-line bg-paper px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-muted">
             For contact
-            <span className="text-navy font-medium normal-case tracking-normal">
+            <span className="text-ink font-medium normal-case tracking-normal">
               {contactName}
             </span>
           </span>
         </div>
       )}
 
-      <div className="rounded-3xl border border-line bg-white p-8 md:p-12 shadow-soft">
+      <div className="rounded-lg border border-line bg-paper p-8 md:p-12 shadow-soft">
         <div className="flex items-center gap-2 mb-2">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-navy text-ivory">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] text-[var(--on-dark)]" style={{ background: "linear-gradient(150deg, var(--gold), #B0863F)" }}>
             <Wand2 className="h-4 w-4" />
           </span>
-          <p className="text-xs uppercase tracking-[0.2em] text-sand-600">
+          <p className="tc-eyebrow gold">
             Build to spec
           </p>
         </div>
-        <h2 className="font-display text-3xl md:text-4xl text-navy">
+        <h2 className="font-display text-3xl md:text-4xl text-ink">
           Paste the full brief. We&apos;ll build it.
         </h2>
-        <p className="mt-3 text-sm text-muted-foreground leading-relaxed max-w-prose">
+        <p className="mt-3 text-sm text-muted leading-relaxed max-w-prose">
           When you already know the day-by-day, the vehicle, the meal plan —
           skip the wizard. Write it naturally, exactly the way you&apos;d describe
           it to a colleague. We&apos;ll keep your details verbatim and never
@@ -88,7 +88,7 @@ export function TripBriefForm({
             <Label htmlFor="trip-brief">Your brief</Label>
             <span
               className={`text-[10px] uppercase tracking-[0.18em] tabular-nums ${
-                tooLong ? "text-red-600" : "text-muted-foreground"
+                tooLong ? "text-bad" : "text-muted"
               }`}
             >
               {trimmedLength.toLocaleString()} / {MAX_LENGTH.toLocaleString()}
@@ -103,7 +103,7 @@ export function TripBriefForm({
             disabled={isPending}
             className="text-sm leading-relaxed font-mono"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted">
             Tip: include the day split (e.g. &ldquo;2N Shimla / 2N Manali&rdquo;),
             specific sightseeing per day, transport, and meal plan. The more
             specifics, the more faithful the result.
@@ -111,7 +111,7 @@ export function TripBriefForm({
         </div>
 
         {error && (
-          <p className="mt-6 text-sm text-red-600 animate-fade-in">{error}</p>
+          <p className="mt-6 text-sm text-bad animate-fade-in">{error}</p>
         )}
 
         <div className="mt-10 flex items-center justify-end">

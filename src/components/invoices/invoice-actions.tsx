@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { Bell, CheckCircle2, Download, Loader2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { InvoiceStatus } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,18 @@ export function InvoiceActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
+        {/* Always available — opens the rendered tax-invoice PDF. For a draft
+            it's a preview; once issued it carries the invoice number. */}
+        <a
+          href={`/api/invoices/${invoiceId}/pdf`}
+          target="_blank"
+          rel="noopener"
+        >
+          <Button variant="outline">
+            <Download className="h-4 w-4" />
+            {status === "DRAFT" ? "Preview PDF" : "Download PDF"}
+          </Button>
+        </a>
         {status === "DRAFT" ? (
           <>
             <Button onClick={() => setIssueOpen(true)} disabled={isPending}>
@@ -130,11 +142,11 @@ export function InvoiceActions({
               cancellation with a reason.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-xl border border-line bg-ivory p-4 text-center">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+          <div className="rounded-[10px] border border-line bg-paper-2 p-4 text-center">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-muted">
               Will be assigned
             </p>
-            <p className="mt-1.5 font-display text-2xl text-navy tracking-wider">
+            <p className="mt-1.5 font-display text-2xl text-ink tracking-wider font-mono tabular-nums">
               {previewedNumber ?? "—"}
             </p>
           </div>

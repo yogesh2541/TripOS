@@ -126,9 +126,9 @@ export function DataTable<T>({
   );
 
   return (
-    <div className="rounded-2xl border border-line bg-white overflow-hidden">
+    <div className="rounded-lg border border-line bg-paper overflow-hidden shadow-soft">
       {/* Header */}
-      <div className="flex items-center bg-ivory border-b border-line">
+      <div className="flex items-center bg-paper-2 border-b border-line">
         {selectable ? (
           <div className="pl-4 flex items-center">
             <input
@@ -136,7 +136,7 @@ export function DataTable<T>({
               aria-label="Select all"
               checked={allShownSelected}
               onChange={() => onToggleAll?.()}
-              className="h-4 w-4 accent-navy cursor-pointer"
+              className="h-4 w-4 accent-inkwash cursor-pointer"
             />
           </div>
         ) : null}
@@ -159,10 +159,10 @@ export function DataTable<T>({
                     type="button"
                     onClick={() => toggleSort(col.key)}
                     className={cn(
-                      "inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.16em] transition-colors",
+                      "inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.13em] font-semibold transition-colors",
                       isSorted
-                        ? "text-navy"
-                        : "text-muted-foreground hover:text-navy"
+                        ? "text-ink"
+                        : "text-muted hover:text-ink"
                     )}
                   >
                     {col.header}
@@ -177,7 +177,7 @@ export function DataTable<T>({
                     )}
                   </button>
                 ) : (
-                  <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                  <span className="text-[10px] uppercase tracking-[0.13em] font-semibold text-muted">
                     {col.header}
                   </span>
                 )}
@@ -188,7 +188,7 @@ export function DataTable<T>({
       </div>
 
       {/* Body */}
-      <ul className="divide-y divide-line/70">
+      <ul className="divide-y divide-line-2">
         {sorted.map((row) => {
           const id = rowKey(row);
           const href = rowHref?.(row);
@@ -207,7 +207,7 @@ export function DataTable<T>({
                   className={cn(
                     "flex items-center transition-colors",
                     accent,
-                    selected ? "bg-sand-50/60" : "hover:bg-ivory/70"
+                    selected ? "bg-gold-soft/40" : "hover:bg-paper-2"
                   )}
                 >
                   <div className="pl-4 flex items-center">
@@ -216,7 +216,7 @@ export function DataTable<T>({
                       aria-label="Select row"
                       checked={selected}
                       onChange={() => onToggleRow?.(id)}
-                      className="h-4 w-4 accent-navy cursor-pointer"
+                      className="h-4 w-4 accent-inkwash cursor-pointer"
                     />
                   </div>
                   {href ? (
@@ -237,7 +237,7 @@ export function DataTable<T>({
                 <Link
                   href={href}
                   className={cn(
-                    "block hover:bg-ivory/70 transition-colors",
+                    "block hover:bg-paper-2 transition-colors",
                     accent
                   )}
                 >

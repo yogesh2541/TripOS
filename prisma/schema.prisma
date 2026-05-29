@@ -981,6 +981,24 @@ model AgencySettings {
   // Stamp the agency logo on every major section header.
   proposalRepeatLogo     Boolean @default(true)
 
+  // === WhatsApp Cloud API (per-agency BYO credentials) ====================
+  // The agency connects its own Meta WhatsApp Business account. Secret values
+  // (access token, app secret) are stored encrypted at rest — see
+  // [crypto.ts](src/lib/crypto.ts). Non-secret IDs are plaintext.
+  waEnabled            Boolean @default(false)
+  waPhoneNumberId      String?
+  waBusinessAccountId  String?
+  waApiVersion         String?
+  waAccessTokenEnc     String? // encrypted
+  waAppSecretEnc       String? // encrypted (used to verify inbound webhook signatures)
+  waWebhookVerifyToken String? // agency-chosen handshake token (pasted into Meta)
+
+  // === Payments — Razorpay (per-agency BYO credentials) ===================
+  razorpayEnabled          Boolean @default(false)
+  razorpayKeyId            String?
+  razorpayKeySecretEnc     String? // encrypted
+  razorpayWebhookSecretEnc String? // encrypted
+
   // Future-proof feature flags
   eInvoiceEnabled Boolean @default(false)
   eWayBillEnabled Boolean @default(false)

@@ -41,13 +41,13 @@ const ICONS: Partial<Record<ActivityType, React.ReactNode>> = {
 };
 
 const TONES: Partial<Record<ActivityType, string>> = {
-  VENDOR_CONFIRMED: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  VENDOR_CANCELLED: "border-red-200 bg-red-50 text-red-700",
-  TRIP_READY: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  TRIP_STARTED: "border-sand-200 bg-sand-50 text-sand-800",
-  TRIP_COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  VOUCHER_SENT: "border-sand-200 bg-sand-50 text-sand-800",
-  PAYMENT_RECORDED: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  VENDOR_CONFIRMED: "border-ok/40 bg-ok-soft text-ok",
+  VENDOR_CANCELLED: "border-bad/40 bg-bad-soft text-bad",
+  TRIP_READY: "border-ok/40 bg-ok-soft text-ok",
+  TRIP_STARTED: "border-[var(--gold-line)] bg-gold-soft text-gold-deep",
+  TRIP_COMPLETED: "border-ok/40 bg-ok-soft text-ok",
+  VOUCHER_SENT: "border-[var(--gold-line)] bg-gold-soft text-gold-deep",
+  PAYMENT_RECORDED: "border-ok/40 bg-ok-soft text-ok",
 };
 
 export function OperationsTimeline({
@@ -56,19 +56,19 @@ export function OperationsTimeline({
   entries: TimelineEntry[];
 }) {
   return (
-    <section className="rounded-2xl border border-line bg-white p-5 shadow-soft">
+    <section className="rounded-lg border border-line bg-paper p-5 shadow-soft">
       <header className="mb-4">
-        <h3 className="font-display text-xl text-navy">Operations timeline</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <h3 className="font-display text-xl text-ink">Operations timeline</h3>
+        <p className="text-xs text-muted mt-0.5">
           Operational events for this trip — assignments, vouchers, status
           changes.
         </p>
       </header>
 
       {entries.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-line/70 bg-ivory p-6 text-center">
-          <p className="text-sm font-medium text-navy">Quiet for now</p>
-          <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+        <div className="rounded-[10px] border border-dashed border-line/70 bg-paper-2 p-6 text-center">
+          <p className="text-sm font-medium text-ink">Quiet for now</p>
+          <p className="text-xs text-muted mt-1 max-w-xs mx-auto">
             Vendor confirmations, voucher generation, and trip events will
             stream into this timeline as they happen.
           </p>
@@ -80,22 +80,22 @@ export function OperationsTimeline({
               <span
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full border shrink-0",
-                  TONES[e.type] ?? "border-line bg-ivory text-sand-700"
+                  TONES[e.type] ?? "border-line bg-paper-2 text-gold-deep"
                 )}
               >
                 {ICONS[e.type] ?? <Sparkles className="h-3.5 w-3.5" />}
               </span>
               <div className="flex-1 min-w-0 pb-3 border-b border-line/70 last:border-b-0">
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-sm font-medium text-navy truncate">
+                  <p className="text-sm font-medium text-ink truncate">
                     {e.title}
                   </p>
-                  <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground whitespace-nowrap">
+                  <span className="text-[10px] uppercase tracking-[0.16em] text-faint font-mono tabular-nums whitespace-nowrap">
                     {formatDistanceToNow(e.createdAt, { addSuffix: true })}
                   </span>
                 </div>
                 {e.body ? (
-                  <p className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3">
+                  <p className="mt-1 text-xs text-muted whitespace-pre-wrap line-clamp-3">
                     {e.body}
                   </p>
                 ) : null}

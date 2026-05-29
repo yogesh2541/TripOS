@@ -65,11 +65,11 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label="Notifications"
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-navy hover:border-sand transition-colors"
+          className="relative inline-flex h-[34px] w-[34px] items-center justify-center rounded-[9px] border border-line bg-paper text-ink-2 transition-colors hover:border-[var(--gold-line)] hover:bg-paper-2"
         >
           <Bell className="h-4 w-4" />
           {unread > 0 ? (
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-medium text-white">
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-bad px-1 text-[9px] font-medium text-white">
               {unread > 9 ? "9+" : unread}
             </span>
           ) : null}

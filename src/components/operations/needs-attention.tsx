@@ -83,14 +83,14 @@ export function NeedsAttention({
   // All caught up: celebrate
   if (items.length === 0) {
     return (
-      <section className="mb-8 rounded-2xl border border-emerald-200/70 bg-emerald-50/40 p-4 shadow-soft">
+      <section className="mb-8 rounded-lg border border-ok/30 bg-ok-soft/40 p-4 shadow-soft">
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white border border-emerald-200 text-emerald-700">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-paper border border-ok/30 text-ok">
             <Sparkles className="h-3.5 w-3.5" />
           </span>
           <p className="text-sm">
-            <span className="font-medium text-navy">All caught up.</span>
-            <span className="text-muted-foreground ml-1.5">
+            <span className="font-medium text-ink">All caught up.</span>
+            <span className="text-muted ml-1.5">
               No urgent ops issues — savor the calm.
             </span>
           </p>
@@ -103,9 +103,9 @@ export function NeedsAttention({
   const visible = items.slice(0, 5);
 
   return (
-    <section className="mb-8 rounded-2xl border border-line bg-white p-4 shadow-soft">
+    <section className="mb-8 rounded-lg border border-line bg-paper p-4 shadow-soft">
       <div className="flex items-start gap-3 flex-wrap">
-        <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground self-center whitespace-nowrap">
+        <span className="text-[10px] uppercase tracking-[0.22em] text-muted self-center whitespace-nowrap">
           Needs your attention
         </span>
         <div className="flex flex-wrap gap-2 flex-1">
@@ -120,13 +120,13 @@ export function NeedsAttention({
 
 function Chip({ item }: { item: Item }) {
   const cls = cn(
-    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
+    "inline-flex items-center gap-1.5 rounded-[6px] border px-3 py-1 text-xs transition-colors",
     item.tone === "urgent" &&
-      "border-red-200 bg-red-50 text-red-700 hover:bg-red-100",
+      "border-bad/40 bg-bad-soft text-bad hover:bg-bad/10",
     item.tone === "warn" &&
-      "border-sand-200 bg-sand-50 text-sand-800 hover:bg-sand-100",
+      "border-warn/40 bg-warn-soft text-warn hover:bg-warn/10",
     item.tone === "info" &&
-      "border-line bg-ivory text-navy hover:bg-white"
+      "border-line bg-paper-2 text-ink hover:bg-paper"
   );
   if (item.href) {
     return (

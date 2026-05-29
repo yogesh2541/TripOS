@@ -142,9 +142,9 @@ export function VendorList({ vendors }: { vendors: VendorListItem[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-16 text-center">
-          <p className="font-display text-xl text-navy">No vendors match</p>
-          <p className="mt-2 text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-line bg-paper-2 p-16 text-center">
+          <p className="font-display text-xl text-ink">No vendors match</p>
+          <p className="mt-2 text-sm text-muted">
             Try a different search or clear the filters.
           </p>
         </div>
@@ -183,9 +183,9 @@ function VendorRowCard({
   return (
     <div
       className={cn(
-        "group relative rounded-2xl border border-line bg-white p-5 shadow-soft transition-all",
-        "hover:border-sand/60 hover:shadow-md",
-        v.isPreferred && "ring-1 ring-sand-200/70 bg-sand-50/30",
+        "group relative rounded-lg border border-line bg-paper p-5 shadow-soft transition-all",
+        "hover:border-[var(--gold-line)] hover:shadow-lift",
+        v.isPreferred && "ring-1 ring-[var(--gold-line)] bg-gold-soft/20",
         !v.isActive && "opacity-60"
       )}
     >
@@ -194,12 +194,12 @@ function VendorRowCard({
           <div className="flex items-center gap-2">
             <Link
               href={`/vendors/${v.id}`}
-              className="font-display text-xl text-navy hover:text-sand-800 transition-colors truncate"
+              className="font-display text-xl text-ink hover:text-gold-deep transition-colors truncate"
             >
               {v.name}
             </Link>
             {v.isPreferred ? (
-              <Star className="h-4 w-4 fill-sand text-sand" />
+              <Star className="h-4 w-4 fill-gold-deep text-gold-deep" />
             ) : null}
           </div>
           <div className="mt-1 flex items-center gap-2">
@@ -212,20 +212,20 @@ function VendorRowCard({
             type="button"
             onClick={onTogglePreferred}
             className={cn(
-              "rounded-full p-1.5 transition-colors",
+              "rounded-[6px] p-1.5 transition-colors",
               v.isPreferred
-                ? "text-sand hover:bg-sand-50"
-                : "text-muted-foreground hover:text-sand hover:bg-sand-50"
+                ? "text-gold-deep hover:bg-gold-soft"
+                : "text-muted hover:text-gold-deep hover:bg-gold-soft"
             )}
             title={v.isPreferred ? "Remove preferred" : "Mark preferred"}
           >
-            <Star className={cn("h-4 w-4", v.isPreferred && "fill-sand")} />
+            <Star className={cn("h-4 w-4", v.isPreferred && "fill-gold-deep")} />
           </button>
           <button
             type="button"
             onClick={onToggleActive}
             className={cn(
-              "rounded-full p-1.5 transition-colors text-muted-foreground hover:text-navy"
+              "rounded-[6px] p-1.5 transition-colors text-muted hover:text-ink"
             )}
             title={v.isActive ? "Archive vendor" : "Reactivate vendor"}
           >
@@ -249,7 +249,7 @@ function VendorRowCard({
         {v.phone ? (
           <a
             href={`tel:${v.phone}`}
-            className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] text-navy hover:border-sand-200"
+            className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2.5 py-1 text-[11px] text-ink hover:border-[var(--gold-line)]"
           >
             <Phone className="h-3 w-3" />
             {v.phone}
@@ -260,7 +260,7 @@ function VendorRowCard({
             href={`https://wa.me/${v.whatsapp.replace(/\D/g, "")}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] text-emerald-700 hover:border-emerald-200"
+            className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2.5 py-1 text-[11px] text-ok hover:border-ok/40"
           >
             <MessageCircle className="h-3 w-3" />
             WhatsApp
@@ -269,7 +269,7 @@ function VendorRowCard({
         {v.email ? (
           <a
             href={`mailto:${v.email}`}
-            className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] text-navy hover:border-sand-200 truncate max-w-[160px]"
+            className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2.5 py-1 text-[11px] text-ink hover:border-[var(--gold-line)] truncate max-w-[160px]"
           >
             <Mail className="h-3 w-3 shrink-0" />
             <span className="truncate">{v.email}</span>
@@ -277,12 +277,12 @@ function VendorRowCard({
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-line/70 pt-3 text-xs text-muted-foreground">
+      <div className="mt-4 flex items-center justify-between border-t border-line/70 pt-3 text-xs text-muted">
         <span>
           {v.assignmentsCount} assignment
           {v.assignmentsCount === 1 ? "" : "s"}
         </span>
-        <span className="tabular-nums">
+        <span className="font-mono tabular-nums">
           ₹ {Math.round(v.paidTotal).toLocaleString("en-IN")} paid
         </span>
       </div>

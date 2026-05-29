@@ -104,7 +104,7 @@ export default async function LeadDetailPage({
       <div className="flex items-center justify-between mb-6">
         <Link
           href="/contacts"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           All contacts
@@ -114,7 +114,7 @@ export default async function LeadDetailPage({
       <header className="flex flex-wrap items-start justify-between gap-6 mb-10">
         <div className="space-y-3">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-display text-4xl md:text-5xl text-navy leading-tight">
+            <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">
               {contact.name}
             </h1>
             <LeadStatusPill contactId={contact.id} status={contact.status} />
@@ -125,7 +125,7 @@ export default async function LeadDetailPage({
               </Badge>
             )}
           </div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted">
             Source · {LEAD_SOURCE_LABEL[contact.source]}
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -215,7 +215,7 @@ export default async function LeadDetailPage({
 
           <TabsContent value="trips">
             {contact.trips.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-line bg-white/60 p-12 text-center text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 text-center text-sm text-muted">
                 No trips linked yet.
               </div>
             ) : (
@@ -224,13 +224,13 @@ export default async function LeadDetailPage({
                   <li key={t.id}>
                     <Link
                       href={`/trips/${t.id}`}
-                      className="flex items-center justify-between rounded-2xl border border-line bg-white p-5 hover:shadow-soft transition-all group"
+                      className="flex items-center justify-between rounded-lg border border-line bg-paper p-5 hover:shadow-soft transition-all group"
                     >
                       <div>
-                        <p className="font-display text-xl text-navy">
+                        <p className="font-display text-xl text-ink">
                           {t.destination}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-muted mt-1">
                           {t.days} days · {t.travelers} travelers ·{" "}
                           {t.travelType}
                         </p>
@@ -239,7 +239,7 @@ export default async function LeadDetailPage({
                         <Badge variant={TRIP_STATUS_TONE[t.status]}>
                           {TRIP_STATUS_LABEL[t.status]}
                         </Badge>
-                        <ArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-navy transition-colors" />
+                        <ArrowUpRight className="h-5 w-5 text-muted group-hover:text-ink transition-colors" />
                       </div>
                     </Link>
                   </li>
@@ -278,7 +278,7 @@ export default async function LeadDetailPage({
                   />
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-line bg-white/60 p-4 text-xs text-muted-foreground">
+                <div className="rounded-lg border border-dashed border-line bg-paper-2 p-4 text-xs text-muted">
                   Add a phone number to send WhatsApp.
                 </div>
               )}
@@ -341,7 +341,7 @@ function Overview({
   contact: { destination: string | null; budget: number | null; adults: number; notes: string | null };
 }) {
   return (
-    <div className="rounded-2xl border border-line bg-white p-6 md:p-8 space-y-6">
+    <div className="rounded-lg border border-line bg-paper p-6 md:p-8 space-y-6">
       <div className="grid sm:grid-cols-2 gap-x-6 gap-y-4">
         <Field label="Destination" value={contact.destination ?? "—"} />
         <Field label="Adults" value={String(contact.adults)} />
@@ -352,7 +352,7 @@ function Overview({
       </div>
       {contact.notes && (
         <div>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-1">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted mb-1">
             Notes
           </p>
           <p className="text-sm text-ink/80 whitespace-pre-line leading-relaxed">
@@ -367,7 +367,7 @@ function Overview({
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted">
         {label}
       </p>
       <p className="mt-1 text-base text-ink">{value}</p>
@@ -383,8 +383,8 @@ function SidePanel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-line bg-white p-5 space-y-3">
-      <p className="text-[10px] uppercase tracking-[0.2em] text-sand-700">
+    <section className="rounded-lg border border-line bg-paper p-5 space-y-3">
+      <p className="tc-eyebrow gold">
         {title}
       </p>
       {children}
@@ -395,7 +395,7 @@ function SidePanel({
 function PanelRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="text-muted">{label}</span>
       <span className="text-ink text-right">{value}</span>
     </div>
   );

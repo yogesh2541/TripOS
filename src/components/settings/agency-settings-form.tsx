@@ -181,7 +181,7 @@ export function AgencySettingsForm({
             <p>JPG, PNG, WEBP, GIF, or AVIF — up to 8 MB.</p>
             <p>
               {form.logoUrl ? (
-                <span className="text-emerald-700">
+                <span className="text-ok">
                   ✓ Logo set — customers will see your brand on shared
                   proposals.
                 </span>
@@ -324,7 +324,7 @@ export function AgencySettingsForm({
                   key={s.code}
                   type="button"
                   onClick={() => update("defaultSacCode", s.code)}
-                  className="text-[10px] rounded-full border border-line bg-white px-2 py-0.5 hover:border-sand-200 text-muted-foreground"
+                  className="text-[10px] rounded-[6px] border border-line bg-paper px-2 py-0.5 hover:border-[var(--gold-line)] text-muted"
                 >
                   {s.label}
                 </button>
@@ -457,31 +457,31 @@ export function AgencySettingsForm({
         hint="Reserved for upcoming integrations — leave off until needed."
       >
         <div className="space-y-2">
-          <label className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm">
+          <label className="flex items-center gap-3 rounded-[10px] border border-line bg-paper px-4 py-3 text-sm">
             <input
               type="checkbox"
               checked={form.eInvoiceEnabled ?? false}
               onChange={(e) => update("eInvoiceEnabled", e.target.checked)}
-              className="h-4 w-4 accent-sand-700"
+              className="h-4 w-4 accent-[var(--gold-line)]"
             />
             <span>
-              <span className="font-medium text-navy">e-Invoicing (IRP)</span>
-              <span className="ml-2 text-xs text-muted-foreground">
+              <span className="font-medium text-ink">e-Invoicing (IRP)</span>
+              <span className="ml-2 text-xs text-muted">
                 Required when turnover crosses the prescribed threshold (you
                 decide when).
               </span>
             </span>
           </label>
-          <label className="flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm">
+          <label className="flex items-center gap-3 rounded-[10px] border border-line bg-paper px-4 py-3 text-sm">
             <input
               type="checkbox"
               checked={form.eWayBillEnabled ?? false}
               onChange={(e) => update("eWayBillEnabled", e.target.checked)}
-              className="h-4 w-4 accent-sand-700"
+              className="h-4 w-4 accent-[var(--gold-line)]"
             />
             <span>
-              <span className="font-medium text-navy">e-Way Bill</span>
-              <span className="ml-2 text-xs text-muted-foreground">
+              <span className="font-medium text-ink">e-Way Bill</span>
+              <span className="ml-2 text-xs text-muted">
                 Off by default; rarely applicable to pure travel services.
               </span>
             </span>
@@ -491,7 +491,7 @@ export function AgencySettingsForm({
 
       <div className="sticky bottom-4 flex items-center justify-end gap-3">
         {dirty ? (
-          <span className="rounded-full border border-sand-200 bg-sand-50 px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-sand-800 shadow-soft">
+          <span className="rounded-[6px] border border-[var(--gold-line)] bg-gold-soft px-3 py-1.5 text-[10px] uppercase tracking-[0.16em] text-gold-deep shadow-soft">
             Unsaved changes
           </span>
         ) : null}
@@ -518,11 +518,11 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-line bg-white p-6 shadow-soft">
+    <section className="rounded-lg border border-line bg-paper p-6 shadow-soft">
       <header className="mb-4">
-        <h3 className="font-display text-xl text-navy">{title}</h3>
+        <h3 className="font-display text-xl text-ink">{title}</h3>
         {hint ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+          <p className="mt-0.5 text-xs text-muted">{hint}</p>
         ) : null}
       </header>
       {children}
@@ -547,11 +547,11 @@ function Field({
     <div className={"space-y-1.5 " + (className ?? "")}>
       <Label className="flex items-center gap-1">
         {label}
-        {required ? <span className="text-red-600">*</span> : null}
+        {required ? <span className="text-bad">*</span> : null}
       </Label>
       {children}
       {hint ? (
-        <p className="text-[11px] text-muted-foreground">{hint}</p>
+        <p className="text-[11px] text-muted">{hint}</p>
       ) : null}
     </div>
   );

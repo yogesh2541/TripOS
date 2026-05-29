@@ -78,15 +78,11 @@ export default async function CustomersPage({
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Repeat clients
-          </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Customers
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="tc-eyebrow gold">Repeat clients</p>
+          <h1 className="tc-page-title mt-2.5">Customers</h1>
+          <p className="tc-page-sub">
             Contacts who've booked — your roster of repeat clients.
           </p>
         </div>
@@ -123,11 +119,11 @@ export default async function CustomersPage({
         <ul className="grid gap-4 lg:grid-cols-2">
           {enriched.map((c) => (
             <li key={c.id}>
-              <article className="rounded-2xl border border-line bg-white p-6 shadow-soft hover:shadow-lift transition-all flex flex-col gap-4">
+              <article className="rounded-lg border border-line bg-paper p-6 shadow-soft hover:shadow-lift transition-all flex flex-col gap-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-display text-2xl text-navy">
+                      <p className="font-display text-2xl text-ink">
                         {c.name}
                       </p>
                       {(() => {
@@ -142,7 +138,7 @@ export default async function CustomersPage({
                       })()}
                     </div>
                     {c.convertedAt && (
-                      <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                      <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted font-mono tabular-nums">
                         Since {formatDate(c.convertedAt)}
                       </p>
                     )}
@@ -163,7 +159,7 @@ export default async function CustomersPage({
 
                 <Link
                   href={`/contacts/${c.id}`}
-                  className="text-xs uppercase tracking-[0.2em] text-muted-foreground hover:text-navy transition-colors inline-flex items-center gap-1.5 self-start"
+                  className="text-xs uppercase tracking-[0.2em] text-muted hover:text-ink transition-colors inline-flex items-center gap-1.5 self-start"
                 >
                   Open profile
                   <ArrowUpRight className="h-3.5 w-3.5" />
@@ -179,11 +175,11 @@ export default async function CustomersPage({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-ivory border border-line/60 px-3 py-2">
-      <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+    <div className="rounded-[8px] bg-paper-2 border border-line px-3 py-2">
+      <p className="text-[9px] uppercase tracking-[0.2em] text-muted">
         {label}
       </p>
-      <p className="mt-0.5 font-medium text-navy text-sm">{value}</p>
+      <p className="mt-0.5 font-medium text-ink text-sm font-mono tabular-nums">{value}</p>
     </div>
   );
 }

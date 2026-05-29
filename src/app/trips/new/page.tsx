@@ -53,13 +53,11 @@ export default async function NewTripPage({
   return (
     <PageShell>
       <div className="text-center mb-12">
-        <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-          New trip
-        </p>
-        <h1 className="mt-4 font-display text-4xl md:text-5xl text-navy">
+        <p className="tc-eyebrow gold">New trip</p>
+        <h1 className="mt-4 font-display text-4xl md:text-5xl text-ink">
           A few details, then we craft.
         </h1>
-        <p className="mt-3 text-base text-muted-foreground max-w-md mx-auto">
+        <p className="mt-3 text-base text-muted max-w-md mx-auto">
           Walk through the wizard for a fresh idea, or paste a detailed brief
           when you already know the day-by-day.
         </p>

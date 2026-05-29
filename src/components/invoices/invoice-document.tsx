@@ -240,7 +240,9 @@ const styles = StyleSheet.create({
 });
 
 function formatINR(n: number): string {
-  return "₹ " + Math.round(n).toLocaleString("en-IN");
+  // "Rs." not the ₹ glyph (U+20B9): the built-in PDF fonts (Helvetica/Times)
+  // have no rupee glyph, so it renders as a stray "¹". "Rs." is glyph-safe.
+  return "Rs. " + Math.round(n).toLocaleString("en-IN");
 }
 
 function formatDate(d: Date | null | undefined): string {

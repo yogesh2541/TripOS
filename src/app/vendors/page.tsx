@@ -19,15 +19,11 @@ export default async function VendorsPage() {
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Operations
-          </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Vendors
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="tc-eyebrow gold">Operations</p>
+          <h1 className="tc-page-title mt-2.5">Vendors</h1>
+          <p className="tc-page-sub">
             Hotels, transport, drivers, guides — your supplier roster.
           </p>
         </div>

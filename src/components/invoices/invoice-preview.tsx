@@ -63,19 +63,19 @@ export function InvoicePreview({
   const isExempt = invoice.taxScheme === "EXEMPT";
 
   return (
-    <article className="rounded-2xl border border-line bg-white shadow-soft overflow-hidden">
+    <article className="rounded-lg border border-line bg-paper shadow-soft overflow-hidden">
       {/* Hero band */}
-      <header className="bg-navy text-ivory px-6 py-5">
+      <header className="bg-inkwash text-[var(--on-dark)] px-6 py-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-sand-200/80">
+            <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--on-dark)]/70">
               {isExempt ? "Bill of Supply" : "Tax Invoice"}
             </p>
             <h2 className="font-display text-2xl mt-1 leading-tight">
               {supplier?.legalName ?? "—"}
             </h2>
             {supplier?.tradeName ? (
-              <p className="text-xs text-sand-200/80 mt-0.5">
+              <p className="text-xs text-[var(--on-dark)]/70 mt-0.5">
                 Trading as {supplier.tradeName}
               </p>
             ) : null}
@@ -103,7 +103,7 @@ export function InvoicePreview({
       <div className="px-6 py-6 grid gap-6 md:grid-cols-2">
         {/* Supplier */}
         <Block label="Bill from">
-          <p className="font-medium text-navy">{supplier?.legalName ?? "—"}</p>
+          <p className="font-medium text-ink">{supplier?.legalName ?? "—"}</p>
           {supplier?.address?.line1 ? (
             <p className="text-sm text-ink/80">{supplier.address.line1}</p>
           ) : null}
@@ -127,7 +127,7 @@ export function InvoicePreview({
 
         {/* Recipient */}
         <Block label="Bill to">
-          <p className="font-medium text-navy">{recipient?.name ?? "—"}</p>
+          <p className="font-medium text-ink">{recipient?.name ?? "—"}</p>
           <KV label="GSTIN" value={recipient?.gstin} />
           <KV label="Email" value={recipient?.email} />
           <KV label="Phone" value={recipient?.phone} />
@@ -144,7 +144,7 @@ export function InvoicePreview({
       </div>
 
       {/* Meta strip */}
-      <div className="border-y border-line/70 bg-ivory/40 px-6 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+      <div className="border-y border-line/70 bg-paper-2 px-6 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
         <Meta label="Date" value={formatDate(invoice.invoiceDate)} />
         <Meta label="Scheme" value={SCHEME_LABEL[invoice.taxScheme] ?? "—"} />
         <Meta label="Basis" value={BASIS_LABEL[invoice.taxableBasis] ?? "—"} />
@@ -162,9 +162,9 @@ export function InvoicePreview({
       </div>
 
       {/* Items */}
-      <div className="px-6 py-6">
-        <table className="w-full text-sm">
-          <thead className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <div className="px-6 py-6 overflow-x-auto">
+        <table className="w-full text-sm min-w-[520px]">
+          <thead className="text-[10px] uppercase tracking-[0.18em] text-muted">
             <tr className="border-b border-line/70">
               <th className="text-left py-2">#</th>
               <th className="text-left py-2">Description</th>
@@ -192,9 +192,9 @@ export function InvoicePreview({
                 it.igstAmount;
               return (
                 <tr key={it.id} className="align-top">
-                  <td className="py-2 text-muted-foreground">{i + 1}</td>
+                  <td className="py-2 text-muted">{i + 1}</td>
                   <td className="py-2">{it.description}</td>
-                  <td className="py-2 text-muted-foreground">{it.sacCode}</td>
+                  <td className="py-2 text-muted">{it.sacCode}</td>
                   <td className="py-2 text-right tabular-nums">
                     {it.quantity}
                   </td>
@@ -218,7 +218,7 @@ export function InvoicePreview({
                       {formatINR(it.igstAmount)}
                     </td>
                   ) : null}
-                  <td className="py-2 text-right tabular-nums font-medium text-navy">
+                  <td className="py-2 text-right tabular-nums font-medium text-ink">
                     {formatINR(lineTotal)}
                   </td>
                 </tr>
@@ -229,7 +229,7 @@ export function InvoicePreview({
       </div>
 
       {/* Totals */}
-      <div className="border-t border-line/70 bg-ivory/30 px-6 py-5 flex flex-col gap-1.5 items-end">
+      <div className="border-t border-line/70 bg-paper-2 px-6 py-5 flex flex-col gap-1.5 items-end">
         <TotalRow label="Subtotal (taxable)" value={invoice.subtotal} />
         {invoice.cgstAmount > 0 ? (
           <TotalRow
@@ -253,15 +253,15 @@ export function InvoicePreview({
           <TotalRow label="Round off" value={invoice.roundOff} muted />
         ) : null}
         <div className="mt-2 flex items-center gap-3 border-t border-line pt-2 min-w-[220px] justify-end">
-          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted">
             Grand total
           </span>
-          <span className="font-display text-2xl text-navy tabular-nums">
+          <span className="font-display text-2xl text-ink tabular-nums">
             {formatINR(invoice.grandTotal)}
           </span>
         </div>
         {invoice.amountInWords ? (
-          <p className="text-[11px] text-muted-foreground italic mt-1 text-right max-w-md">
+          <p className="text-[11px] text-muted italic mt-1 text-right max-w-md">
             {invoice.amountInWords}
           </p>
         ) : null}
@@ -271,10 +271,10 @@ export function InvoicePreview({
       <footer className="border-t border-line/70 px-6 py-5 grid gap-5 md:grid-cols-2">
         {supplier?.bank?.accountNumber ? (
           <div className="text-xs space-y-0.5">
-            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted mb-1">
               Bank details
             </p>
-            <p className="text-navy">{supplier.bank.holder ?? "—"}</p>
+            <p className="text-ink">{supplier.bank.holder ?? "—"}</p>
             <p className="text-ink/80">
               {supplier.bank.name} · A/c {supplier.bank.accountNumber}
             </p>
@@ -284,15 +284,15 @@ export function InvoicePreview({
           <div />
         )}
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted mb-1">
             For {supplier?.legalName ?? "—"}
           </p>
           <div className="h-12" />
-          <p className="text-sm font-medium text-navy">
+          <p className="text-sm font-medium text-ink">
             {supplier?.signatory?.name ?? "Authorised signatory"}
           </p>
           {supplier?.signatory?.designation ? (
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[11px] text-muted">
               {supplier.signatory.designation}
             </p>
           ) : null}
@@ -300,16 +300,16 @@ export function InvoicePreview({
       </footer>
 
       {(supplier?.invoiceTerms || supplier?.invoiceNotes) && (
-        <div className="border-t border-line/70 bg-ivory/30 px-6 py-4 text-xs text-muted-foreground space-y-2">
+        <div className="border-t border-line/70 bg-paper-2 px-6 py-4 text-xs text-muted space-y-2">
           {supplier?.invoiceTerms ? (
             <p className="whitespace-pre-wrap">
-              <span className="font-medium text-navy">Terms: </span>
+              <span className="font-medium text-ink">Terms: </span>
               {supplier.invoiceTerms}
             </p>
           ) : null}
           {supplier?.invoiceNotes ? (
             <p className="whitespace-pre-wrap">
-              <span className="font-medium text-navy">Notes: </span>
+              <span className="font-medium text-ink">Notes: </span>
               {supplier.invoiceNotes}
             </p>
           ) : null}
@@ -328,7 +328,7 @@ function Block({
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-1.5">
+      <p className="text-[10px] uppercase tracking-[0.22em] text-muted mb-1.5">
         {label}
       </p>
       <div className="space-y-0.5 text-sm">{children}</div>
@@ -345,9 +345,9 @@ function KV({
 }) {
   if (!value) return null;
   return (
-    <p className="text-xs text-muted-foreground">
+    <p className="text-xs text-muted">
       <span className="text-[10px] uppercase tracking-[0.16em]">{label}: </span>
-      <span className="text-navy">{value}</span>
+      <span className="text-ink">{value}</span>
     </p>
   );
 }
@@ -361,10 +361,10 @@ function Meta({
 }) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+      <span className="text-[10px] uppercase tracking-[0.16em] text-muted">
         {label}:
       </span>
-      <span className="text-navy">{value ?? "—"}</span>
+      <span className="text-ink">{value ?? "—"}</span>
     </span>
   );
 }
@@ -380,13 +380,13 @@ function TotalRow({
 }) {
   return (
     <div className="flex items-center gap-3 min-w-[260px] justify-end text-sm">
-      <span className={cn("text-muted-foreground", muted && "italic")}>
+      <span className={cn("text-muted", muted && "italic")}>
         {label}
       </span>
       <span
         className={cn(
           "tabular-nums w-32 text-right",
-          muted ? "text-muted-foreground italic" : "text-navy"
+          muted ? "text-muted italic" : "text-ink"
         )}
       >
         {formatINR(value)}

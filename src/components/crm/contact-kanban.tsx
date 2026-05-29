@@ -125,18 +125,18 @@ function Column({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col gap-3 rounded-3xl bg-white/40 border border-line/70 p-3 transition-colors",
-        isOver && isOverlayTarget && "bg-sand-50 border-sand-300"
+        "flex flex-col gap-3 rounded-lg bg-paper-2 border border-line p-3 transition-colors",
+        isOver && isOverlayTarget && "bg-gold-soft/50 border-[var(--gold-line)]"
       )}
     >
-      <header className="px-2 pb-2 border-b border-line/50">
-        <p className="font-display text-base text-navy">
+      <header className="px-2 pb-2 border-b border-line-2">
+        <p className="font-display text-base text-ink">
           {LEAD_STATUS_LABEL[status]}
-          <span className="ml-2 text-xs text-muted-foreground">
+          <span className="ml-2 font-mono text-xs text-muted">
             {items.length}
           </span>
         </p>
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-0.5">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted mt-0.5">
           {LEAD_STATUS_COLUMN_DESC[status]}
         </p>
       </header>
@@ -146,7 +146,7 @@ function Column({
       >
         <div className="space-y-3 min-h-[120px]">
           {items.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-line p-6 text-center text-xs text-muted-foreground">
+            <div className="rounded-[10px] border border-dashed border-line p-6 text-center text-xs text-muted-foreground">
               Empty
             </div>
           )}

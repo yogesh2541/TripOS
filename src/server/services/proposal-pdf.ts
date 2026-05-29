@@ -88,6 +88,22 @@ export type ProposalPdfSnapshot = {
 
 const SAND = "#C8A96A";
 
+// @react-pdf renders server-side and must *fetch* every <Image src>. Uploaded
+// images are stored relative (`/uploads/x.jpg`), which has no origin to
+// resolve against on the server — so the cover/logo would silently drop.
+// Promote relative paths to absolute using the app's public origin. Already-
+// absolute (http/https) or data: URLs pass through untouched.
+function toAbsoluteUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (/^(https?:|data:)/i.test(url)) return url;
+  const base = (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_URL ||
+    "http://localhost:3000"
+  ).replace(/\/$/, "");
+  return url.startsWith("/") ? `${base}${url}` : `${base}/${url}`;
+}
+
 function buildSnapshot(
   quote: Quote & {
     items: QuoteItem[];
@@ -132,7 +148,15 @@ function buildSnapshot(
   const itinerary: ItineraryContent | null = rawItin
     ? (() => {
         const i = rawItin as ItineraryContent;
-        return { ...i, days: i.days.map((d) => readDay(d)) };
+        return {
+          ...i,
+          // Absolutize so the server-side PDF renderer can fetch them.
+          coverImageUrl: toAbsoluteUrl(i.coverImageUrl) ?? undefined,
+          days: i.days.map((d) => {
+            const day = readDay(d);
+            return { ...day, imageUrl: toAbsoluteUrl(day.imageUrl) ?? undefined };
+          }),
+        };
       })()
     : null;
 
@@ -173,7 +197,7 @@ function buildSnapshot(
     pricing,
     agency: {
       name: agencyName,
-      logoUrl: settings?.logoUrl ?? null,
+      logoUrl: toAbsoluteUrl(settings?.logoUrl),
       phone: settings?.phone ?? null,
       email: settings?.email ?? null,
       website: settings?.website ?? null,

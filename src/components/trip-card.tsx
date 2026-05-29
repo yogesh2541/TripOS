@@ -41,18 +41,16 @@ export function TripCard({
     >
       <Link
         href={`/trips/${id}`}
-        className="group block rounded-2xl border border-line bg-white p-6 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
+        className="group block rounded-lg border border-line bg-paper p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:border-[var(--gold-line)] hover:shadow-lift"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-sand-700">
-              {travelType}
-            </p>
-            <h3 className="mt-2 font-display text-2xl text-navy leading-tight truncate">
+            <p className="tc-eyebrow gold">{travelType}</p>
+            <h3 className="mt-2 font-display text-2xl text-ink leading-tight truncate">
               {destination}
             </h3>
             {leadName && (
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted">
                 <User className="h-3 w-3" />
                 <span className="truncate">{leadName}</span>
               </p>
@@ -62,28 +60,28 @@ export function TripCard({
             <Badge variant={TRIP_STATUS_TONE[status]}>
               {TRIP_STATUS_LABEL[status]}
             </Badge>
-            <span className="opacity-0 transition-opacity group-hover:opacity-100 text-navy">
+            <span className="opacity-0 transition-opacity group-hover:opacity-100 text-gold-deep">
               <ArrowUpRight className="h-5 w-5" />
             </span>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center gap-4 text-xs text-muted-foreground">
+        <div className="mt-6 flex items-center gap-4 text-xs text-muted">
           <span className="flex items-center gap-1.5">
-            <CalendarDays className="h-3.5 w-3.5" />
-            {days} days
+            <CalendarDays className="h-3.5 w-3.5 text-gold-deep" />
+            <span className="font-mono tabular-nums">{days}</span> days
           </span>
           <span className="flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5" />
-            {travelers}
+            <Users className="h-3.5 w-3.5 text-gold-deep" />
+            <span className="font-mono tabular-nums">{travelers}</span>
           </span>
           {startDate && (
-            <span className="ml-auto text-[11px] uppercase tracking-widest">
+            <span className="ml-auto font-mono text-[11px] text-faint">
               {formatDate(startDate)}
             </span>
           )}
         </div>
-        <p className="mt-4 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+        <p className="mt-4 text-[10px] uppercase tracking-[0.2em] text-faint">
           Created {formatDate(createdAt)}
         </p>
       </Link>

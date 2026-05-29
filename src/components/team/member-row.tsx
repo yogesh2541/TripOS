@@ -89,20 +89,20 @@ export function MemberRow({
     !isSelf || membership.role !== "OWNER" || ownerCount > 1;
 
   return (
-    <li className="rounded-2xl border border-line bg-white px-4 py-3 flex items-center gap-3">
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-ivory text-xs font-medium shrink-0">
+    <li className="rounded-lg border border-line bg-paper px-4 py-3 flex items-center gap-3">
+      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-inkwash text-[var(--on-dark)] text-xs font-medium shrink-0">
         {initials}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-navy text-sm truncate">
+        <p className="font-medium text-ink text-sm truncate">
           {membership.user.name ?? membership.user.email}
           {isSelf ? (
-            <span className="ml-2 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            <span className="ml-2 text-[10px] uppercase tracking-[0.16em] text-muted">
               You
             </span>
           ) : null}
         </p>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-xs text-muted truncate">
           {membership.user.email}
         </p>
       </div>

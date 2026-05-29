@@ -111,12 +111,12 @@ export default async function PreviewPage({
   };
 
   return (
-    <div className="min-h-screen bg-ivory">
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-ivory/85 backdrop-blur-md print:hidden">
+    <div className="min-h-screen bg-canvas">
+      <header className="sticky top-0 z-30 border-b border-line bg-[rgba(244,242,236,.85)] backdrop-blur-md print:hidden">
         <div className="container flex h-16 items-center justify-between">
           <Link
             href={`/trips/${trip.id}`}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to workspace
@@ -127,30 +127,54 @@ export default async function PreviewPage({
             recipientPhone={trip.contact?.phone ?? null}
             recipientName={trip.contact?.name ?? null}
             destination={trip.destination}
+            agencyName={proposalAgency.name}
+            total={pricing?.total ?? null}
+            perPerson={pricing?.perPerson ?? null}
+            version={quote?.version ?? null}
+            validityDays={14}
+            preparedAt={(quote?.updatedAt ?? trip.updatedAt).toISOString()}
+            dateRange={
+              trip.startDate
+                ? `${new Date(trip.startDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                  })} – ${new Date(
+                    new Date(trip.startDate).getTime() +
+                      (trip.days - 1) * 86400000
+                  ).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}`
+                : null
+            }
           />
         </div>
       </header>
 
-      <main className="container py-10 md:py-16 max-w-5xl">
-        <PreviewRenderer
-          trip={{
-            destination: trip.destination,
-            days: trip.days,
-            travelers: trip.travelers,
-            startDate: trip.startDate,
-            travelType: trip.travelType,
-          }}
-          itinerary={itinerary}
-          pricing={pricing}
-          segments={trip.travelSegments}
-          agency={proposalAgency}
-          branding={proposalBranding}
-          meta={{
-            version: quote?.version,
-            preparedAt: (quote?.updatedAt ?? trip.updatedAt).toISOString(),
-            validityDays: 14,
-          }}
-        />
+      <main className="mx-auto max-w-5xl py-8 md:py-12 px-4 md:px-6">
+        <div className="overflow-hidden rounded-xl border border-line shadow-lift print:border-0 print:shadow-none print:rounded-none">
+          <PreviewRenderer
+            trip={{
+              destination: trip.destination,
+              days: trip.days,
+              travelers: trip.travelers,
+              startDate: trip.startDate,
+              travelType: trip.travelType,
+            }}
+            itinerary={itinerary}
+            pricing={pricing}
+            segments={trip.travelSegments}
+            agency={proposalAgency}
+            branding={proposalBranding}
+            recipientName={trip.contact?.name ?? null}
+            meta={{
+              version: quote?.version,
+              preparedAt: (quote?.updatedAt ?? trip.updatedAt).toISOString(),
+              validityDays: 14,
+            }}
+          />
+        </div>
       </main>
     </div>
   );

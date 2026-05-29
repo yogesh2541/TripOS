@@ -40,13 +40,13 @@ export function SegmentList({
     <div className="space-y-8">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-sand-600">
+          <p className="tc-eyebrow gold">
             Transport
           </p>
-          <h2 className="font-display text-2xl text-navy">
+          <h2 className="font-display text-2xl text-ink mt-1">
             Travel segments
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted">
             Flights & trains attached to this trip. Day numbers map to the
             itinerary.
           </p>
@@ -80,10 +80,10 @@ export function SegmentList({
       </header>
 
       {segments.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-12 text-center">
-          <Plus className="h-5 w-5 mx-auto text-muted-foreground mb-3" />
-          <p className="font-display text-2xl text-navy">No transport yet</p>
-          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+        <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 text-center">
+          <Plus className="h-5 w-5 mx-auto text-muted mb-3" />
+          <p className="font-display text-2xl text-ink">No transport yet</p>
+          <p className="mt-2 text-sm text-muted max-w-md mx-auto">
             Add a flight or train and it will surface above the matching day
             in the itinerary, and inside the proposal.
           </p>
@@ -133,7 +133,7 @@ function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h3 className="text-[11px] uppercase tracking-[0.22em] text-sand-700 flex items-center gap-2">
+      <h3 className="text-[11px] uppercase tracking-[0.22em] text-gold-deep flex items-center gap-2">
         {icon}
         {title}
       </h3>
@@ -190,22 +190,22 @@ function SegmentRow({
   }
 
   return (
-    <article className="rounded-2xl border border-line bg-white p-5">
+    <article className="rounded-lg border border-line bg-paper p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-baseline gap-3">
-            <span className="text-[10px] uppercase tracking-[0.2em] text-sand-700">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-gold-deep font-mono tabular-nums">
               Day {segment.dayNumber}
             </span>
-            <p className="font-display text-lg text-navy leading-tight">
-              {segment.from} <span className="text-sand-700">→</span>{" "}
+            <p className="font-display text-lg text-ink leading-tight">
+              {segment.from} <span className="text-gold-deep">→</span>{" "}
               {segment.to}
             </p>
           </div>
           {identifier && (
             <p className="mt-1 text-sm text-ink/80">{identifier}</p>
           )}
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-faint font-mono tabular-nums">
             {formatDate(segment.departureTime)}
             {" · "}
             {new Date(segment.departureTime).toLocaleTimeString("en-IN", {
@@ -221,7 +221,7 @@ function SegmentRow({
             })}
           </p>
           {seatLine && (
-            <p className="mt-1 text-xs text-muted-foreground">{seatLine}</p>
+            <p className="mt-1 text-xs text-muted">{seatLine}</p>
           )}
         </div>
 
@@ -233,7 +233,7 @@ function SegmentRow({
             segment={segment}
             trigger={
               <button
-                className="h-8 w-8 rounded-xl border border-line text-muted-foreground hover:text-navy hover:border-sand transition-colors flex items-center justify-center"
+                className="h-8 w-8 rounded-[8px] border border-line text-muted hover:text-ink hover:border-[var(--gold-line)] transition-colors flex items-center justify-center"
                 title="Edit"
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -244,7 +244,7 @@ function SegmentRow({
             type="button"
             onClick={addToQuote}
             disabled={isPending}
-            className="h-8 px-3 rounded-xl border border-line text-xs text-navy hover:border-sand transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            className="h-8 px-3 rounded-[8px] border border-line text-xs text-ink hover:border-[var(--gold-line)] transition-colors disabled:opacity-50 flex items-center gap-1.5"
             title="Add to quote"
           >
             {isPending ? (
@@ -258,7 +258,7 @@ function SegmentRow({
             type="button"
             onClick={remove}
             disabled={isPending}
-            className="h-8 w-8 rounded-xl border border-line text-muted-foreground hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center disabled:opacity-50"
+            className="h-8 w-8 rounded-[8px] border border-line text-muted hover:text-bad hover:border-bad/40 transition-colors flex items-center justify-center disabled:opacity-50"
             title="Delete"
           >
             <Trash2 className="h-3.5 w-3.5" />

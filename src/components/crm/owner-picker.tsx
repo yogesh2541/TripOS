@@ -55,9 +55,9 @@ export function OwnerPicker({
   }
 
   const pill = (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-xs text-navy">
-      <UserCircle2 className="h-3.5 w-3.5 text-sand-700" />
-      <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+    <span className="inline-flex items-center gap-1.5 rounded-[6px] border border-line bg-paper px-3 py-1.5 text-xs text-ink">
+      <UserCircle2 className="h-3.5 w-3.5 text-gold-deep" />
+      <span className="text-[10px] uppercase tracking-[0.16em] text-muted">
         {label}
       </span>
       <span className="font-medium">{current?.name ?? "Unassigned"}</span>

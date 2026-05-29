@@ -5,24 +5,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-medium tracking-wide transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ivory disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[9px] text-[13px] font-[550] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold-line)] focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:pointer-events-none disabled:opacity-50 active:translate-y-px [&_svg]:h-[15px] [&_svg]:w-[15px]",
   {
     variants: {
       variant: {
+        // navy primary
         default:
-          "bg-navy text-ivory shadow-soft hover:bg-navy-600 active:scale-[0.98]",
+          "bg-inkwash text-[var(--on-dark)] shadow-soft hover:bg-inkwash-2",
+        // restrained gold gradient — the main CTA only
         accent:
-          "bg-sand text-navy shadow-soft hover:bg-sand-300 active:scale-[0.98]",
+          "bg-gradient-to-br from-gold to-[#B0863F] text-inkwash shadow-[0_2px_10px_rgba(200,169,106,.3)] hover:brightness-[1.04]",
         outline:
-          "border border-line bg-transparent text-navy hover:bg-white hover:shadow-soft",
-        ghost: "text-navy hover:bg-white",
-        link: "text-navy underline-offset-4 hover:underline",
+          "border border-line bg-paper text-ink hover:border-[var(--gold-line)] hover:bg-paper-2",
+        ghost: "text-ink hover:bg-paper-2",
+        link: "text-ink underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-11 px-6 py-2",
-        sm: "h-9 px-4 text-xs",
-        lg: "h-12 px-8 text-base",
-        icon: "h-10 w-10",
+        default: "h-9 px-[15px]",
+        sm: "h-[30px] px-[11px] text-xs rounded-[8px]",
+        lg: "h-11 px-7 text-sm",
+        icon: "h-9 w-9",
       },
     },
     defaultVariants: { variant: "default", size: "default" },

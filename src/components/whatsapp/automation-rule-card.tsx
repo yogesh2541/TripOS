@@ -103,13 +103,13 @@ export function AutomationRuleCard({
   }
 
   return (
-    <li className="rounded-2xl border border-line bg-white p-5">
+    <li className="rounded-lg border border-line bg-paper p-5 shadow-soft">
       <div className="flex flex-wrap items-start gap-3 justify-between">
         <div className="min-w-0">
-          <p className="font-display text-lg text-navy">
+          <p className="font-display text-lg text-ink">
             {AUTOMATION_TRIGGER_LABEL[trigger]}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             {TRIGGER_HINT[trigger]}
           </p>
         </div>
@@ -119,9 +119,9 @@ export function AutomationRuleCard({
             checked={enabled}
             onChange={(e) => toggle(e.target.checked)}
             disabled={isPending && !rule}
-            className="h-4 w-4 accent-navy"
+            className="h-4 w-4 accent-[var(--gold-line)]"
           />
-          <span className="uppercase tracking-[0.18em] text-muted-foreground">
+          <span className="uppercase tracking-[0.18em] text-muted">
             {enabled ? "On" : "Off"}
           </span>
         </label>

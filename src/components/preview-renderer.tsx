@@ -3,18 +3,15 @@
 import { motion } from "framer-motion";
 import {
   Building2,
-  CalendarDays,
+  Calendar,
   Check,
   Compass,
-  Mail,
+  Eye,
   Map,
   MapPin,
-  Phone,
   Plane,
-  ShieldCheck,
   Train,
   Users,
-  Utensils,
   UtensilsCrossed,
   X,
 } from "lucide-react";
@@ -78,15 +75,14 @@ type ResolvedBranding = {
 };
 
 const SAND_ACCENT = "#C8A96A";
+const DEFAULT_TAGLINE = "Crafted travel";
 
 function resolveBranding(b?: ProposalBranding | null): ResolvedBranding {
   return {
     theme: b?.theme ?? "classic",
     accent: b?.accentColor?.trim() || SAND_ACCENT,
-    // Minimal template forces a flat cover regardless of the saved choice —
-    // a photo hero would defeat the whole point of "minimal".
-    coverStyle:
-      b?.theme === "minimal" ? "solid" : b?.coverStyle ?? "photo",
+    // Minimal forces a flat cover (no photo hero — that's the whole point).
+    coverStyle: b?.theme === "minimal" ? "solid" : b?.coverStyle ?? "photo",
     showAtAGlance: b?.showAtAGlance ?? true,
     showInclusions: b?.showInclusions ?? true,
     showTerms: b?.showTerms ?? true,
@@ -95,41 +91,26 @@ function resolveBranding(b?: ProposalBranding | null): ResolvedBranding {
   };
 }
 
-/**
- * Small round agency monogram — used in section headers, hero, closing.
- * Falls back to a navy disc with the compass mark when no logo is on file.
- */
-function AgencyMonogram({
+/** Monogram "seal" — agency logo if present, else the initial in Playfair. */
+function Seal({
   logoUrl,
   agencyName,
-  size = 32,
   className = "",
+  style,
 }: {
-  logoUrl: string | null | undefined;
+  logoUrl?: string | null;
   agencyName: string;
-  size?: number;
   className?: string;
+  style?: React.CSSProperties;
 }) {
-  const cls = `inline-flex shrink-0 items-center justify-center rounded-full border border-line bg-white overflow-hidden ${className}`;
-  if (logoUrl) {
-    return (
-      <span className={cls} style={{ height: size, width: size }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logoUrl}
-          alt={agencyName}
-          className="h-full w-full object-cover"
-        />
-      </span>
-    );
-  }
   return (
-    <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-navy text-ivory ${className}`}
-      style={{ height: size, width: size }}
-      aria-label={agencyName}
-    >
-      <Compass style={{ height: size * 0.5, width: size * 0.5 }} />
+    <span className={`seal ${className}`} style={style} aria-label={agencyName}>
+      {logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoUrl} alt={agencyName} />
+      ) : (
+        agencyName.charAt(0).toUpperCase()
+      )}
     </span>
   );
 }
@@ -152,6 +133,15 @@ function fmtDayLabel(d: Date): string {
   });
 }
 
+function dateRangeOf(startDate: Date | null, days: number): string {
+  if (!startDate) return "Dates flexible";
+  const end = addDays(startDate, days - 1);
+  return `${startDate.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  })} – ${fmtFull(end)}`;
+}
+
 export function PreviewRenderer({
   trip,
   itinerary,
@@ -160,6 +150,7 @@ export function PreviewRenderer({
   agency,
   meta,
   branding,
+  recipientName,
 }: {
   trip: Trip;
   itinerary: ItineraryContent | null;
@@ -168,8 +159,9 @@ export function PreviewRenderer({
   agency?: ProposalAgency | null;
   meta?: ProposalMeta;
   branding?: ProposalBranding | null;
+  /** "Prepared for {name}" on the cover — optional. */
+  recipientName?: string | null;
 }) {
-  // Normalize legacy itinerary shapes transparently.
   const normalized: ItineraryContent | null = itinerary
     ? { ...itinerary, days: itinerary.days.map((d) => readDay(d)) }
     : null;
@@ -179,87 +171,54 @@ export function PreviewRenderer({
   const b = resolveBranding(branding);
   const logoUrl = agency?.logoUrl ?? null;
 
-  // Aggregate per-day inclusions / exclusions into one trip-level list.
   const { included, excluded } = collectInclusions(normalized);
 
-  // Expose the accent as a CSS custom property so descendants can opt in.
   const accentStyle = {
     ["--proposal-accent" as string]: b.accent,
   } as React.CSSProperties;
 
   return (
-    <div
-      data-theme={b.theme}
-      style={accentStyle}
-      className="space-y-16 md:space-y-20 print:space-y-10"
-    >
-      <Hero
+    <div className="pp" data-theme={b.theme} style={accentStyle}>
+      <Cover
         trip={trip}
         startDate={startDate}
-        summary={normalized?.summary}
         coverImageUrl={normalized?.coverImageUrl ?? null}
         agencyName={agencyName}
         logoUrl={logoUrl}
         version={meta?.version}
         branding={b}
+        recipientName={recipientName ?? null}
       />
 
-      {b.showAtAGlance &&
-        normalized &&
-        normalized.days.length > 0 && (
-          <AtAGlance
-            itinerary={normalized}
-            startDate={startDate}
-            agencyName={agencyName}
-            logoUrl={logoUrl}
-            branding={b}
-          />
-        )}
+      <Overview
+        trip={trip}
+        summary={normalized?.summary}
+        itinerary={normalized}
+        agencyName={agencyName}
+        logoUrl={logoUrl}
+        showIndex={b.showAtAGlance}
+        validityDays={meta?.validityDays ?? 14}
+      />
 
       {segments.length > 0 && (
-        <TravelPlan
-          segments={segments}
-          agencyName={agencyName}
-          logoUrl={logoUrl}
-          branding={b}
-        />
+        <GettingThere segments={segments} />
       )}
 
-      {normalized && (
-        <Itinerary
-          itinerary={normalized}
-          startDate={startDate}
-          agencyName={agencyName}
-          logoUrl={logoUrl}
-          branding={b}
-        />
+      {normalized && normalized.days.length > 0 && (
+        <DayByDay itinerary={normalized} startDate={startDate} />
       )}
 
       {b.showInclusions && (included.length > 0 || excluded.length > 0) && (
-        <InclusionSummary
-          included={included}
-          excluded={excluded}
-          agencyName={agencyName}
-          logoUrl={logoUrl}
-          branding={b}
-        />
+        <Inclusions included={included} excluded={excluded} />
       )}
 
-      {pricing && (
-        <PricingBlock
-          pricing={pricing}
-          meta={meta}
-          agencyName={agencyName}
-          logoUrl={logoUrl}
-          branding={b}
-        />
-      )}
+      {pricing && <Investment pricing={pricing} meta={meta} />}
 
       {b.showTerms && agency?.terms?.trim() ? (
-        <TermsBlock terms={agency.terms} />
+        <Terms terms={agency.terms} />
       ) : null}
 
-      <ClosingBlock
+      <Closing
         agency={agency}
         agencyName={agencyName}
         logoUrl={logoUrl}
@@ -269,350 +228,233 @@ export function PreviewRenderer({
   );
 }
 
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
+};
+
 // ---------------------------------------------------------------------------
-// Hero
+// Cover
 // ---------------------------------------------------------------------------
 
-function Hero({
+function Cover({
   trip,
   startDate,
-  summary,
   coverImageUrl,
   agencyName,
   logoUrl,
   version,
   branding,
+  recipientName,
 }: {
   trip: Trip;
   startDate: Date | null;
-  summary?: string;
-  coverImageUrl?: string | null;
+  coverImageUrl: string | null;
   agencyName: string;
   logoUrl: string | null;
   version?: number;
   branding: ResolvedBranding;
+  recipientName: string | null;
 }) {
   const hasCover = !!coverImageUrl && branding.coverStyle === "photo";
-  const endDate = startDate ? addDays(startDate, trip.days - 1) : null;
-  const dateValue =
-    startDate && endDate
-      ? `${startDate.toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-        })} – ${fmtFull(endDate)}`
-      : "Dates flexible";
-
-  // Theme-specific surface colours.
-  const isMinimal = branding.theme === "minimal";
-  const isEditorial = branding.theme === "editorial";
-
-  const shellClass = isMinimal
-    ? "bg-white text-navy border border-line"
-    : isEditorial
-      ? "bg-ivory text-navy border border-line"
-      : "bg-navy text-ivory";
-
-  const eyebrowColor = branding.accent;
-  const headlineSize = isMinimal
-    ? "text-4xl md:text-6xl"
-    : "text-5xl md:text-7xl";
-  const subtextColor = isMinimal || isEditorial
-    ? "text-ink/75"
-    : "text-ivory/75";
+  const range = dateRangeOf(startDate, trip.days);
 
   return (
-    <motion.section
+    <motion.header
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative overflow-hidden rounded-3xl print:rounded-none ${shellClass}`}
+      className="pp-cover"
     >
       {hasCover && (
-        <>
-          {/* Real <img>, not a CSS background — CSS backgrounds get dropped
-              by browsers when "Save as PDF" runs without "Background
-              graphics" enabled. An <img> always prints. */}
-          <img
-            src={coverImageUrl!}
-            alt=""
-            className={`absolute inset-0 h-full w-full object-cover ${
-              isEditorial ? "opacity-25" : "opacity-40"
-            }`}
-            aria-hidden
-          />
-          {!isEditorial && (
-            <div
-              className="absolute inset-0 bg-gradient-to-br from-navy/90 via-navy/65 to-navy/45"
-              aria-hidden
-            />
-          )}
-        </>
+        // Real <img> (not a CSS bg) so it survives "Save as PDF".
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={coverImageUrl!} alt="" className="cover-img" aria-hidden />
       )}
-      {branding.theme === "classic" && (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,169,106,0.18),transparent_60%)]" />
-      )}
-      <div className="relative px-8 py-14 md:px-16 md:py-20">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <AgencyMonogram
+      <div className="scrim" />
+      <div className="glow" />
+      <div className="pp-cover-inner">
+        <div className="cover-top">
+          <div className="cover-brand">
+            <Seal
               logoUrl={logoUrl}
               agencyName={agencyName}
-              size={44}
-              className={isMinimal || isEditorial ? "" : "border-white/20"}
+              style={{
+                width: 44,
+                height: 44,
+                fontSize: 16,
+                background: "rgba(255,255,255,.05)",
+              }}
             />
             <div>
-              <p
-                className="text-[11px] uppercase tracking-[0.3em]"
-                style={{ color: eyebrowColor }}
-              >
-                Travel proposal
-              </p>
-              <p
-                className={`mt-0.5 text-sm font-medium ${
-                  isMinimal || isEditorial ? "text-navy" : "text-ivory"
-                }`}
-              >
-                {agencyName}
-              </p>
+              <div className="cover-word">{agencyName.toUpperCase()}</div>
+              <div className="cover-tag">{DEFAULT_TAGLINE}</div>
             </div>
           </div>
-          {version ? (
-            <span
-              className={`text-[10px] uppercase tracking-[0.2em] ${
-                isMinimal || isEditorial ? "text-muted-foreground" : "text-ivory/50"
-              }`}
-            >
-              v{version}
-            </span>
+          <div className="cover-vrow">
+            <div className="l">Travel Proposal</div>
+            <div className="v">
+              {version ? `v${version} · ` : ""}
+              {range}
+            </div>
+          </div>
+        </div>
+
+        <div className="cover-headline">
+          <div className="cover-kicker">
+            A journey for {trip.travelers}
+          </div>
+          <div className="cover-title">{trip.destination}</div>
+          <div className="cover-sub">
+            A {trip.days}-day {trip.travelType.toLowerCase()} journey, crafted
+            with care from first light to last sunset.
+          </div>
+          {recipientName ? (
+            <div className="cover-prepared">
+              Prepared for <b>{recipientName}</b>
+            </div>
           ) : null}
-        </div>
 
-        <h1 className={`mt-8 font-display ${headlineSize} leading-[0.95] tracking-tight`}>
-          {trip.destination}
-        </h1>
-        {isEditorial && (
-          <div
-            className="mt-4 h-px w-16"
-            style={{ backgroundColor: branding.accent }}
-          />
-        )}
-        <p className={`mt-6 max-w-2xl text-base md:text-lg leading-relaxed ${subtextColor}`}>
-          {summary?.trim()
-            ? summary
-            : `A ${trip.days}-day ${trip.travelType.toLowerCase()} journey, curated for ${
-                trip.travelers === 1
-                  ? "a solo traveller"
-                  : `${trip.travelers} travellers`
-              }.`}
-        </p>
-
-        <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl">
-          <Meta
-            icon={<CalendarDays className="h-4 w-4" />}
-            label="Duration"
-            value={`${trip.days} days / ${Math.max(0, trip.days - 1)} nights`}
-            invert={!(isMinimal || isEditorial)}
-            accent={branding.accent}
-          />
-          <Meta
-            icon={<Map className="h-4 w-4" />}
-            label="Travel dates"
-            value={dateValue}
-            invert={!(isMinimal || isEditorial)}
-            accent={branding.accent}
-          />
-          <Meta
-            icon={<Users className="h-4 w-4" />}
-            label="Travellers"
-            value={`${trip.travelers}`}
-            invert={!(isMinimal || isEditorial)}
-            accent={branding.accent}
-          />
-          <Meta
-            icon={<Compass className="h-4 w-4" />}
-            label="Style"
-            value={trip.travelType}
-            invert={!(isMinimal || isEditorial)}
-            accent={branding.accent}
-          />
+          <div className="cover-meta">
+            <div className="cmeta">
+              <div className="l">
+                <Calendar /> Duration
+              </div>
+              <div className="v">
+                {trip.days}
+                <small> days</small> / {Math.max(0, trip.days - 1)}
+                <small> nights</small>
+              </div>
+            </div>
+            <div className="cmeta">
+              <div className="l">
+                <MapPin /> Travel dates
+              </div>
+              <div className="v">{range}</div>
+            </div>
+            <div className="cmeta">
+              <div className="l">
+                <Users /> Travellers
+              </div>
+              <div className="v">
+                {trip.travelers}
+                <small> guests</small>
+              </div>
+            </div>
+            <div className="cmeta">
+              <div className="l">
+                <Compass /> Style
+              </div>
+              <div className="v">{trip.travelType}</div>
+            </div>
+          </div>
         </div>
       </div>
-    </motion.section>
-  );
-}
-
-function Meta({
-  icon,
-  label,
-  value,
-  invert,
-  accent,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  /** When true, render against a dark navy hero (light foreground). */
-  invert: boolean;
-  accent: string;
-}) {
-  return (
-    <div>
-      <div
-        className="flex items-center gap-2"
-        style={{ color: accent }}
-      >
-        {icon}
-        <span className="text-[10px] uppercase tracking-[0.22em]">{label}</span>
-      </div>
-      <p
-        className={`mt-2 font-display text-lg leading-snug ${
-          invert ? "text-ivory" : "text-navy"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
+    </motion.header>
   );
 }
 
 // ---------------------------------------------------------------------------
-// At a glance
+// Overview — drop-cap lead + dotted itinerary index
 // ---------------------------------------------------------------------------
 
-function AtAGlance({
+function Overview({
+  trip,
+  summary,
   itinerary,
-  startDate,
   agencyName,
   logoUrl,
-  branding,
+  showIndex,
+  validityDays,
 }: {
-  itinerary: ItineraryContent;
-  startDate: Date | null;
+  trip: Trip;
+  summary?: string;
+  itinerary: ItineraryContent | null;
   agencyName: string;
   logoUrl: string | null;
-  branding: ResolvedBranding;
+  showIndex: boolean;
+  validityDays: number;
 }) {
+  const lead =
+    summary?.trim() ||
+    `A ${trip.days}-day ${trip.travelType.toLowerCase()} journey across ${
+      trip.destination
+    } — every stay hand-picked, every transfer private, nothing rushed.`;
+  const hasIndex = showIndex && itinerary && itinerary.days.length > 0;
+
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6 }}
-      className="rounded-3xl border border-line bg-white p-6 md:p-10 shadow-soft print:break-inside-avoid"
-    >
-      <div className="flex items-center justify-between mb-5">
-        {branding.repeatLogo ? (
-          <AgencyMonogram
-            logoUrl={logoUrl}
-            agencyName={agencyName}
-            size={28}
-          />
-        ) : (
-          <span />
-        )}
-        <p
-          className="text-[11px] uppercase tracking-[0.25em] text-center flex-1"
-          style={{ color: branding.accent }}
-        >
-          Trip at a glance
-        </p>
-        <span className="w-7" aria-hidden />
+    <motion.section {...reveal} className="pp-sec">
+      <div className="sec-kicker">
+        <span className="eyb gold">The Overview</span>
+        <span className="ln" />
+        <Seal
+          logoUrl={logoUrl}
+          agencyName={agencyName}
+          className="on-light"
+          style={{ width: 30, height: 30, fontSize: 12 }}
+        />
       </div>
-      <div className="overflow-x-auto -mx-2 md:mx-0">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-[10px] uppercase tracking-[0.2em] text-muted-foreground border-b border-line">
-              <th className="pb-3 px-2 font-medium w-28">Day</th>
-              <th className="pb-3 px-2 font-medium">Where</th>
-              <th className="pb-3 px-2 font-medium">Stay</th>
-              <th className="pb-3 px-2 font-medium">Highlights</th>
-            </tr>
-          </thead>
-          <tbody>
-            {itinerary.days.map((day, i) => (
-              <tr key={i} className="border-b border-line/50 last:border-0">
-                <td className="py-3 px-2 align-top">
-                  <span className="text-sand-700 font-medium tabular-nums">
-                    {String(i + 1).padStart(2, "0")}
+      <div className={hasIndex ? "ov-grid" : ""}>
+        <div>
+          <p className="ov-lead">{lead}</p>
+          <p className="ov-note">
+            This itinerary is fully bespoke and can be tuned to your pace — add
+            a day, soften the early starts, or upgrade a suite. Pricing on the
+            final pages holds for {validityDays} days from issue.
+          </p>
+        </div>
+        {hasIndex && (
+          <div>
+            <div className="eyb" style={{ marginBottom: 16 }}>
+              The Itinerary
+            </div>
+            <div className="ov-index">
+              {itinerary!.days.map((d, i) => (
+                <div className="ov-row" key={i}>
+                  <span className="num">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="place">
+                    {d.city || stripDayPrefix(d.title) || `Day ${i + 1}`}
                   </span>
-                  {startDate ? (
-                    <span className="block text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                      {fmtDayLabel(addDays(startDate, i))}
-                    </span>
-                  ) : null}
-                </td>
-                <td className="py-3 px-2 text-navy align-top">
-                  {day.city || stripDayPrefix(day.title) || "—"}
-                </td>
-                <td className="py-3 px-2 text-ink/80 text-sm align-top">
-                  {day.hotel ? (
-                    day.hotel
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
-                <td className="py-3 px-2 text-ink/80 text-sm align-top">
-                  {day.activities && day.activities.length > 0 ? (
-                    day.activities.slice(0, 3).join(" · ")
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <span className="dots" />
+                  <span className="stay">{d.hotel || "—"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </motion.section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Travel plan
+// Getting there (travel segments)
 // ---------------------------------------------------------------------------
 
-function TravelPlan({
-  segments,
-  agencyName,
-  logoUrl,
-  branding,
-}: {
-  segments: TravelSegment[];
-  agencyName: string;
-  logoUrl: string | null;
-  branding: ResolvedBranding;
-}) {
+function GettingThere({ segments }: { segments: TravelSegment[] }) {
   const flights = segments.filter((s) => s.type === "FLIGHT");
   const trains = segments.filter((s) => s.type === "TRAIN");
-
   return (
-    <section className="space-y-10">
-      <SectionHeading
-        eyebrow="Getting there"
-        title="Travel plan"
-        agencyName={agencyName}
-        logoUrl={logoUrl}
-        branding={branding}
-      />
-      <div className="grid gap-6 md:grid-cols-2 print:grid-cols-2">
+    <motion.section {...reveal} className="pp-sec tight">
+      <div className="sec-kicker">
+        <span className="eyb gold">Getting There</span>
+        <span className="ln" />
+      </div>
+      <div className="inc-grid">
         {flights.length > 0 && (
           <SegmentGroup
             title="Flights"
-            icon={<Plane className="h-3.5 w-3.5" />}
+            icon={<Plane />}
             segments={flights}
-            accent={branding.accent}
           />
         )}
         {trains.length > 0 && (
-          <SegmentGroup
-            title="Trains"
-            icon={<Train className="h-3.5 w-3.5" />}
-            segments={trains}
-            accent={branding.accent}
-          />
+          <SegmentGroup title="Trains" icon={<Train />} segments={trains} />
         )}
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -620,84 +462,58 @@ function SegmentGroup({
   title,
   icon,
   segments,
-  accent,
 }: {
   title: string;
   icon: React.ReactNode;
   segments: TravelSegment[];
-  accent: string;
 }) {
+  const time = (d: Date) =>
+    d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6 }}
-      className="rounded-3xl border border-line bg-white p-6 md:p-8 shadow-soft print:break-inside-avoid"
-    >
-      <p
-        className="text-[11px] uppercase tracking-[0.22em] flex items-center gap-2 mb-5"
-        style={{ color: accent }}
-      >
+    <div>
+      <div className="exp-h" style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {icon}
         {title}
-      </p>
-      <ul className="space-y-5">
-        {segments.map((s) => (
-          <SegmentLine key={s.id} segment={s} />
-        ))}
-      </ul>
-    </motion.div>
-  );
-}
-
-function SegmentLine({ segment }: { segment: TravelSegment }) {
-  const isFlight = segment.type === "FLIGHT";
-  const identifier = isFlight
-    ? [segment.airline, segment.flightNumber].filter(Boolean).join(" · ")
-    : [segment.trainName, segment.trainNumber].filter(Boolean).join(" · ");
-  const seatLine = !isFlight
-    ? [
-        segment.coach && `Coach ${segment.coach}`,
-        segment.seat && `Seat ${segment.seat}`,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : null;
-
-  const dep = new Date(segment.departureTime);
-  const arr = new Date(segment.arrivalTime);
-
-  return (
-    <li>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="font-medium text-navy">
-          {segment.from} <span className="text-sand-700">→</span> {segment.to}
-        </p>
-        <span className="text-[10px] uppercase tracking-[0.2em] text-sand-600 whitespace-nowrap">
-          Day {segment.dayNumber}
-        </span>
       </div>
-      {identifier && <p className="mt-0.5 text-sm text-ink/80">{identifier}</p>}
-      <p className="mt-1 text-sm tabular-nums text-ink/75">
-        {dep.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-        {" · "}
-        {dep.toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
+      <div className="exp-list">
+        {segments.map((s) => {
+          const isFlight = s.type === "FLIGHT";
+          const id = isFlight
+            ? [s.airline, s.flightNumber].filter(Boolean).join(" · ")
+            : [s.trainName, s.trainNumber].filter(Boolean).join(" · ");
+          const dep = new Date(s.departureTime);
+          const arr = new Date(s.arrivalTime);
+          return (
+            <div key={s.id} style={{ paddingBottom: 8 }}>
+              <div className="day-title" style={{ fontSize: 18 }}>
+                {s.from} <span style={{ color: "var(--gold-deep)" }}>→</span>{" "}
+                {s.to}
+              </div>
+              {id ? (
+                <div className="day-pin" style={{ marginTop: 6 }}>
+                  {id}
+                </div>
+              ) : null}
+              <div
+                className="ppmono"
+                style={{ fontSize: 12, color: "var(--muted)", marginTop: 4 }}
+              >
+                Day {s.dayNumber} ·{" "}
+                {dep.toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                })}{" "}
+                · {time(dep)} → {time(arr)}
+              </div>
+            </div>
+          );
         })}
-        <span className="text-muted-foreground"> → </span>
-        {arr.toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })}
-      </p>
-      {seatLine && (
-        <p className="mt-0.5 text-xs text-muted-foreground">{seatLine}</p>
-      )}
-    </li>
+      </div>
+    </div>
   );
 }
 
@@ -705,29 +521,23 @@ function SegmentLine({ segment }: { segment: TravelSegment }) {
 // Day by day
 // ---------------------------------------------------------------------------
 
-function Itinerary({
+function DayByDay({
   itinerary,
   startDate,
-  agencyName,
-  logoUrl,
-  branding,
 }: {
   itinerary: ItineraryContent;
   startDate: Date | null;
-  agencyName: string;
-  logoUrl: string | null;
-  branding: ResolvedBranding;
 }) {
   return (
-    <section className="space-y-12">
-      <SectionHeading
-        eyebrow="The journey"
-        title="Day by day"
-        agencyName={agencyName}
-        logoUrl={logoUrl}
-        branding={branding}
-      />
-      <div className="space-y-12">
+    <section className="pp-sec" style={{ background: "var(--paper)" }}>
+      <div className="sec-kicker">
+        <span className="eyb gold">The Journey</span>
+        <span className="ln" />
+      </div>
+      <h2 className="sec-h" style={{ marginBottom: 8 }}>
+        Day by day
+      </h2>
+      <div style={{ marginTop: 16 }}>
         {itinerary.days.map((day, i) => (
           <DayBlock key={i} day={day} index={i} startDate={startDate} />
         ))}
@@ -745,229 +555,289 @@ function DayBlock({
   index: number;
   startDate: Date | null;
 }) {
-  // Hide foodNotes that are just paraphrasing "breakfast and dinner
-  // included" — the meal chips beside them already say exactly that.
-  // Genuine dining recommendations ("Try the duck at Mozaic") survive.
   const rawFood = day.foodNote?.trim() || day.food?.trim() || null;
   const foodText = isGenericMealNote(rawFood) ? null : rawFood;
   const dateLabel = startDate ? fmtDayLabel(addDays(startDate, index)) : null;
+  const activities = day.activities ?? [];
+  const showPhoto = !!day.imageUrl;
+  // Striped placeholder reads as a deliberate location slot — only on days
+  // that have real content, never on a bare arrival/departure leg.
+  const showPlaceholder = !day.imageUrl && activities.length >= 2;
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="grid md:grid-cols-[200px_1fr] gap-6 md:gap-12 print:break-inside-avoid"
-    >
-      <div className="md:border-r md:border-line md:pr-6">
-        <p className="text-xs uppercase tracking-[0.25em] text-sand-600">
-          Day {index + 1}
-        </p>
-        {dateLabel && (
-          <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-muted-foreground tabular-nums">
-            {dateLabel}
-          </p>
-        )}
-        <h3 className="mt-3 font-display text-2xl text-navy leading-tight">
-          {stripDayPrefix(day.title)}
-        </h3>
+    <motion.article {...reveal} className="day">
+      <div className="day-rail">
+        <div className="day-num">{String(index + 1).padStart(2, "0")}</div>
+        {dateLabel && <div className="day-date">{dateLabel}</div>}
         {day.city && (
-          <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-ink/70">
-            <MapPin className="h-3 w-3 text-sand-700" />
-            {day.city}
-          </p>
+          <div className="day-pin">
+            <MapPin /> {day.city}
+          </div>
         )}
         {day.meals && hasAnyMeal(day.meals) && (
-          <div className="mt-4">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-sand-700 mb-1.5">
-              Meals included
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {day.meals.breakfast && <MealChip label="Breakfast" />}
-              {day.meals.lunch && <MealChip label="Lunch" />}
-              {day.meals.dinner && <MealChip label="Dinner" />}
-            </div>
+          <div className="day-meals">
+            {day.meals.breakfast && <span className="mchip">Breakfast</span>}
+            {day.meals.lunch && <span className="mchip">Lunch</span>}
+            {day.meals.dinner && <span className="mchip">Dinner</span>}
           </div>
         )}
       </div>
+      <div className="day-body">
+        <h3 className="day-title">{stripDayPrefix(day.title)}</h3>
+        {day.summary?.trim() && <p className="day-text">{day.summary.trim()}</p>}
 
-      <div className="space-y-6">
-        {day.imageUrl && (
-          // Real <img> so the image survives PDF export — see Hero above.
-          <img
-            src={day.imageUrl}
-            alt={day.title}
-            className="h-48 md:h-56 w-full rounded-2xl object-cover border border-line print:break-inside-avoid"
-          />
+        {showPhoto && (
+          <>
+            <div className="day-img">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={day.imageUrl!} alt={day.title} />
+            </div>
+            {day.city && <div className="day-cap">{day.city}</div>}
+          </>
         )}
-        {day.hotel && <StayCard day={day} />}
-
-        {day.summary?.trim() && (
-          <p className="text-ink/85 text-base md:text-[17px] leading-relaxed whitespace-pre-line">
-            {day.summary.trim()}
-          </p>
+        {showPlaceholder && (
+          <div className="day-img ph">
+            <div className="img-ph">
+              <Eye />
+              <span>Photo{day.city ? ` · ${day.city}` : ""}</span>
+            </div>
+          </div>
         )}
 
-        {day.activities && day.activities.length > 0 && (
-          <ActivitiesBlock activities={day.activities} />
+        {activities.length > 0 && (
+          <div className="exp">
+            <div className="exp-h">Experiences &amp; highlights</div>
+            <div className="exp-list">
+              {activities.map((e, i) => (
+                <div className="exp-item" key={i}>
+                  <span className="bull" />
+                  {e}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {day.hotel && (
+          <div className="stay-card">
+            <span className="ic">
+              <Building2 />
+            </span>
+            <div>
+              <div className="l">Where you&apos;ll stay</div>
+              <div className="v">
+                {day.hotel}
+                {day.roomType && <small> · {day.roomType}</small>}
+              </div>
+            </div>
+          </div>
         )}
 
         {foodText && (
-          <Callout
-            icon={<UtensilsCrossed className="h-3.5 w-3.5" />}
-            label="Dining"
-            text={foodText}
-          />
+          <div className="callout">
+            <div className="ch">
+              <UtensilsCrossed /> Dining
+            </div>
+            <p>{foodText}</p>
+          </div>
         )}
-
-        {((day.inclusions && day.inclusions.length > 0) ||
-          (day.exclusions && day.exclusions.length > 0)) && (
-          <InclusionsExclusions day={day} />
-        )}
-
         {day.transferNote?.trim() && (
-          <Callout
-            icon={<Map className="h-3.5 w-3.5" />}
-            label="Transfer"
-            text={day.transferNote}
-            tone="ivory"
-          />
+          <div className="callout ivory">
+            <div className="ch">
+              <Map /> Transfer
+            </div>
+            <p>{day.transferNote.trim()}</p>
+          </div>
         )}
-
         {day.notes?.trim() && (
-          <Callout
-            icon={<Compass className="h-3.5 w-3.5" />}
-            label="Good to know"
-            text={day.notes}
-            tone="ivory"
-          />
+          <div className="callout ivory">
+            <div className="ch">
+              <Compass /> Good to know
+            </div>
+            <p>{day.notes.trim()}</p>
+          </div>
         )}
       </div>
     </motion.article>
   );
 }
 
-function ActivitiesBlock({ activities }: { activities: string[] }) {
-  return (
-    <div className="rounded-2xl border border-line bg-white p-5">
-      <p className="text-[10px] uppercase tracking-[0.22em] text-sand-700 mb-3 inline-flex items-center gap-1.5">
-        <Map className="h-3 w-3" />
-        Experiences & highlights
-      </p>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {activities.map((a, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-ink/85">
-            <span className="mt-1.5 flex h-1.5 w-1.5 shrink-0 rounded-full bg-sand-400" />
-            {a}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Inclusions
+// ---------------------------------------------------------------------------
 
-function MealChip({ label }: { label: string }) {
-  return (
-    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
-      {label}
-    </span>
-  );
-}
-
-function hasAnyMeal(m: {
-  breakfast?: boolean;
-  lunch?: boolean;
-  dinner?: boolean;
+function Inclusions({
+  included,
+  excluded,
+}: {
+  included: string[];
+  excluded: string[];
 }) {
-  return !!(m.breakfast || m.lunch || m.dinner);
-}
-
-/**
- * True when a foodNote is just a generic restatement of which meals are
- * included ("Breakfast and dinner will be provided"). The meal chips
- * already convey this; we hide the redundant Dining callout. A genuine
- * recommendation like "Try the duck at Mozaic" survives.
- */
-function isGenericMealNote(note: string | null): boolean {
-  if (!note) return false;
-  // Strip meal words and filler — if what's left is essentially empty,
-  // the note adds no information beyond the chips.
-  const remainder = note
-    .toLowerCase()
-    .replace(
-      /breakfast|lunch|dinner|supper|\bmeal[s]?\s*plan\b|\bmeal[s]?\b|will be (?:provided|served)|included|provided|served|at (?:the )?hotel|\band\b|\bthe\b|\bare\b|\bis\b|\ball\b|\bboth\b/g,
-      ""
-    )
-    .replace(/[\s.,;:()\-+&/]/g, "");
-  return remainder.length < 4;
-}
-
-function StayCard({ day }: { day: ItineraryDay }) {
   return (
-    <div className="rounded-2xl border border-sand-200 bg-sand-50/50 px-5 py-4 flex items-start gap-4">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-sand-200 text-sand-700 flex-shrink-0">
-        <Building2 className="h-4 w-4" />
-      </span>
-      <div className="flex-1 min-w-0">
-        {day.hotel && (
-          <p className="font-medium text-navy">
-            {day.hotel}
-            {day.roomType && (
-              <span className="text-ink/70 font-normal"> · {day.roomType}</span>
-            )}
-          </p>
+    <motion.section {...reveal} className="pp-sec">
+      <div className="sec-kicker">
+        <span className="eyb gold">The Fine Print</span>
+        <span className="ln" />
+      </div>
+      <h2 className="sec-h" style={{ marginBottom: 36 }}>
+        What&apos;s included
+      </h2>
+      <div className="inc-grid">
+        {included.length > 0 && (
+          <div>
+            <div className="inc-h in">Your package includes</div>
+            {included.map((it, i) => (
+              <div className="inc-item in" key={i}>
+                <Check /> {it}
+              </div>
+            ))}
+          </div>
+        )}
+        {excluded.length > 0 && (
+          <div>
+            <div className="inc-h ex">Not included</div>
+            {excluded.map((it, i) => (
+              <div className="inc-item ex" key={i}>
+                <X /> {it}
+              </div>
+            ))}
+          </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function InclusionsExclusions({ day }: { day: ItineraryDay }) {
-  return (
-    <div className="grid gap-3 md:grid-cols-2 print:grid-cols-2">
-      {day.inclusions && day.inclusions.length > 0 && (
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-800 mb-2">
-            Included this day
-          </p>
-          <ul className="space-y-1">
-            {day.inclusions.map((it, i) => (
-              <li
-                key={i}
-                className="text-sm text-ink/85 flex items-start gap-1.5"
-              >
-                <Check className="h-3 w-3 text-emerald-600 mt-1 flex-shrink-0" />
-                {it}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {day.exclusions && day.exclusions.length > 0 && (
-        <div className="rounded-xl border border-line bg-ivory/60 px-4 py-3">
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
-            Not included
-          </p>
-          <ul className="space-y-1">
-            {day.exclusions.map((it, i) => (
-              <li
-                key={i}
-                className="text-sm text-ink/75 flex items-start gap-1.5"
-              >
-                <X className="h-3 w-3 text-muted-foreground mt-1 flex-shrink-0" />
-                {it}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+    </motion.section>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Trip-level inclusion summary
+// Investment — customer-safe: selling totals only, no cost/markup/profit.
+// ---------------------------------------------------------------------------
+
+function Investment({
+  pricing,
+  meta,
+}: {
+  pricing: ProposalPricing;
+  meta?: ProposalMeta;
+}) {
+  const validityDays = meta?.validityDays ?? 14;
+  const validUntil = meta?.preparedAt
+    ? addDays(new Date(meta.preparedAt), validityDays)
+    : null;
+
+  return (
+    <motion.section
+      {...reveal}
+      className="pp-sec pp-invest"
+      style={{ scrollMarginTop: 40 }}
+    >
+      <div className="glow" />
+      <div className="invest-grid">
+        <div>
+          <div className="invest-eyb">The Investment</div>
+          <div className="invest-total">{formatINR(pricing.total)}</div>
+          {pricing.travelers > 1 && (
+            <div className="invest-pp">
+              {formatINR(pricing.perPerson)} per person · {pricing.travelers}{" "}
+              travellers
+            </div>
+          )}
+          <p className="invest-valid">
+            All amounts in Indian Rupees, inclusive of applicable service
+            charges.
+            {validUntil
+              ? ` This quotation is valid until ${fmtFull(validUntil)}.`
+              : ""}
+          </p>
+        </div>
+        {pricing.categories.length > 0 && (
+          <div className="invest-break">
+            <div className="brk-h">How it breaks down</div>
+            {pricing.categories.map((c) => (
+              <div className="brk-row" key={c.category}>
+                <span className="c">{c.label}</span>
+                <span className="a">{formatINR(c.amount)}</span>
+              </div>
+            ))}
+            <div className="brk-total">
+              <span className="c">Total package</span>
+              <span className="a">{formatINR(pricing.total)}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Terms
+// ---------------------------------------------------------------------------
+
+function Terms({ terms }: { terms: string }) {
+  return (
+    <motion.section {...reveal} className="pp-sec tight">
+      <div className="sec-kicker">
+        <span className="eyb">Booking Terms</span>
+        <span className="ln" />
+      </div>
+      <div className="terms-box">
+        <p className="terms-body">{terms}</p>
+      </div>
+    </motion.section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Closing
+// ---------------------------------------------------------------------------
+
+function Closing({
+  agency,
+  agencyName,
+  logoUrl,
+  signatureNote,
+}: {
+  agency?: ProposalAgency | null;
+  agencyName: string;
+  logoUrl: string | null;
+  signatureNote: string | null;
+}) {
+  const contacts: { label: string; value: string }[] = [];
+  if (agency?.phone) contacts.push({ label: "Phone", value: agency.phone });
+  if (agency?.email) contacts.push({ label: "Email", value: agency.email });
+  if (agency?.website) contacts.push({ label: "Web", value: agency.website });
+
+  return (
+    <footer className="pp-close">
+      <div className="glow" />
+      <div className="ci">
+        <Seal logoUrl={logoUrl} agencyName={agencyName} />
+        <p className="close-sig">
+          {signatureNote ??
+            "When you're ready, we'll handle every detail — so all that's left for you is to arrive."}
+        </p>
+        <div style={{ marginTop: 26 }}>
+          <div className="close-eyb">With warm regards</div>
+          <div className="close-agency">{agencyName}</div>
+        </div>
+        {contacts.length > 0 && (
+          <div className="close-contacts">
+            {contacts.map((c, i) => (
+              <div key={i}>
+                <div className="l">{c.label}</div>
+                <div className="v">{c.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="close-craft">Crafted with TripCraft</div>
+      </div>
+    </footer>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared helpers
 // ---------------------------------------------------------------------------
 
 function collectInclusions(itinerary: ItineraryContent | null): {
@@ -996,347 +866,29 @@ function collectInclusions(itinerary: ItineraryContent | null): {
   };
 }
 
-function InclusionSummary({
-  included,
-  excluded,
-  agencyName,
-  logoUrl,
-  branding,
-}: {
-  included: string[];
-  excluded: string[];
-  agencyName: string;
-  logoUrl: string | null;
-  branding: ResolvedBranding;
+function hasAnyMeal(m: {
+  breakfast?: boolean;
+  lunch?: boolean;
+  dinner?: boolean;
 }) {
-  return (
-    <section className="space-y-10 print:break-inside-avoid">
-      <SectionHeading
-        eyebrow="The fine print"
-        title="What's included"
-        agencyName={agencyName}
-        logoUrl={logoUrl}
-        branding={branding}
-      />
-      <div className="grid gap-6 md:grid-cols-2">
-        {included.length > 0 && (
-          <div className="rounded-3xl border border-emerald-100 bg-emerald-50/40 p-6 md:p-8">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-emerald-800 mb-4 inline-flex items-center gap-2">
-              <Check className="h-3.5 w-3.5" />
-              Your package includes
-            </p>
-            <ul className="space-y-2">
-              {included.map((it, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-2 text-sm text-ink/85"
-                >
-                  <Check className="h-3.5 w-3.5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                  {it}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {excluded.length > 0 && (
-          <div className="rounded-3xl border border-line bg-white p-6 md:p-8 shadow-soft">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground mb-4 inline-flex items-center gap-2">
-              <X className="h-3.5 w-3.5" />
-              Not included
-            </p>
-            <ul className="space-y-2">
-              {excluded.map((it, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-2 text-sm text-ink/75"
-                >
-                  <X className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  {it}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    </section>
-  );
+  return !!(m.breakfast || m.lunch || m.dinner);
 }
 
-// ---------------------------------------------------------------------------
-// Pricing — customer-safe: selling prices only, no markup / cost math.
-// ---------------------------------------------------------------------------
-
-function PricingBlock({
-  pricing,
-  meta,
-  agencyName,
-  logoUrl,
-  branding,
-}: {
-  pricing: ProposalPricing;
-  meta?: ProposalMeta;
-  agencyName: string;
-  logoUrl: string | null;
-  branding: ResolvedBranding;
-}) {
-  const validityDays = meta?.validityDays ?? 14;
-  const validUntil = meta?.preparedAt
-    ? addDays(new Date(meta.preparedAt), validityDays)
-    : null;
-
-  return (
-    <section className="space-y-10 print:break-before-page">
-      <SectionHeading
-        eyebrow="Investment"
-        title="Your package price"
-        agencyName={agencyName}
-        logoUrl={logoUrl}
-        branding={branding}
-      />
-
-      <div className="rounded-3xl border border-line bg-white shadow-soft overflow-hidden">
-        {/* Headline price */}
-        <div className="bg-navy text-ivory px-8 py-10 md:px-12 text-center">
-          {branding.repeatLogo && (
-            <div className="flex justify-center mb-4">
-              <AgencyMonogram
-                logoUrl={logoUrl}
-                agencyName={agencyName}
-                size={36}
-                className="border-white/20"
-              />
-            </div>
-          )}
-          <p
-            className="text-[11px] uppercase tracking-[0.25em]"
-            style={{ color: branding.accent }}
-          >
-            Total package
-          </p>
-          <p className="mt-2 font-display text-5xl md:text-6xl tracking-tight">
-            {formatINR(pricing.total)}
-          </p>
-          {pricing.travelers > 1 && (
-            <p className="mt-3 text-sm text-ivory/70">
-              {formatINR(pricing.perPerson)} per person ·{" "}
-              {pricing.travelers} travellers
-            </p>
-          )}
-        </div>
-
-        {/* Category breakdown — selling amounts, summing to the total */}
-        {pricing.categories.length > 0 && (
-          <div className="px-8 py-8 md:px-12">
-            <p
-              className="text-[11px] uppercase tracking-[0.22em] mb-4"
-              style={{ color: branding.accent }}
-            >
-              How it breaks down
-            </p>
-            <ul className="divide-y divide-line/70">
-              {pricing.categories.map((c) => (
-                <li
-                  key={c.category}
-                  className="flex items-baseline justify-between gap-4 py-3"
-                >
-                  <span className="text-ink">{c.label}</span>
-                  <span className="tabular-nums text-navy font-medium">
-                    {formatINR(c.amount)}
-                  </span>
-                </li>
-              ))}
-              <li className="flex items-baseline justify-between gap-4 pt-4">
-                <span className="text-xs uppercase tracking-[0.2em] text-navy">
-                  Total
-                </span>
-                <span className="font-display text-2xl text-navy">
-                  {formatINR(pricing.total)}
-                </span>
-              </li>
-            </ul>
-            <p className="mt-5 text-xs text-muted-foreground leading-relaxed">
-              All amounts are in Indian Rupees and inclusive of applicable
-              service charges.
-              {validUntil
-                ? ` This quotation is valid until ${fmtFull(validUntil)}.`
-                : ""}
-            </p>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Terms
-// ---------------------------------------------------------------------------
-
-function TermsBlock({ terms }: { terms: string }) {
-  return (
-    <section className="print:break-inside-avoid">
-      <div className="rounded-3xl border border-line bg-ivory/60 p-6 md:p-8">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-sand-700 mb-3 inline-flex items-center gap-2">
-          <ShieldCheck className="h-3.5 w-3.5" />
-          Booking terms & conditions
-        </p>
-        <p className="text-sm text-ink/75 leading-relaxed whitespace-pre-line">
-          {terms}
-        </p>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Closing — white-label, agency-branded
-// ---------------------------------------------------------------------------
-
-function ClosingBlock({
-  agency,
-  agencyName,
-  logoUrl,
-  signatureNote,
-}: {
-  agency?: ProposalAgency | null;
-  agencyName: string;
-  logoUrl: string | null;
-  signatureNote: string | null;
-}) {
-  const contacts: { icon: React.ReactNode; value: string }[] = [];
-  if (agency?.phone)
-    contacts.push({
-      icon: <Phone className="h-3.5 w-3.5" />,
-      value: agency.phone,
-    });
-  if (agency?.email)
-    contacts.push({
-      icon: <Mail className="h-3.5 w-3.5" />,
-      value: agency.email,
-    });
-  if (agency?.website)
-    contacts.push({
-      icon: <Compass className="h-3.5 w-3.5" />,
-      value: agency.website,
-    });
-
-  return (
-    <section className="text-center pt-10 border-t border-line print:break-inside-avoid">
-      {/* Prominent agency logo — the strongest brand moment in the doc. */}
-      <div className="flex justify-center mb-5">
-        <AgencyMonogram
-          logoUrl={logoUrl}
-          agencyName={agencyName}
-          size={88}
-        />
-      </div>
-      {signatureNote ? (
-        <p className="mt-4 max-w-md mx-auto text-sm text-ink/80 italic leading-relaxed whitespace-pre-line">
-          {signatureNote}
-        </p>
-      ) : (
-        <p
-          className="text-[11px] uppercase tracking-[0.25em]"
-          style={{ color: "var(--proposal-accent)" }}
-        >
-          Ready when you are
-        </p>
-      )}
-      <p className="mt-3 font-display text-3xl text-navy">{agencyName}</p>
-      {contacts.length > 0 ? (
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-ink/75">
-          {contacts.map((c, i) => (
-            <span key={i} className="inline-flex items-center gap-1.5">
-              <span style={{ color: "var(--proposal-accent)" }}>{c.icon}</span>
-              {c.value}
-            </span>
-          ))}
-        </div>
-      ) : null}
-      <p className="mt-6 text-[10px] uppercase tracking-[0.28em] text-muted-foreground/70">
-        Crafted with TripCraft
-      </p>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Shared
-// ---------------------------------------------------------------------------
-
-function Callout({
-  icon,
-  label,
-  text,
-  tone = "white",
-}: {
-  icon: React.ReactNode;
-  label: string;
-  text: string;
-  tone?: "white" | "ivory";
-}) {
-  return (
-    <div
-      className={`rounded-xl border border-line px-5 py-4 ${
-        tone === "ivory" ? "bg-ivory" : "bg-white"
-      }`}
-    >
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-sand-700">
-        {icon}
-        {label}
-      </div>
-      <p className="mt-2 text-sm text-ink/80 leading-relaxed whitespace-pre-line">
-        {text}
-      </p>
-    </div>
-  );
-}
-
-function SectionHeading({
-  eyebrow,
-  title,
-  agencyName,
-  logoUrl,
-  branding,
-}: {
-  eyebrow: string;
-  title: string;
-  // Optional so callers without branding context still work.
-  agencyName?: string;
-  logoUrl?: string | null;
-  branding?: ResolvedBranding;
-}) {
-  const accent = branding?.accent ?? SAND_ACCENT;
-  const showLogo = branding?.repeatLogo && agencyName;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.6 }}
-      className="text-center"
-    >
-      {showLogo && (
-        <div className="flex justify-center mb-4">
-          <AgencyMonogram
-            logoUrl={logoUrl ?? null}
-            agencyName={agencyName}
-            size={32}
-          />
-        </div>
-      )}
-      <p
-        className="text-xs uppercase tracking-[0.3em]"
-        style={{ color: accent }}
-      >
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 font-display text-4xl md:text-5xl text-navy">
-        {title}
-      </h2>
-    </motion.div>
-  );
+/**
+ * True when a foodNote is just a generic restatement of which meals are
+ * included — the meal chips already convey it. A genuine recommendation
+ * like "Try the duck at Mozaic" survives.
+ */
+function isGenericMealNote(note: string | null): boolean {
+  if (!note) return false;
+  const remainder = note
+    .toLowerCase()
+    .replace(
+      /breakfast|lunch|dinner|supper|\bmeal[s]?\s*plan\b|\bmeal[s]?\b|will be (?:provided|served)|included|provided|served|at (?:the )?hotel|\band\b|\bthe\b|\bare\b|\bis\b|\ball\b|\bboth\b/g,
+      ""
+    )
+    .replace(/[\s.,;:()\-+&/]/g, "");
+  return remainder.length < 4;
 }
 
 function stripDayPrefix(title: string) {

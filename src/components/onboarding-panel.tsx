@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireAgency } from "@/lib/session";
-import { isWhatsappConfigured } from "@/lib/whatsapp/client";
+import { isWhatsappConfiguredForAgency } from "@/server/services/integrations";
 
 // First-run checklist. Renders as a card on the dashboard until every
 // foundational piece of TripCraft is set up. Once everything is in place,
@@ -32,15 +32,17 @@ type Step = {
 export async function OnboardingPanel() {
   const { agencyId, user } = await requireAgency();
 
-  const [agency, templateCount, leadCount, memberCount] = await Promise.all([
-    prisma.agencySettings.findUnique({
-      where: { agencyId },
-      select: { legalName: true, gstin: true, logoUrl: true },
-    }),
-    prisma.whatsappTemplate.count({ where: { agencyId, isActive: true } }),
-    prisma.contact.count({ where: { agencyId, deletedAt: null } }),
-    prisma.membership.count({ where: { agencyId } }),
-  ]);
+  const [agency, templateCount, leadCount, memberCount, waConfigured] =
+    await Promise.all([
+      prisma.agencySettings.findUnique({
+        where: { agencyId },
+        select: { legalName: true, gstin: true, logoUrl: true },
+      }),
+      prisma.whatsappTemplate.count({ where: { agencyId, isActive: true } }),
+      prisma.contact.count({ where: { agencyId, deletedAt: null } }),
+      prisma.membership.count({ where: { agencyId } }),
+      isWhatsappConfiguredForAgency(agencyId),
+    ]);
 
   const steps: Step[] = [
     {
@@ -63,9 +65,9 @@ export async function OnboardingPanel() {
       key: "whatsapp",
       label: "Connect WhatsApp",
       hint: "Send proposals, invoices and reminders straight from a contact.",
-      href: "/communications",
+      href: "/settings/integrations",
       cta: "Set up WhatsApp",
-      done: isWhatsappConfigured(),
+      done: waConfigured,
     },
     {
       key: "template",
@@ -103,24 +105,24 @@ export async function OnboardingPanel() {
   const next = remaining[0];
 
   return (
-    <section className="mb-10 rounded-3xl border border-sand-200 bg-gradient-to-br from-sand-50/80 to-ivory p-6 md:p-8 shadow-soft">
+    <section className="mb-10 rounded-lg border border-[var(--gold-line)] bg-gold-soft p-6 md:p-8 shadow-soft">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.22em] text-sand-800 inline-flex items-center gap-2">
+          <p className="tc-eyebrow gold inline-flex items-center gap-2">
             <Sparkles className="h-3 w-3" />
             Getting started · {completed} of {steps.length} done
           </p>
-          <h2 className="mt-3 font-display text-2xl md:text-3xl text-navy">
+          <h2 className="mt-3 font-display text-2xl md:text-3xl text-ink">
             A few essentials to unlock everything.
           </h2>
-          <p className="mt-1.5 text-sm text-muted-foreground max-w-xl">
+          <p className="mt-1.5 text-sm text-muted max-w-xl">
             TripCraft works better when these are in place. Knock them out in
             any order — this card disappears once you're done.
           </p>
         </div>
         <Link
           href={next.href}
-          className="inline-flex items-center gap-2 rounded-2xl bg-navy text-ivory px-5 py-2.5 text-sm font-medium shadow-soft hover:bg-navy-600 transition-colors"
+          className="inline-flex items-center gap-2 rounded-[8px] bg-inkwash text-[var(--on-dark)] px-5 py-2.5 text-sm font-medium shadow-soft hover:bg-inkwash/90 transition-colors"
         >
           {next.cta}
           <ArrowRight className="h-4 w-4" />
@@ -132,14 +134,14 @@ export async function OnboardingPanel() {
           <li
             key={s.key}
             className={
-              "flex items-start gap-3 rounded-2xl border px-4 py-3 transition-colors " +
+              "flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors " +
               (s.done
-                ? "border-emerald-100 bg-emerald-50/40"
-                : "border-line bg-white hover:border-sand-200")
+                ? "border-ok/20 bg-ok-soft/40"
+                : "border-line bg-paper hover:border-line-2")
             }
           >
             {s.done ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-ok mt-0.5 shrink-0" />
             ) : (
               <Circle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
             )}
@@ -147,19 +149,19 @@ export async function OnboardingPanel() {
               <p
                 className={
                   "text-sm font-medium " +
-                  (s.done ? "text-emerald-800 line-through" : "text-navy")
+                  (s.done ? "text-ok line-through" : "text-ink")
                 }
               >
                 {s.label}
               </p>
               {!s.done ? (
                 <>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="text-xs text-muted mt-0.5">
                     {s.hint}
                   </p>
                   <Link
                     href={s.href}
-                    className="mt-1.5 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-sand-800 hover:text-navy"
+                    className="mt-1.5 inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.18em] text-gold-deep hover:text-ink"
                   >
                     {s.cta}
                     <ArrowRight className="h-3 w-3" />
@@ -171,10 +173,14 @@ export async function OnboardingPanel() {
         ))}
       </ul>
 
-      {!isWhatsappConfigured() ? (
-        <p className="mt-5 text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
-          <MessageCircle className="h-3 w-3 text-emerald-600" />
-          WhatsApp setup needs API credentials in <code className="bg-white border border-line rounded px-1 py-0.5">.env</code> — see project README.
+      {!waConfigured ? (
+        <p className="mt-5 text-[11px] text-muted inline-flex items-center gap-1.5">
+          <MessageCircle className="h-3 w-3 text-ok" />
+          Connect your WhatsApp Business API in{" "}
+          <Link href="/settings/integrations" className="underline">
+            Settings → Integrations
+          </Link>
+          .
         </p>
       ) : null}
     </section>

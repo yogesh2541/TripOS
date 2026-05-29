@@ -55,7 +55,7 @@ export function SuccessFlash({
                   delay: i * 0.12,
                   ease: "easeOut",
                 }}
-                className="absolute h-32 w-32 rounded-full border border-sand-300"
+                className="absolute h-32 w-32 rounded-full border border-[var(--gold-line)]"
               />
             ))}
           </div>
@@ -65,13 +65,13 @@ export function SuccessFlash({
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 18 }}
-            className="relative rounded-3xl border border-sand-200 bg-white shadow-lift px-8 py-7 text-center max-w-sm"
+            className="relative rounded-xl border border-line bg-paper shadow-lift px-8 py-7 text-center max-w-sm"
           >
             <motion.div
               initial={{ scale: 0, rotate: -90 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 220, damping: 12, delay: 0.05 }}
-              className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-ivory shadow-soft"
+              className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-ok text-white shadow-soft"
             >
               {icon === "check" ? (
                 <Check className="h-6 w-6" strokeWidth={3} />
@@ -79,9 +79,9 @@ export function SuccessFlash({
                 <Sparkles className="h-6 w-6" />
               )}
             </motion.div>
-            <p className="font-display text-2xl text-navy">{title}</p>
+            <p className="font-display text-2xl text-ink">{title}</p>
             {body ? (
-              <p className="mt-1.5 text-sm text-muted-foreground">{body}</p>
+              <p className="mt-1.5 text-sm text-muted">{body}</p>
             ) : null}
           </motion.div>
         </motion.div>

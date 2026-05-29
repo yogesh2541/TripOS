@@ -49,14 +49,16 @@ export type LeadStatusTone =
   | "accent"
   | "muted"
   | "danger"
-  | "success";
+  | "success"
+  | "warn"
+  | "info";
 
 export const LEAD_STATUS_TONE: Record<LeadStatus, LeadStatusTone> = {
   NEW: "outline",
-  CONTACTED: "accent",
-  REQUIREMENT_UNDERSTOOD: "accent",
-  QUOTED: "default",
-  FOLLOW_UP: "muted",
+  CONTACTED: "info",
+  REQUIREMENT_UNDERSTOOD: "info",
+  QUOTED: "accent",
+  FOLLOW_UP: "warn",
   WON: "success",
   LOST: "danger",
 };
@@ -65,13 +67,13 @@ export const LEAD_STATUS_TONE: Record<LeadStatus, LeadStatusTone> = {
 // list by pipeline stage without reading every Status badge. Border-color
 // utility classes (consumed as `border-l-[3px] <class>`).
 export const LEAD_STATUS_ACCENT: Record<LeadStatus, string> = {
-  NEW: "border-l-navy-200",
-  CONTACTED: "border-l-sand-200",
-  REQUIREMENT_UNDERSTOOD: "border-l-sand-300",
-  QUOTED: "border-l-sand-500",
-  FOLLOW_UP: "border-l-amber-400",
-  WON: "border-l-emerald-500",
-  LOST: "border-l-red-300",
+  NEW: "border-l-dv-slate",
+  CONTACTED: "border-l-info",
+  REQUIREMENT_UNDERSTOOD: "border-l-dv-sage",
+  QUOTED: "border-l-gold",
+  FOLLOW_UP: "border-l-warn",
+  WON: "border-l-ok",
+  LOST: "border-l-bad",
 };
 
 export const LEAD_SOURCE_LABEL: Record<LeadSource, string> = {
@@ -99,11 +101,11 @@ export const TRIP_STATUS_LABEL: Record<TripStatus, string> = {
 export const TRIP_STATUS_TONE: Record<TripStatus, LeadStatusTone> = {
   PLANNING: "outline",
   QUOTED: "accent",
-  BOOKED: "default",
-  VENDOR_CONFIRMATION_PENDING: "outline",
-  PARTIALLY_CONFIRMED: "accent",
+  BOOKED: "info",
+  VENDOR_CONFIRMATION_PENDING: "warn",
+  PARTIALLY_CONFIRMED: "warn",
   READY_TO_TRAVEL: "success",
-  IN_PROGRESS: "default",
+  IN_PROGRESS: "info",
   COMPLETED: "success",
   CANCELLED: "danger",
 };
@@ -125,19 +127,19 @@ export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
 };
 
 export const BOOKING_STATUS_TONE: Record<BookingStatus, LeadStatusTone> = {
-  PENDING: "outline",
-  CONFIRMED: "accent",
-  IN_PROGRESS: "default",
+  PENDING: "warn",
+  CONFIRMED: "info",
+  IN_PROGRESS: "accent",
   COMPLETED: "success",
   CANCELLED: "danger",
 };
 
 export const BOOKING_STATUS_ACCENT: Record<BookingStatus, string> = {
-  PENDING: "border-l-sand-300",
-  CONFIRMED: "border-l-sand-500",
-  IN_PROGRESS: "border-l-navy-300",
-  COMPLETED: "border-l-emerald-500",
-  CANCELLED: "border-l-red-300",
+  PENDING: "border-l-warn",
+  CONFIRMED: "border-l-info",
+  IN_PROGRESS: "border-l-gold",
+  COMPLETED: "border-l-ok",
+  CANCELLED: "border-l-bad",
 };
 
 export const PAYMENT_TYPE_LABEL: Record<PaymentType, string> = {
@@ -208,8 +210,8 @@ export const VENDOR_ASSIGNMENT_STATUS_TONE: Record<
   LeadStatusTone
 > = {
   PENDING: "outline",
-  REQUESTED: "accent",
-  CONFIRMED: "default",
+  REQUESTED: "info",
+  CONFIRMED: "success",
   COMPLETED: "success",
   CANCELLED: "danger",
 };
@@ -235,7 +237,7 @@ export const OPERATION_TASK_STATUS_TONE: Record<
   LeadStatusTone
 > = {
   PENDING: "outline",
-  IN_PROGRESS: "accent",
+  IN_PROGRESS: "info",
   COMPLETED: "success",
   BLOCKED: "danger",
 };

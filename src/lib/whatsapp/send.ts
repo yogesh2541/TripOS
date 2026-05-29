@@ -21,12 +21,12 @@ import { createHash } from "crypto";
 import type { Prisma, WhatsappMessageKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
-  getWhatsappCredentials,
-  isWhatsappConfigured,
   postMessage,
   WhatsappApiError,
   WhatsappConfigError,
+  type WhatsappCredentials,
 } from "./client";
+import { getAgencyWhatsappConfig } from "@/server/services/integrations";
 import { normalizeWhatsappPhone } from "./phone";
 import { takeWhatsappToken } from "./rate-limit";
 import {
@@ -152,7 +152,8 @@ async function findExistingByIdempotency(agencyId: string, key: string | null | 
 
 async function sendWithRetries(
   payload: WaSendPayload,
-  messageRowId: string
+  messageRowId: string,
+  creds?: WhatsappCredentials
 ): Promise<WaSendResponse> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -161,7 +162,7 @@ async function sendWithRetries(
       data: { attempts: attempt },
     });
     try {
-      return await postMessage(payload);
+      return await postMessage(payload, creds);
     } catch (err) {
       lastError = err;
       if (err instanceof WhatsappApiError && err.retryable && attempt < MAX_ATTEMPTS) {
@@ -217,15 +218,17 @@ async function dispatch(args: DispatchBase, payload: WaSendPayload): Promise<Dis
     return { messageId: rowId, status: "QUEUED" };
   }
 
-  if (!isWhatsappConfigured()) {
+  const waConfig = await getAgencyWhatsappConfig(args.agencyId);
+  if (!waConfig.configured || !waConfig.credentials) {
     await finalizeFailure(
       rowId,
-      new WhatsappConfigError(["WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN"])
+      new WhatsappConfigError(["phoneNumberId", "accessToken"])
     );
     return {
       messageId: rowId,
       status: "FAILED",
-      error: "WhatsApp Cloud API is not configured. Add credentials to .env.",
+      error:
+        "WhatsApp isn't connected. Add your WhatsApp API in Settings → Integrations.",
     };
   }
 
@@ -243,7 +246,7 @@ async function dispatch(args: DispatchBase, payload: WaSendPayload): Promise<Dis
   }
 
   try {
-    const res = await sendWithRetries(payload, rowId);
+    const res = await sendWithRetries(payload, rowId, waConfig.credentials);
     await finalizeSuccess(rowId, res);
     return {
       messageId: rowId,
@@ -381,12 +384,18 @@ export async function retryFailedMessage(messageRowId: string): Promise<Dispatch
     data: { status: "QUEUED", failedReason: null, failedCode: null },
   });
 
-  if (!isWhatsappConfigured()) {
+  const waConfig = await getAgencyWhatsappConfig(row.agencyId);
+  if (!waConfig.configured || !waConfig.credentials) {
     await finalizeFailure(
       row.id,
-      new WhatsappConfigError(["WHATSAPP_PHONE_NUMBER_ID", "WHATSAPP_ACCESS_TOKEN"])
+      new WhatsappConfigError(["phoneNumberId", "accessToken"])
     );
-    return { messageId: row.id, status: "FAILED", error: "WhatsApp Cloud API is not configured." };
+    return {
+      messageId: row.id,
+      status: "FAILED",
+      error:
+        "WhatsApp isn't connected. Add your WhatsApp API in Settings → Integrations.",
+    };
   }
 
   const limit = takeWhatsappToken(row.phone);
@@ -395,7 +404,7 @@ export async function retryFailedMessage(messageRowId: string): Promise<Dispatch
     return { messageId: row.id, status: "FAILED", error: `Rate limited (${limit.scope}).` };
   }
 
-  const creds = getWhatsappCredentials();
+  const creds = waConfig.credentials;
   let payload: WaSendPayload;
   if (row.kind === "TEMPLATE" && row.templateId) {
     const meta = (row.metadata as Record<string, unknown> | null) ?? {};

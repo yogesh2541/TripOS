@@ -7,8 +7,8 @@ import { assertCan, requireAgency } from "@/lib/session";
 import {
   cancelRazorpayPaymentLink,
   createRazorpayPaymentLink,
-  isRazorpayConfigured,
 } from "@/lib/razorpay";
+import { getAgencyRazorpayConfig } from "@/server/services/integrations";
 
 const createSchema = z.object({
   bookingId: z.string(),
@@ -23,13 +23,18 @@ export async function createPaymentLinkAction(input: CreatePaymentLinkInput) {
   const { agencyId, user } = await requireAgency();
   await assertCan("payment:create");
 
-  if (!isRazorpayConfigured()) {
+  const rzp = await getAgencyRazorpayConfig(agencyId);
+  if (!rzp.configured || !rzp.credentials) {
     return {
       ok: false as const,
       error:
-        "Online payments aren't set up yet. Add your Razorpay keys to enable payment links.",
+        "Online payments aren't connected. Add your Razorpay keys in Settings → Integrations.",
     };
   }
+  const rzpKeys = {
+    keyId: rzp.credentials.keyId,
+    keySecret: rzp.credentials.keySecret,
+  };
 
   const booking = await prisma.booking.findFirst({
     where: { id: data.bookingId, trip: { agencyId } },
@@ -78,7 +83,7 @@ export async function createPaymentLinkAction(input: CreatePaymentLinkInput) {
         paymentLinkId: link.id,
         agencyId,
       },
-    });
+    }, rzpKeys);
 
     const updated = await prisma.paymentLink.update({
       where: { id: link.id },
@@ -115,7 +120,13 @@ export async function cancelPaymentLinkAction(linkId: string) {
   }
 
   if (link.providerLinkId) {
-    await cancelRazorpayPaymentLink(link.providerLinkId);
+    const rzp = await getAgencyRazorpayConfig(agencyId);
+    await cancelRazorpayPaymentLink(
+      link.providerLinkId,
+      rzp.credentials
+        ? { keyId: rzp.credentials.keyId, keySecret: rzp.credentials.keySecret }
+        : undefined
+    );
   }
   await prisma.paymentLink.update({
     where: { id: link.id },

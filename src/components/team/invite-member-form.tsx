@@ -109,12 +109,12 @@ export function InviteMemberForm() {
 
         {inviteUrl ? (
           <div className="space-y-3">
-            <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
-              <p className="text-xs text-emerald-800 font-medium inline-flex items-center gap-1.5">
+            <div className="rounded-lg bg-ok-soft border border-ok/20 p-4">
+              <p className="text-xs text-ok font-medium inline-flex items-center gap-1.5">
                 <Mail className="h-3.5 w-3.5" />
                 Invite ready — share this link
               </p>
-              <p className="mt-2 text-[11px] text-emerald-800/80">
+              <p className="mt-2 text-[11px] text-ok/80">
                 Email delivery isn't wired yet, so paste this into a WhatsApp
                 or email manually. The link is valid for 14 days.
               </p>
@@ -164,7 +164,7 @@ export function InviteMemberForm() {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted">
                 {ROLE_OPTIONS.find((r) => r.value === role)?.hint}
               </p>
             </div>

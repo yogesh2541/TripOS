@@ -147,14 +147,14 @@ export function TravelerProfilesPanel({
 }) {
   if (travelers.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-line bg-white/60 p-12 text-center">
-        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-ivory border border-line text-sand-700">
+      <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 text-center">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-[8px] bg-gold-soft border border-[var(--gold-line)] text-gold-deep">
           <UserPlus className="h-5 w-5" />
         </span>
-        <p className="mt-4 font-display text-xl text-navy">
+        <p className="mt-4 font-display text-xl text-ink">
           No traveller profiles yet
         </p>
-        <p className="mt-1.5 text-sm text-muted-foreground max-w-sm mx-auto">
+        <p className="mt-1.5 text-sm text-muted max-w-sm mx-auto">
           Capture passports, dates of birth, dietary needs and loyalty numbers
           once — reuse them on every trip without chasing the client again.
         </p>
@@ -178,7 +178,7 @@ export function TravelerProfilesPanel({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted">
           {travelers.length} traveller{travelers.length === 1 ? "" : "s"} on
           this account
         </p>
@@ -235,19 +235,19 @@ function TravelerCard({
   }
 
   return (
-    <article className="rounded-2xl border border-line bg-white p-5 shadow-soft">
+    <article className="rounded-lg border border-line bg-paper p-5 shadow-soft">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-display text-xl text-navy">{t.fullName}</p>
+            <p className="font-display text-xl text-ink">{t.fullName}</p>
             {t.isPrimary && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-navy px-2 py-0.5 text-[10px] font-medium text-ivory">
+              <span className="inline-flex items-center gap-1 rounded-[6px] bg-inkwash px-2 py-0.5 text-[10px] font-medium text-[var(--on-dark)]">
                 <BadgeCheck className="h-3 w-3" />
                 Primary
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-muted">
             {RELATIONSHIP_LABEL[t.relationship]}
             {age !== null ? ` · ${age} yrs` : ""}
             {t.nationality ? ` · ${t.nationality}` : ""}
@@ -260,7 +260,7 @@ function TravelerCard({
               traveler={t}
               trigger={
                 <button
-                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-ivory hover:text-navy transition-colors"
+                  className="rounded-[6px] p-1.5 text-muted hover:bg-paper-2 hover:text-ink transition-colors"
                   aria-label="Edit traveller"
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -270,7 +270,7 @@ function TravelerCard({
             <button
               onClick={remove}
               disabled={isPending}
-              className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+              className="rounded-[6px] p-1.5 text-muted hover:bg-bad-soft hover:text-bad transition-colors disabled:opacity-50"
               aria-label="Remove traveller"
             >
               {isPending ? (
@@ -288,10 +288,10 @@ function TravelerCard({
         <div
           className={`mt-3 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium ${
             flag.tone === "danger"
-              ? "bg-red-50 text-red-700 border border-red-100"
+              ? "bg-bad-soft text-bad border border-bad-soft"
               : flag.tone === "warn"
-                ? "bg-amber-50 text-amber-800 border border-amber-100"
-                : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                ? "bg-warn-soft text-warn border border-warn-soft"
+                : "bg-ok-soft text-ok border border-ok-soft"
           }`}
         >
           {flag.tone === "ok" ? (
@@ -337,9 +337,9 @@ function TravelerCard({
           {t.loyaltyNumbers.map((l, i) => (
             <span
               key={i}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-ivory px-2.5 py-1 text-[11px] text-ink/80"
+              className="inline-flex items-center gap-1.5 rounded-[6px] border border-[var(--gold-line)] bg-gold-soft px-2.5 py-1 text-[11px] text-ink"
             >
-              <span className="text-sand-700">{l.program}</span>
+              <span className="text-gold-deep">{l.program}</span>
               <span className="font-medium tabular-nums">{l.number}</span>
             </span>
           ))}
@@ -368,7 +368,7 @@ function Detail({
 }) {
   return (
     <div className={className}>
-      <dt className="flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <dt className="flex items-center gap-1 text-[10px] uppercase tracking-[0.18em] text-muted">
         {icon}
         {label}
       </dt>
@@ -639,7 +639,7 @@ function TravelerFormDialog({
                     { program: "", number: "" },
                   ])
                 }
-                className="text-xs text-navy hover:text-sand-700 transition-colors inline-flex items-center gap-1"
+                className="text-xs text-ink hover:text-gold-deep transition-colors inline-flex items-center gap-1"
               >
                 <Plus className="h-3 w-3" />
                 Add
@@ -679,7 +679,7 @@ function TravelerFormDialog({
                           form.loyaltyNumbers.filter((_, j) => j !== i)
                         )
                       }
-                      className="rounded-lg p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors shrink-0"
+                      className="rounded-[6px] p-2 text-muted hover:bg-bad-soft hover:text-bad transition-colors shrink-0"
                       aria-label="Remove"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -700,15 +700,15 @@ function TravelerFormDialog({
             />
           </div>
 
-          <label className="sm:col-span-2 flex items-center gap-2.5 rounded-xl border border-line bg-ivory/60 px-3.5 py-2.5 cursor-pointer">
+          <label className="sm:col-span-2 flex items-center gap-2.5 rounded-[8px] border border-line bg-paper-2 px-3.5 py-2.5 cursor-pointer">
             <input
               type="checkbox"
               checked={form.isPrimary}
               onChange={(e) => update("isPrimary", e.target.checked)}
-              className="h-4 w-4 rounded border-line accent-navy"
+              className="h-4 w-4 rounded border-line accent-[var(--gold-line)]"
             />
             <span className="flex items-center gap-1.5 text-sm text-ink">
-              <CalendarDays className="h-3.5 w-3.5 text-sand-700" />
+              <CalendarDays className="h-3.5 w-3.5 text-gold-deep" />
               Primary contact for this account
             </span>
           </label>

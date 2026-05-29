@@ -70,15 +70,15 @@ export function ActivityItem({ activity }: { activity: ActivityWithActor }) {
   return (
     <article className="flex gap-4">
       <div className="relative">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ivory border border-line text-sand-700">
+        <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-gold-soft border border-[var(--gold-line)] text-gold-deep">
           {ICONS[activity.type]}
         </span>
         <span className="absolute left-1/2 top-8 h-full w-px -translate-x-1/2 bg-line" />
       </div>
       <div className="flex-1 pb-6">
         <div className="flex items-baseline justify-between gap-3">
-          <p className="font-medium text-navy text-sm">{activity.title}</p>
-          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground whitespace-nowrap">
+          <p className="font-medium text-ink text-sm">{activity.title}</p>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted whitespace-nowrap font-mono tabular-nums">
             {actorName ? `${actorName} · ` : ""}
             {formatDistanceToNow(activity.createdAt, { addSuffix: true })}
           </span>

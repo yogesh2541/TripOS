@@ -37,7 +37,7 @@ export function ContactStrip({
             <button
               type="button"
               title="WhatsApp"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-emerald-700 hover:border-emerald-200 transition-colors"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-line bg-paper text-ok hover:border-[var(--gold-line)] transition-colors"
             >
               <MessageCircle className="h-3.5 w-3.5" />
             </button>
@@ -65,7 +65,7 @@ function IconButton({
   return (
     <span
       title={title}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-navy hover:border-sand transition-colors"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-[8px] border border-line bg-paper text-ink hover:border-[var(--gold-line)] transition-colors"
     >
       {children}
     </span>

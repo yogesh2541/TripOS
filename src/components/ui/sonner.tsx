@@ -8,11 +8,11 @@ export function Toaster() {
       toastOptions={{
         classNames: {
           toast:
-            "rounded-2xl border border-line bg-white shadow-lift text-ink",
-          title: "font-medium text-navy",
-          description: "text-muted-foreground",
-          actionButton: "bg-navy text-ivory rounded-xl",
-          cancelButton: "bg-ivory text-navy rounded-xl",
+            "rounded-[10px] border border-line bg-paper shadow-lift text-ink",
+          title: "font-medium text-ink",
+          description: "text-muted",
+          actionButton: "bg-inkwash text-[var(--on-dark)] rounded-[8px]",
+          cancelButton: "bg-paper-2 text-ink rounded-[8px]",
         },
       }}
     />

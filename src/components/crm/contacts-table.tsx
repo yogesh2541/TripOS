@@ -166,11 +166,18 @@ export function LeadsTable({
       header: "Contact",
       sortValue: (r) => r.name.toLowerCase(),
       render: (r) => (
-        <div className="min-w-0">
-          <p className="font-medium text-navy truncate">{r.name}</p>
-          <p className="text-[11px] text-muted-foreground truncate">
-            {LEAD_SOURCE_LABEL[r.source]}
-          </p>
+        <div className="tc-cell-lead">
+          <span className="tc-ava-sm">
+            {r.name
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((w) => w[0]?.toUpperCase() ?? "")
+              .join("")}
+          </span>
+          <div className="min-w-0">
+            <p className="t-strong truncate">{r.name}</p>
+            <p className="t-mut truncate">{LEAD_SOURCE_LABEL[r.source]}</p>
+          </div>
         </div>
       ),
     },
@@ -214,9 +221,11 @@ export function LeadsTable({
       className: "hidden sm:block",
       render: (r) =>
         r.budget ? (
-          <span className="tabular-nums text-navy">{formatINR(r.budget)}</span>
+          <span className="font-mono tabular-nums text-ink font-semibold">
+            {formatINR(r.budget)}
+          </span>
         ) : (
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted">—</span>
         ),
     },
     {
@@ -319,7 +328,7 @@ export function LeadsTable({
 
       {/* Bulk action bar — appears when rows are selected */}
       {canEdit && selectedCount > 0 ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-navy bg-navy px-4 py-2.5 text-ivory">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-inkwash bg-inkwash px-4 py-2.5 text-[var(--on-dark)]">
           <span className="text-sm font-medium">{selectedCount} selected</span>
           <span className="text-ivory/40">·</span>
 
@@ -401,7 +410,7 @@ export function LeadsTable({
         onToggleRow={toggleRow}
         onToggleAll={toggleAll}
         empty={
-          <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center text-sm text-muted-foreground">
             <UserCog className="h-5 w-5 mx-auto mb-2 opacity-60" />
             No contacts match these filters.
           </div>

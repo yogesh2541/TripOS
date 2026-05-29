@@ -115,21 +115,20 @@ export default async function BookingsPage({
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Pipeline
+          <p className="tc-eyebrow gold">
+            <Wallet className="h-[13px] w-[13px]" />
+            Pipeline · Finance
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Bookings
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="tc-page-title mt-2.5">Bookings</h1>
+          <p className="tc-page-sub">
             {totals._count} active ·{" "}
-            <span className="font-medium text-navy">
+            <span className="font-mono font-medium text-ink">
               {formatINR(totals._sum.paidAmount ?? 0)}
             </span>
             {" / "}
-            <span className="text-navy">
+            <span className="font-mono text-ink">
               {formatINR(totals._sum.totalAmount ?? 0)}
             </span>{" "}
             collected
@@ -137,17 +136,12 @@ export default async function BookingsPage({
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center gap-2 mb-8">
+      <div className="flex flex-wrap items-center gap-2 mb-7">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
             href={filterHref(f.key)}
-            className={cn(
-              "h-9 px-4 inline-flex items-center rounded-full border text-xs uppercase tracking-[0.16em] transition-colors",
-              f.key === filter
-                ? "border-navy bg-navy text-ivory"
-                : "border-line bg-white text-navy hover:border-sand"
-            )}
+            className={cn("tc-chip", f.key === filter && "on")}
           >
             {f.label}
           </Link>
@@ -166,24 +160,22 @@ export default async function BookingsPage({
       </div>
 
       {bookings.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line bg-white/60 p-12 text-center">
-          <Wallet className="h-6 w-6 mx-auto text-muted-foreground mb-3" />
-          <p className="font-display text-2xl text-navy">
+        <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 text-center">
+          <Wallet className="h-6 w-6 mx-auto text-muted mb-3" />
+          <p className="font-display text-2xl text-ink">
             No bookings in this filter
           </p>
-          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+          <p className="mt-2 text-sm text-muted max-w-md mx-auto">
             Accept a quote on a trip to create one — bookings land here
             automatically with payment status, invoice and trip context.
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
             <Link href="/trips">
-              <button className="inline-flex items-center gap-1.5 rounded-2xl border border-line bg-white px-5 py-2 text-sm hover:border-sand">
-                Browse trips
-              </button>
+              <button className="tc-btn tc-btn-ghost">Browse trips</button>
             </Link>
             {filter !== "all" ? (
               <Link href="/bookings?status=all">
-                <button className="inline-flex items-center gap-1.5 rounded-2xl border border-line bg-white px-5 py-2 text-sm hover:border-sand">
+                <button className="tc-btn tc-btn-ghost">
                   See all statuses
                 </button>
               </Link>
@@ -203,43 +195,52 @@ export default async function BookingsPage({
               <li key={b.id}>
                 <Link
                   href={`/trips/${b.trip.id}`}
-                  className="grid grid-cols-[1.4fr_1fr_1fr_auto] gap-6 items-center rounded-2xl border border-line bg-white p-5 hover:shadow-soft transition-all group"
+                  className="group grid grid-cols-[1.4fr_1fr_1fr_auto] gap-6 items-center rounded-lg border border-line bg-paper p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:border-[var(--gold-line)] hover:shadow-lift"
                 >
                   <div>
-                    <p className="font-display text-xl text-navy leading-tight">
+                    <p className="font-display text-xl text-ink leading-tight">
                       {b.trip.destination}
                     </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {b.trip.days} days · {b.trip.travelers} travelers
+                    <p className="mt-0.5 text-xs text-muted">
+                      <span className="font-mono tabular-nums">
+                        {b.trip.days}
+                      </span>{" "}
+                      days ·{" "}
+                      <span className="font-mono tabular-nums">
+                        {b.trip.travelers}
+                      </span>{" "}
+                      travelers
                       {b.trip.contact && ` · ${b.trip.contact.name}`}
                     </p>
                   </div>
 
                   <div>
-                    <div className="flex items-baseline justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <div className="flex items-baseline justify-between font-mono text-[11px] text-muted">
                       <span>{formatINR(b.paidAmount)}</span>
                       <span>{pct}%</span>
                     </div>
-                    <div className="mt-1.5 h-1.5 w-full bg-ivory rounded-full overflow-hidden border border-line/60">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          b.status === "CANCELLED"
-                            ? "bg-line"
-                            : pct >= 100
-                              ? "bg-emerald-500"
-                              : "bg-navy"
-                        )}
-                        style={{ width: `${Math.min(100, pct)}%` }}
+                    <div
+                      className={cn(
+                        "mt-1.5 tc-meter",
+                        pct >= 100 && "sage"
+                      )}
+                    >
+                      <i
+                        style={{
+                          width: `${Math.min(100, pct)}%`,
+                          ...(b.status === "CANCELLED"
+                            ? { background: "var(--line)" }
+                            : {}),
+                        }}
                       />
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <p className="font-medium text-navy tabular-nums">
+                    <p className="font-mono font-semibold text-ink tabular-nums">
                       {formatINR(b.totalAmount)}
                     </p>
-                    <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-faint">
                       Quote v{b.quote.version} · {formatDate(b.createdAt)}
                     </p>
                   </div>
@@ -258,7 +259,7 @@ export default async function BookingsPage({
                     <Badge variant={BOOKING_STATUS_TONE[b.status]}>
                       {BOOKING_STATUS_LABEL[b.status]}
                     </Badge>
-                    <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-navy transition-colors" />
+                    <ArrowUpRight className="h-4 w-4 text-muted group-hover:text-gold-deep transition-colors" />
                   </div>
                 </Link>
               </li>

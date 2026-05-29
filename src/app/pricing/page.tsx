@@ -50,10 +50,8 @@ export default async function PricingPage() {
   return (
     <MarketingShell>
       <section className="mx-auto max-w-6xl px-5 md:px-10 pt-16 md:pt-20 pb-10 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-          Pricing
-        </p>
-        <h1 className="mt-3 font-display text-4xl md:text-6xl text-navy leading-tight">
+        <p className="tc-eyebrow gold">Pricing</p>
+        <h1 className="mt-3 font-display text-4xl md:text-6xl text-ink leading-tight">
           One price per agency. No surprises.
         </h1>
         <p className="mt-4 max-w-xl mx-auto text-base text-ink/75">
@@ -71,29 +69,31 @@ export default async function PricingPage() {
             <div
               key={tier}
               className={
-                "rounded-3xl border bg-white p-8 shadow-soft flex flex-col " +
-                (featured ? "border-navy ring-1 ring-navy/15" : "border-line")
+                "rounded-lg border bg-paper p-8 shadow-soft flex flex-col " +
+                (featured
+                  ? "border-[var(--gold-line)] ring-1 ring-[var(--gold-line)]/40"
+                  : "border-line")
               }
             >
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-3xl text-navy">{def.name}</h2>
+                <h2 className="font-display text-3xl text-ink">{def.name}</h2>
                 {featured && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-navy px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-ivory">
+                  <span className="inline-flex items-center gap-1 rounded-[6px] bg-gold-soft border border-[var(--gold-line)] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-gold-deep">
                     <Sparkles className="h-3 w-3" />
                     Popular
                   </span>
                 )}
               </div>
-              <p className="mt-1.5 text-sm text-muted-foreground">
+              <p className="mt-1.5 text-sm text-muted">
                 {def.tagline}
               </p>
               <p className="mt-6">
-                <span className="font-display text-5xl text-navy">
+                <span className="font-display text-5xl text-ink font-mono tabular-nums">
                   {formatPlanPrice(def.priceMonthly)}
                 </span>
-                <span className="text-sm text-muted-foreground"> / month</span>
+                <span className="text-sm text-muted"> / month</span>
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted font-mono tabular-nums">
                 or {formatPlanPrice(def.priceAnnual)} / year — two months free
               </p>
               <ul className="mt-6 space-y-2.5 flex-1">
@@ -102,7 +102,7 @@ export default async function PricingPage() {
                     key={i}
                     className="flex items-start gap-2 text-sm text-ink/85"
                   >
-                    <Check className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <Check className="h-4 w-4 text-ok mt-0.5 shrink-0" />
                     {h}
                   </li>
                 ))}
@@ -110,10 +110,10 @@ export default async function PricingPage() {
               <Link
                 href="/signup"
                 className={
-                  "mt-8 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition-colors " +
+                  "mt-8 inline-flex items-center justify-center gap-2 rounded-[8px] px-5 py-3 text-sm font-medium transition-colors " +
                   (featured
-                    ? "bg-navy text-ivory hover:bg-navy/90"
-                    : "border border-line text-navy hover:border-navy/40")
+                    ? "bg-inkwash text-[var(--on-dark)] hover:bg-inkwash/90"
+                    : "border border-line text-ink hover:border-line-2")
                 }
               >
                 Start {TRIAL_DAYS}-day free trial
@@ -126,11 +126,11 @@ export default async function PricingPage() {
 
       {/* Comparison table */}
       <section className="mx-auto max-w-3xl px-5 md:px-10 py-20">
-        <h2 className="font-display text-2xl text-navy text-center mb-8">
+        <h2 className="font-display text-2xl text-ink text-center mb-8">
           What&apos;s included
         </h2>
-        <div className="rounded-2xl border border-line bg-white overflow-hidden shadow-soft">
-          <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 border-b border-line bg-ivory/60 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <div className="rounded-lg border border-line bg-paper overflow-hidden shadow-soft">
+          <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 border-b border-line bg-paper-2 text-[10px] uppercase tracking-[0.18em] text-muted">
             <span>Feature</span>
             <span className="w-16 text-center">Starter</span>
             <span className="w-16 text-center">Pro</span>
@@ -143,13 +143,13 @@ export default async function PricingPage() {
               <span className="text-sm text-ink/85">{row.label}</span>
               <span className="w-16 flex justify-center">
                 {row.key === "starter" ? (
-                  <Check className="h-4 w-4 text-emerald-600" />
+                  <Check className="h-4 w-4 text-ok" />
                 ) : (
-                  <X className="h-4 w-4 text-muted-foreground/40" />
+                  <X className="h-4 w-4 text-faint" />
                 )}
               </span>
               <span className="w-16 flex justify-center">
-                <Check className="h-4 w-4 text-emerald-600" />
+                <Check className="h-4 w-4 text-ok" />
               </span>
             </div>
           ))}
@@ -158,16 +158,16 @@ export default async function PricingPage() {
 
       {/* FAQ */}
       <section className="mx-auto max-w-3xl px-5 md:px-10 pb-24">
-        <h2 className="font-display text-3xl text-navy text-center mb-10">
+        <h2 className="font-display text-3xl text-ink text-center mb-10">
           Frequently asked
         </h2>
         <div className="space-y-4">
           {FAQ.map((f) => (
             <div
               key={f.q}
-              className="rounded-2xl border border-line bg-white p-6"
+              className="rounded-lg border border-line bg-paper p-6"
             >
-              <p className="font-medium text-navy">{f.q}</p>
+              <p className="font-medium text-ink">{f.q}</p>
               <p className="mt-2 text-sm text-ink/75 leading-relaxed">{f.a}</p>
             </div>
           ))}
@@ -175,7 +175,7 @@ export default async function PricingPage() {
         <div className="mt-12 text-center">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-medium text-ivory hover:bg-navy/90 transition-colors"
+            className="inline-flex items-center gap-2 rounded-[8px] bg-inkwash px-6 py-3 text-sm font-medium text-[var(--on-dark)] hover:bg-inkwash/90 transition-colors"
           >
             Start your free trial
             <ArrowRight className="h-4 w-4" />

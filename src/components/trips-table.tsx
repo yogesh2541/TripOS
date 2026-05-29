@@ -39,11 +39,16 @@ export function TripsTable({ trips }: { trips: TripRow[] }) {
       header: "Trip",
       sortValue: (r) => r.destination.toLowerCase(),
       render: (r) => (
-        <div className="min-w-0">
-          <p className="font-medium text-navy truncate">{r.destination}</p>
-          <p className="text-[11px] text-muted-foreground truncate">
-            {r.contactName ?? "No contact linked"}
-          </p>
+        <div className="tc-cell-lead">
+          <span className="tc-ava-sm">
+            {r.destination.slice(0, 2).toUpperCase()}
+          </span>
+          <div className="min-w-0">
+            <p className="t-strong truncate">{r.destination}</p>
+            <p className="t-mut truncate">
+              {r.contactName ?? "No contact linked"}
+            </p>
+          </div>
         </div>
       ),
     },
@@ -70,7 +75,9 @@ export function TripsTable({ trips }: { trips: TripRow[] }) {
       align: "right",
       className: "hidden md:block",
       sortValue: (r) => r.days,
-      render: (r) => <span className="tabular-nums text-ink/80">{r.days}</span>,
+      render: (r) => (
+        <span className="font-mono tabular-nums text-ink-2">{r.days}</span>
+      ),
     },
     {
       key: "travelers",
@@ -79,7 +86,7 @@ export function TripsTable({ trips }: { trips: TripRow[] }) {
       className: "hidden md:block",
       sortValue: (r) => r.travelers,
       render: (r) => (
-        <span className="tabular-nums text-ink/80">{r.travelers}</span>
+        <span className="font-mono tabular-nums text-ink-2">{r.travelers}</span>
       ),
     },
     {
@@ -126,7 +133,7 @@ export function TripsTable({ trips }: { trips: TripRow[] }) {
         gridClassName="grid-cols-[1.8fr_1fr_0.9fr_0.7fr_0.7fr_1fr_1fr]"
         initialSort={{ key: "created", dir: "desc" }}
         empty={
-          <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center text-sm text-muted-foreground">
             No trips match this search.
           </div>
         }

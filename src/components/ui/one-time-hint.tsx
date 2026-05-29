@@ -50,32 +50,29 @@ export function OneTimeHint({
   return (
     <aside
       className={cn(
-        "relative flex items-start gap-3 rounded-2xl border p-4 shadow-soft",
+        "relative flex items-start gap-3 rounded-lg border p-4 shadow-soft",
         variant === "accent"
-          ? "border-sand-200 bg-sand-50/60"
-          : "border-line bg-white",
+          ? "border-[var(--gold-line)] bg-gold-soft/50"
+          : "border-line bg-paper",
         className
       )}
     >
       <span
         className={cn(
-          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
+          "flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] border",
           variant === "accent"
-            ? "border-sand-300 bg-white text-sand-800"
-            : "border-line bg-ivory text-sand-700"
+            ? "border-[var(--gold-line)] bg-paper text-gold-deep"
+            : "border-line bg-paper-2 text-gold-deep"
         )}
       >
         <Lightbulb className="h-3.5 w-3.5" />
       </span>
       <div className="min-w-0 flex-1 pr-6">
         {title ? (
-          <p className="text-sm font-medium text-navy">{title}</p>
+          <p className="text-sm font-medium text-ink">{title}</p>
         ) : null}
         <div
-          className={cn(
-            "text-xs text-muted-foreground",
-            title ? "mt-0.5" : ""
-          )}
+          className={cn("text-xs text-muted", title ? "mt-0.5" : "")}
         >
           {children}
         </div>
@@ -84,7 +81,7 @@ export function OneTimeHint({
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="absolute top-2 right-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:text-navy hover:bg-ivory"
+        className="absolute top-2 right-2 inline-flex h-6 w-6 items-center justify-center rounded-[8px] text-muted hover:text-ink hover:bg-paper-2"
       >
         <X className="h-3.5 w-3.5" />
       </button>

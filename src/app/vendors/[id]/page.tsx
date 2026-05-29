@@ -66,7 +66,7 @@ export default async function VendorDetailPage({
       <div className="mb-6">
         <Link
           href="/vendors"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted hover:text-ink transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           All vendors
@@ -76,12 +76,12 @@ export default async function VendorDetailPage({
       <header className="flex flex-wrap items-start justify-between gap-6 mb-10">
         <div className="space-y-3 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-display text-4xl md:text-5xl text-navy leading-tight">
+            <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">
               {vendor.name}
             </h1>
             {vendor.isPreferred ? (
               <Badge variant="accent">
-                <Star className="h-3 w-3 fill-sand text-sand" />
+                <Star className="h-3 w-3 fill-gold-deep text-gold-deep" />
                 Preferred
               </Badge>
             ) : null}
@@ -89,7 +89,7 @@ export default async function VendorDetailPage({
               <Badge variant="danger">Archived</Badge>
             ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted">
             <Building2 className="h-3 w-3" />
             <span>{VENDOR_TYPE_LABEL[vendor.type]}</span>
             {location ? (
@@ -104,7 +104,7 @@ export default async function VendorDetailPage({
             {vendor.phone ? (
               <a
                 href={`tel:${vendor.phone}`}
-                className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs text-navy hover:border-sand-200"
+                className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2.5 py-1 text-xs text-ink hover:border-[var(--gold-line)]"
               >
                 <Phone className="h-3 w-3" />
                 {vendor.phone}
@@ -115,7 +115,7 @@ export default async function VendorDetailPage({
                 href={`https://wa.me/${vendor.whatsapp.replace(/\D/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs text-emerald-700 hover:border-emerald-200"
+                className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2.5 py-1 text-xs text-ok hover:border-ok/40"
               >
                 <MessageCircle className="h-3 w-3" />
                 WhatsApp
@@ -124,7 +124,7 @@ export default async function VendorDetailPage({
             {vendor.email ? (
               <a
                 href={`mailto:${vendor.email}`}
-                className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs text-navy hover:border-sand-200"
+                className="inline-flex items-center gap-1 rounded-[6px] border border-line bg-paper px-2.5 py-1 text-xs text-ink hover:border-[var(--gold-line)]"
               >
                 <Mail className="h-3 w-3" />
                 {vendor.email}
@@ -195,9 +195,9 @@ export default async function VendorDetailPage({
               body="Assign this vendor from a trip's Operations tab."
             />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-              <table className="w-full text-sm">
-                <thead className="bg-ivory text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="overflow-x-auto rounded-lg border border-line bg-paper shadow-soft">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead className="bg-paper-2 text-[10px] uppercase tracking-[0.2em] text-muted">
                   <tr>
                     <th className="px-4 py-3 text-left">Service</th>
                     <th className="px-4 py-3 text-left">Trip</th>
@@ -208,11 +208,11 @@ export default async function VendorDetailPage({
                 </thead>
                 <tbody className="divide-y divide-line/70">
                   {vendor.assignments.map((a) => (
-                    <tr key={a.id} className="hover:bg-ivory/50">
+                    <tr key={a.id} className="hover:bg-paper-2">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-navy">{a.title}</div>
+                        <div className="font-medium text-ink">{a.title}</div>
                         {a.confirmationNumber ? (
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-[11px] text-muted">
                             Conf #{a.confirmationNumber}
                           </div>
                         ) : null}
@@ -220,7 +220,7 @@ export default async function VendorDetailPage({
                       <td className="px-4 py-3">
                         <Link
                           href={`/trips/${a.trip.id}`}
-                          className="text-navy hover:text-sand-800"
+                          className="text-ink hover:text-gold-deep"
                         >
                           {a.trip.destination}
                         </Link>
@@ -230,13 +230,13 @@ export default async function VendorDetailPage({
                           </Badge>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                      <td className="px-4 py-3 text-xs text-muted">
                         {a.startDate ? formatDate(a.startDate) : "—"}
                         {a.endDate
                           ? ` → ${formatDate(a.endDate)}`
                           : ""}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">
                         {a.totalCost ? formatINR(a.totalCost) : "—"}
                       </td>
                       <td className="px-4 py-3">
@@ -256,7 +256,7 @@ export default async function VendorDetailPage({
 
         <TabsContent value="payments">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted">
               Pay-outs made to {vendor.name}.
             </p>
             <VendorPaymentDialog
@@ -281,9 +281,9 @@ export default async function VendorDetailPage({
               body="Vendor payments you record will appear here."
             />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-soft">
-              <table className="w-full text-sm">
-                <thead className="bg-ivory text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <div className="overflow-x-auto rounded-lg border border-line bg-paper shadow-soft">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead className="bg-paper-2 text-[10px] uppercase tracking-[0.2em] text-muted">
                   <tr>
                     <th className="px-4 py-3 text-left">
                       <Calendar className="inline h-3 w-3 mr-1" />
@@ -300,15 +300,15 @@ export default async function VendorDetailPage({
                 </thead>
                 <tbody className="divide-y divide-line/70">
                   {vendor.payments.map((p) => (
-                    <tr key={p.id} className="group hover:bg-ivory/50">
+                    <tr key={p.id} className="group hover:bg-paper-2">
                       <td className="px-4 py-3">{formatDate(p.paymentDate)}</td>
                       <td className="px-4 py-3">
                         {VENDOR_PAYMENT_MODE_LABEL[p.mode]}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                      <td className="px-4 py-3 text-xs text-muted">
                         {p.reference ?? "—"}
                       </td>
-                      <td className="px-4 py-3 text-right tabular-nums">
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">
                         {formatINR(p.amount)}
                       </td>
                       <td className="px-2 py-3 text-right">
@@ -327,8 +327,8 @@ export default async function VendorDetailPage({
 
         <TabsContent value="profile">
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-line bg-white p-6 shadow-soft space-y-3 text-sm">
-              <h3 className="font-display text-xl text-navy">Profile</h3>
+            <div className="rounded-lg border border-line bg-paper p-6 shadow-soft space-y-3 text-sm">
+              <h3 className="font-display text-xl text-ink">Profile</h3>
               <Field label="Address" value={vendor.address} />
               <Field
                 label="Location"
@@ -338,14 +338,14 @@ export default async function VendorDetailPage({
               <Field label="Payment terms" value={vendor.paymentTerms} />
             </div>
 
-            <div className="rounded-2xl border border-line bg-white p-6 shadow-soft space-y-3 text-sm">
-              <h3 className="font-display text-xl text-navy">Operational notes</h3>
+            <div className="rounded-lg border border-line bg-paper p-6 shadow-soft space-y-3 text-sm">
+              <h3 className="font-display text-xl text-ink">Operational notes</h3>
               {vendor.notes ? (
-                <p className="whitespace-pre-wrap text-muted-foreground">
+                <p className="whitespace-pre-wrap text-muted">
                   {vendor.notes}
                 </p>
               ) : (
-                <p className="text-muted-foreground italic">
+                <p className="text-muted italic">
                   No notes yet — use the form below to capture context.
                 </p>
               )}
@@ -367,16 +367,16 @@ export default async function VendorDetailPage({
               {vendor.activities.map((a) => (
                 <li
                   key={a.id}
-                  className="rounded-xl border border-line bg-white p-4 shadow-soft"
+                  className="rounded-[10px] border border-line bg-paper p-4 shadow-soft"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-navy text-sm">{a.title}</p>
-                    <span className="text-[11px] text-muted-foreground">
+                    <p className="font-medium text-ink text-sm">{a.title}</p>
+                    <span className="text-[11px] text-muted">
                       {formatDate(a.createdAt)}
                     </span>
                   </div>
                   {a.body ? (
-                    <p className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap">
+                    <p className="mt-1 text-xs text-muted whitespace-pre-wrap">
                       {a.body}
                     </p>
                   ) : null}
@@ -399,11 +399,11 @@ function Field({
 }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="text-[10px] uppercase tracking-[0.2em] text-muted">
         {label}
       </p>
-      <p className="mt-0.5 text-navy">
-        {value ?? <span className="text-muted-foreground italic">—</span>}
+      <p className="mt-0.5 text-ink">
+        {value ?? <span className="text-muted italic">—</span>}
       </p>
     </div>
   );
@@ -411,9 +411,9 @@ function Field({
 
 function EmptyPanel({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-3xl border border-dashed border-line bg-white/60 p-12 text-center">
-      <p className="font-display text-xl text-navy">{title}</p>
-      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+    <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 text-center">
+      <p className="font-display text-xl text-ink">{title}</p>
+      <p className="mt-2 text-sm text-muted">{body}</p>
     </div>
   );
 }

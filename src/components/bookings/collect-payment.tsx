@@ -139,7 +139,7 @@ export function CollectPaymentDialog({
         </DialogHeader>
 
         {!configured ? (
-          <div className="rounded-2xl border border-sand-200 bg-sand-50/50 p-4 text-sm text-sand-900">
+          <div className="rounded-lg border border-[var(--gold-line)] bg-gold-soft p-4 text-sm text-ink">
             Online payments aren&apos;t set up yet. Add your{" "}
             <span className="font-mono text-xs">RAZORPAY_KEY_ID</span> and{" "}
             <span className="font-mono text-xs">RAZORPAY_KEY_SECRET</span> to
@@ -147,8 +147,8 @@ export function CollectPaymentDialog({
           </div>
         ) : created ? (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-800 mb-2 inline-flex items-center gap-1.5">
+            <div className="rounded-lg border border-ok/20 bg-ok-soft p-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-ok mb-2 inline-flex items-center gap-1.5">
                 <Link2 className="h-3 w-3" />
                 Payment link · {formatINR(amount)}
               </p>
@@ -195,7 +195,7 @@ export function CollectPaymentDialog({
                 autoFocus
               />
               {pendingAmount > 0 && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted">
                   Balance pending: {formatINR(pendingAmount)}
                 </p>
               )}
@@ -230,7 +230,7 @@ export function PaymentLinksList({
   if (links.length === 0) return null;
   return (
     <div className="mt-5">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mb-2">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-muted mb-2">
         Payment links ({links.length})
       </p>
       <ul className="space-y-2">
@@ -294,15 +294,15 @@ function PaymentLinkRow({
   }
 
   return (
-    <li className="rounded-2xl border border-line bg-white px-4 py-2.5 flex items-center gap-3">
+    <li className="rounded-lg border border-line bg-paper px-4 py-2.5 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-navy tabular-nums">
+          <span className="font-medium text-ink tabular-nums font-mono">
             {formatINR(link.amount)}
           </span>
           <Badge variant={STATUS_TONE[link.status]}>{link.status}</Badge>
         </div>
-        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground mt-0.5">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-muted mt-0.5">
           {formatDate(link.createdAt)}
         </p>
       </div>
@@ -311,7 +311,7 @@ function PaymentLinkRow({
           <button
             type="button"
             onClick={copy}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-ivory hover:text-navy transition-colors"
+            className="rounded-[6px] p-1.5 text-muted hover:bg-paper-2 hover:text-ink transition-colors"
             aria-label="Copy link"
           >
             {copied ? (
@@ -325,7 +325,7 @@ function PaymentLinkRow({
               href={wa}
               target="_blank"
               rel="noopener"
-              className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50 transition-colors"
+              className="rounded-[6px] p-1.5 text-ok hover:bg-ok-soft transition-colors"
               aria-label="Send on WhatsApp"
             >
               <MessageCircle className="h-3.5 w-3.5" />
@@ -335,7 +335,7 @@ function PaymentLinkRow({
             type="button"
             onClick={cancel}
             disabled={isPending}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-40"
+            className="rounded-[6px] p-1.5 text-muted hover:bg-bad-soft hover:text-bad transition-colors disabled:opacity-40"
             aria-label="Cancel link"
           >
             {isPending ? (

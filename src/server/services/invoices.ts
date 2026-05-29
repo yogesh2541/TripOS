@@ -22,6 +22,45 @@ export type DraftInvoiceLine = {
   position?: number;
 };
 
+/**
+ * Distribute a booking's selling total across its quote line items, pro-rata
+ * to each item's cost — so the marked-up price is spread invisibly across the
+ * lines (no separate "markup" figure) and the lines sum *exactly* to the
+ * selling total. Each line keeps its true `cost` for the operator margin view.
+ */
+function sellingLinesFromQuote(
+  items: { category: string; label: string; cost: number }[],
+  sellingTotal: number,
+  defaultSacCode: string
+): DraftInvoiceLine[] {
+  const selling = Math.round(sellingTotal);
+  const totalCost = items.reduce((s, it) => s + (it.cost || 0), 0);
+  const shares = items.map((it) =>
+    totalCost > 0
+      ? Math.round(((it.cost || 0) / totalCost) * selling)
+      : Math.round(selling / items.length)
+  );
+  // Absorb the rounding residual into the largest line so the lines tie out
+  // to the selling total to the rupee.
+  const summed = shares.reduce((a, b) => a + b, 0);
+  const residual = selling - summed;
+  if (residual !== 0 && shares.length > 0) {
+    let maxIdx = 0;
+    for (let i = 1; i < shares.length; i++) {
+      if (shares[i] > shares[maxIdx]) maxIdx = i;
+    }
+    shares[maxIdx] += residual;
+  }
+  return items.map((it, i) => ({
+    description: `${it.category} — ${it.label}`,
+    sacCode: defaultSacCode,
+    quantity: 1,
+    unitPrice: shares[i],
+    cost: it.cost,
+    position: i,
+  }));
+}
+
 export type CreateDraftInvoiceInput = {
   bookingId: string;
   lines?: DraftInvoiceLine[]; // if omitted, derived from the booking's quote
@@ -94,24 +133,32 @@ export async function createOrRefreshDraftInvoice(
     settings.stateCode ??
     null;
 
-  // Derive lines: explicit override → quote items → single-line fallback
+  // Derive lines: explicit override → quote items → single-line fallback.
+  //
+  // The CLIENT invoice must bill the *selling* price (cost + markup). The
+  // booking total already carries the quote's markup + discount, so we
+  // distribute it across the quote's line items pro-rata to each item's
+  // cost. The markup is thereby baked into every unitPrice and never appears
+  // as its own figure — invisible to the client. Each line still records its
+  // true `cost`, which powers the operator-only margin view (and the
+  // margin-scheme tax). This mirrors buildProposalPricing's pro-rata so the
+  // invoice total matches the proposal the client accepted.
   const lines: DraftInvoiceLine[] =
     input.lines && input.lines.length > 0
       ? input.lines
       : booking.quote.items.length > 0
-        ? booking.quote.items.map((it, i) => ({
-            description: `${it.category} — ${it.label}`,
-            sacCode: settings.defaultSacCode,
-            quantity: 1,
-            unitPrice: it.cost,
-            position: i,
-          }))
+        ? sellingLinesFromQuote(
+            booking.quote.items,
+            booking.totalAmount,
+            settings.defaultSacCode
+          )
         : [
             {
               description: `Travel package — ${booking.trip.destination}`,
               sacCode: settings.defaultSacCode,
               quantity: 1,
               unitPrice: booking.totalAmount,
+              cost: null,
               position: 0,
             },
           ];

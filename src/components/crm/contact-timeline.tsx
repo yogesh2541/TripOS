@@ -38,7 +38,7 @@ export function LeadTimeline({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-line bg-white p-4">
+      <div className="rounded-lg border border-line bg-paper p-4">
         <Textarea
           rows={2}
           placeholder="Add a note about this contact…"
@@ -63,8 +63,8 @@ export function LeadTimeline({
       </div>
 
       {activities.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-line bg-white/60 p-12 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-lg border border-dashed border-line bg-paper-2 p-12 text-center">
+          <p className="text-sm text-muted">
             No activity yet. Add a note, log a call, or move the contact through
             the pipeline.
           </p>

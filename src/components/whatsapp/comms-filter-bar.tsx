@@ -35,8 +35,8 @@ export function CommsFilterBar() {
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-white px-4 py-3 flex flex-wrap items-center gap-3">
-      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+    <div className="rounded-lg border border-line bg-paper px-4 py-3 flex flex-wrap items-center gap-3">
+      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-muted">
         {isPending ? (
           <Loader2 className="h-3 w-3 animate-spin" />
         ) : (
@@ -47,7 +47,7 @@ export function CommsFilterBar() {
       <select
         value={params.get("status") ?? ""}
         onChange={(e) => setParam("status", e.target.value)}
-        className="rounded-xl border border-line bg-white px-3 py-1.5 text-xs"
+        className="rounded-[8px] border border-line bg-paper px-3 py-1.5 text-xs text-ink"
       >
         {STATUSES.map((s) => (
           <option key={s.v} value={s.v}>
@@ -58,7 +58,7 @@ export function CommsFilterBar() {
       <select
         value={params.get("direction") ?? ""}
         onChange={(e) => setParam("direction", e.target.value)}
-        className="rounded-xl border border-line bg-white px-3 py-1.5 text-xs"
+        className="rounded-[8px] border border-line bg-paper px-3 py-1.5 text-xs text-ink"
       >
         {DIRECTIONS.map((d) => (
           <option key={d.v} value={d.v}>
@@ -73,7 +73,7 @@ export function CommsFilterBar() {
         onKeyDown={(e) => {
           if (e.key === "Enter") setParam("q", (e.target as HTMLInputElement).value);
         }}
-        className="rounded-xl border border-line bg-white px-3 py-1.5 text-xs w-56"
+        className="rounded-[8px] border border-line bg-paper px-3 py-1.5 text-xs text-ink w-56"
       />
     </div>
   );

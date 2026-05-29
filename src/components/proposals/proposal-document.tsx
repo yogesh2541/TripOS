@@ -1,8 +1,12 @@
 /* eslint-disable jsx-a11y/alt-text */
-// PDF rendering of a travel proposal via @react-pdf/renderer. Each
-// agency's theme + accent + logo + section toggles flow through
-// [proposal-pdf.ts](src/server/services/proposal-pdf.ts), so this file is
-// pure presentation — given a snapshot, produce the document.
+// PDF rendering of a travel proposal via @react-pdf/renderer — the "Atelier
+// Editorial" treatment, mirroring the customer web proposal
+// ([preview-renderer.tsx](src/components/preview-renderer.tsx)) paginated for
+// A4. Each agency's theme + accent + logo + section toggles flow through
+// [proposal-pdf.ts](src/server/services/proposal-pdf.ts); this file is pure
+// presentation. @react-pdf has no gradients / CSS vars / ::after / reliable
+// gap — so: explicit values, nested <View>s, Times-Roman for the serif and
+// Helvetica for the sans.
 
 import {
   Document,
@@ -16,21 +20,29 @@ import type { ProposalPdfSnapshot } from "@/server/services/proposal-pdf";
 
 // --- design tokens --------------------------------------------------------
 
-const NAVY = "#0B1C2C";
+const NAVY = "#0C1620";
 const IVORY = "#FAF7F0";
-const INK = "#1A1A1A";
-const MUTED = "#6E6E6E";
-const LINE = "#E6E1D7";
-const WHITE = "#FFFFFF";
+const IVORY2 = "#F3EEE2";
+const PAPER = "#FFFFFF";
+const INK = "#16191D";
+const INK2 = "#3C434B";
+const MUTED = "#6B7077";
+const FAINT = "#9BA0A6";
+const LINE = "#E6E2D8";
+const ON_DARK = "#EFEAE0";
+const OK = "#5C8C69";
 
 // --- helpers --------------------------------------------------------------
 
 function formatINR(n: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Math.round(n));
+  // "Rs." not the ₹ glyph (U+20B9): @react-pdf's built-in fonts have no rupee
+  // glyph, so ₹ renders as a stray "¹". "Rs." is glyph-safe.
+  return (
+    "Rs. " +
+    new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 0,
+    }).format(Math.round(n))
+  );
 }
 
 function fmtDate(d: Date | string | null | undefined): string {
@@ -67,7 +79,6 @@ function hasAnyMealsPdf(
   return !!(m && (m.breakfast || m.lunch || m.dinner));
 }
 
-/** Mirror of preview-renderer's helper — keeps the two outputs in sync. */
 function isGenericMealNote(note?: string | null): boolean {
   if (!note) return false;
   const remainder = note
@@ -106,6 +117,82 @@ function collectInclusions(snap: ProposalPdfSnapshot): {
   };
 }
 
+// Soft tint of the accent for the inner seal ring — approximated since
+// @react-pdf can't do color-mix. Accepts the accent and an alpha.
+function alpha(hex: string, a: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+// --- monogram seal (two concentric circles, no ::after) -------------------
+
+function Seal({
+  agency,
+  size,
+  accent,
+  onDark,
+}: {
+  agency: ProposalPdfSnapshot["agency"];
+  size: number;
+  accent: string;
+  onDark?: boolean;
+}) {
+  // Logo wins if present.
+  if (agency.logoUrl) {
+    return (
+      <Image
+        src={agency.logoUrl}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          objectFit: "cover",
+        }}
+      />
+    );
+  }
+  const inset = 3;
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: 1,
+        borderColor: alpha(accent, 0.65),
+        backgroundColor: onDark ? "rgba(255,255,255,0.05)" : PAPER,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <View
+        style={{
+          position: "absolute",
+          top: inset,
+          left: inset,
+          right: inset,
+          bottom: inset,
+          borderRadius: (size - inset * 2) / 2,
+          borderWidth: 1,
+          borderColor: alpha(accent, 0.3),
+        }}
+      />
+      <Text
+        style={{
+          fontFamily: "Times-Roman",
+          color: accent,
+          fontSize: size * 0.42,
+        }}
+      >
+        {agency.name.charAt(0).toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
 // --- main document --------------------------------------------------------
 
 export function ProposalDocument({
@@ -113,7 +200,8 @@ export function ProposalDocument({
 }: {
   snapshot: ProposalPdfSnapshot;
 }) {
-  const styles = makeStyles(snapshot.branding.theme, snapshot.branding.accent);
+  const accent = snapshot.branding.accent;
+  const styles = makeStyles(accent);
   const { included, excluded } = collectInclusions(snapshot);
   const hasInclusions =
     snapshot.branding.showInclusions &&
@@ -126,27 +214,29 @@ export function ProposalDocument({
       title={`${snapshot.agency.name} — ${snapshot.trip.destination}`}
       author={snapshot.agency.name}
     >
-      {/* Cover page — full bleed, brand-forward */}
-      <CoverPage snapshot={snapshot} styles={styles} />
+      <CoverPage snapshot={snapshot} styles={styles} accent={accent} />
 
-      {/* Main content — one Page that wraps; logo header repeats on each
-          rendered sheet via <View fixed>. */}
+      {/* Main content — one wrapping Page; header/footer repeat per sheet. */}
       <Page size="A4" style={styles.contentPage}>
-        <RunningHeader snapshot={snapshot} styles={styles} />
+        <RunningHeader snapshot={snapshot} styles={styles} accent={accent} />
         <RunningFooter snapshot={snapshot} styles={styles} />
 
         {snapshot.branding.showAtAGlance &&
           snapshot.itinerary &&
           snapshot.itinerary.days.length > 0 && (
-            <AtAGlance snapshot={snapshot} styles={styles} />
+            <AtAGlance snapshot={snapshot} styles={styles} accent={accent} />
           )}
 
         {snapshot.segments.length > 0 && (
-          <TravelPlan snapshot={snapshot} styles={styles} />
+          <TravelPlan snapshot={snapshot} styles={styles} accent={accent} />
         )}
 
         {snapshot.itinerary && (
-          <DayByDay snapshot={snapshot} styles={styles} />
+          <DayByDay snapshot={snapshot} styles={styles} accent={accent} />
+        )}
+
+        {snapshot.pricing && (
+          <PricingBlock snapshot={snapshot} styles={styles} accent={accent} />
         )}
 
         {hasInclusions && (
@@ -154,23 +244,16 @@ export function ProposalDocument({
             included={included}
             excluded={excluded}
             styles={styles}
+            accent={accent}
           />
-        )}
-
-        {snapshot.pricing && (
-          <PricingBlock snapshot={snapshot} styles={styles} />
         )}
 
         {hasTerms && (
-          <TermsBlock
-            terms={snapshot.agency.terms!}
-            styles={styles}
-          />
+          <TermsBlock terms={snapshot.agency.terms!} styles={styles} accent={accent} />
         )}
       </Page>
 
-      {/* Closing on its own page — always */}
-      <ClosingPage snapshot={snapshot} styles={styles} />
+      <ClosingPage snapshot={snapshot} styles={styles} accent={accent} />
     </Document>
   );
 }
@@ -180,9 +263,11 @@ export function ProposalDocument({
 function CoverPage({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
   const { trip, branding, agency, meta } = snapshot;
   const endDate = trip.startDate ? addDays(trip.startDate, trip.days - 1) : null;
@@ -194,143 +279,54 @@ function CoverPage({
         })} – ${fmtDate(endDate)}`
       : "Dates flexible";
 
-  const isMinimal = branding.theme === "minimal";
-  const isEditorial = branding.theme === "editorial";
-  const onDark = !isMinimal && !isEditorial;
+  const showPhoto =
+    branding.coverStyle === "photo" && !!snapshot.itinerary?.coverImageUrl;
 
   return (
     <Page size="A4" style={styles.coverPage}>
-      {/* Cover background — photo, gradient, or solid depending on theme */}
-      {branding.coverStyle === "photo" &&
-        snapshot.itinerary?.coverImageUrl && (
-          <>
-            <Image
-              src={snapshot.itinerary.coverImageUrl}
-              style={styles.coverImage}
-            />
-            {!isEditorial && <View style={styles.coverScrim} />}
-          </>
-        )}
+      {showPhoto && (
+        <Image src={snapshot.itinerary!.coverImageUrl!} style={styles.coverImage} />
+      )}
+      <View style={styles.coverScrim} />
+      <View style={[styles.coverGlow, { backgroundColor: alpha(accent, 0.16) }]} />
 
       <View style={styles.coverInner}>
-        {/* Header — agency logo prominent top-left */}
-        <View style={styles.coverHeader}>
-          <View style={styles.coverHeaderLeft}>
-            {agency.logoUrl ? (
-              <Image src={agency.logoUrl} style={styles.coverLogo} />
-            ) : (
-              <View style={styles.coverLogoFallback}>
-                <Text style={styles.coverLogoFallbackText}>
-                  {agency.name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            )}
+        {/* top: brand + version */}
+        <View style={styles.coverTop}>
+          <View style={styles.coverBrand}>
+            <Seal agency={agency} size={40} accent={accent} onDark />
             <View>
-              <Text
-                style={{
-                  ...styles.eyebrow,
-                  color: branding.accent,
-                }}
-              >
-                Travel proposal
-              </Text>
-              <Text
-                style={onDark ? styles.coverAgencyOnDark : styles.coverAgency}
-              >
-                {agency.name}
+              <Text style={styles.coverWord}>{agency.name.toUpperCase()}</Text>
+              <Text style={[styles.coverTag, { color: accent }]}>
+                Crafted travel
               </Text>
             </View>
           </View>
-          <Text
-            style={onDark ? styles.coverVersionOnDark : styles.coverVersion}
-          >
-            v{meta.version}
-          </Text>
-        </View>
-
-        {/* Destination + summary */}
-        <View style={styles.coverBody}>
-          <Text
-            style={
-              onDark
-                ? styles.coverDestinationOnDark
-                : styles.coverDestination
-            }
-          >
-            {trip.destination}
-          </Text>
-          {isEditorial && (
-            <View
-              style={{
-                width: 56,
-                height: 2,
-                backgroundColor: branding.accent,
-                marginTop: 14,
-              }}
-            />
-          )}
-          {snapshot.itinerary?.summary?.trim() ? (
-            <Text
-              style={
-                onDark ? styles.coverSummaryOnDark : styles.coverSummary
-              }
-            >
-              {snapshot.itinerary.summary.trim()}
-            </Text>
-          ) : (
-            <Text
-              style={
-                onDark ? styles.coverSummaryOnDark : styles.coverSummary
-              }
-            >
-              A {trip.days}-day {trip.travelType.toLowerCase()} journey for{" "}
-              {trip.travelers === 1
-                ? "a solo traveller"
-                : `${trip.travelers} travellers`}
-              .
-            </Text>
-          )}
-
-          {/* Meta row */}
-          <View style={styles.coverMetaRow}>
-            <MetaItem
-              label="Duration"
-              value={`${trip.days}D / ${Math.max(0, trip.days - 1)}N`}
-              onDark={onDark}
-              accent={branding.accent}
-              styles={styles}
-            />
-            <MetaItem
-              label="Travel dates"
-              value={dateRange}
-              onDark={onDark}
-              accent={branding.accent}
-              styles={styles}
-            />
-            <MetaItem
-              label="Travellers"
-              value={`${trip.travelers}`}
-              onDark={onDark}
-              accent={branding.accent}
-              styles={styles}
-            />
-            <MetaItem
-              label="Style"
-              value={trip.travelType}
-              onDark={onDark}
-              accent={branding.accent}
-              styles={styles}
-            />
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.coverVLabel}>Travel Proposal</Text>
+            <Text style={styles.coverVValue}>v{meta.version}</Text>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.coverFooter}>
-          <Text
-            style={
-              onDark ? styles.coverFooterTextOnDark : styles.coverFooterText
-            }
-          >
+        {/* headline */}
+        <View>
+          <Text style={[styles.coverKicker, { color: accent }]}>
+            A JOURNEY FOR {trip.travelers}
+          </Text>
+          <Text style={styles.coverTitle}>{trip.destination}</Text>
+          <Text style={styles.coverSub}>
+            A {trip.days}-day {trip.travelType.toLowerCase()} journey, crafted
+            with care from first light to last sunset.
+          </Text>
+
+          <View style={styles.coverMetaRow}>
+            <MetaItem label="Duration" value={`${trip.days}D / ${Math.max(0, trip.days - 1)}N`} accent={accent} styles={styles} />
+            <MetaItem label="Travel dates" value={dateRange} accent={accent} styles={styles} />
+            <MetaItem label="Travellers" value={`${trip.travelers} guests`} accent={accent} styles={styles} />
+            <MetaItem label="Style" value={trip.travelType} accent={accent} styles={styles} />
+          </View>
+
+          <Text style={styles.coverFooterText}>
             Prepared {fmtDate(meta.preparedAt)} · Valid for {meta.validityDays}{" "}
             days
           </Text>
@@ -343,52 +339,47 @@ function CoverPage({
 function MetaItem({
   label,
   value,
-  onDark,
   accent,
   styles,
 }: {
   label: string;
   value: string;
-  onDark: boolean;
   accent: string;
   styles: Styles;
 }) {
   return (
     <View style={styles.metaItem}>
-      <Text style={{ ...styles.metaLabel, color: accent }}>{label}</Text>
-      <Text style={onDark ? styles.metaValueOnDark : styles.metaValue}>
-        {value}
-      </Text>
+      <Text style={[styles.metaLabel, { color: accent }]}>{label}</Text>
+      <Text style={styles.metaValue}>{value}</Text>
     </View>
   );
 }
 
-// --- running header / footer (repeat on every content page) ---------------
+// --- running header / footer ----------------------------------------------
 
 function RunningHeader({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
   return (
     <View style={styles.runningHeader} fixed>
-      {snapshot.agency.logoUrl ? (
-        <Image src={snapshot.agency.logoUrl} style={styles.runningLogo} />
-      ) : (
-        <View style={styles.runningLogoFallback}>
-          <Text style={styles.runningLogoFallbackText}>
-            {snapshot.agency.name.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      )}
-      <View style={styles.runningHeaderTextWrap}>
-        <Text style={styles.runningHeaderAgency}>{snapshot.agency.name}</Text>
-        <Text style={styles.runningHeaderTrip}>
-          {snapshot.trip.destination} · v{snapshot.meta.version}
-        </Text>
-      </View>
+      <Seal agency={snapshot.agency} size={24} accent={accent} />
+      <Text style={styles.runningHeaderAgency}>{snapshot.agency.name}</Text>
+      <Text style={styles.runningHeaderTrip}>
+        · {snapshot.trip.destination} · v{snapshot.meta.version}
+      </Text>
+      <View style={{ flex: 1 }} />
+      <Text
+        style={styles.runningPage}
+        render={({ pageNumber, totalPages }) =>
+          `Page ${pageNumber} of ${totalPages}`
+        }
+      />
     </View>
   );
 }
@@ -405,12 +396,33 @@ function RunningFooter({
       <Text style={styles.runningFooterText}>
         Crafted with TripCraft · for {snapshot.agency.name}
       </Text>
-      <Text
-        style={styles.runningFooterText}
-        render={({ pageNumber, totalPages }) =>
-          `Page ${pageNumber} of ${totalPages}`
-        }
-      />
+      <Text style={styles.runningFooterText}>
+        {snapshot.agency.website || ""}
+      </Text>
+    </View>
+  );
+}
+
+// --- section heading (left-aligned, gold rule) ----------------------------
+
+function SectionHeading({
+  eyebrow,
+  title,
+  styles,
+  accent,
+  breakBefore,
+}: {
+  eyebrow: string;
+  title: string;
+  styles: Styles;
+  accent: string;
+  breakBefore?: boolean;
+}) {
+  return (
+    <View style={styles.sectionHeading} break={breakBefore}>
+      <Text style={[styles.sectionEyebrow, { color: accent }]}>{eyebrow}</Text>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={[styles.ruleGold, { backgroundColor: accent }]} />
     </View>
   );
 }
@@ -420,61 +432,44 @@ function RunningFooter({
 function AtAGlance({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
-  const { itinerary, trip, branding, agency } = snapshot;
+  const { itinerary, trip } = snapshot;
   if (!itinerary) return null;
   const startDate = trip.startDate;
 
   return (
     <View style={styles.section}>
-      <SectionHeading
-        eyebrow="Overview"
-        title="Trip at a glance"
-        agencyName={agency.name}
-        logoUrl={agency.logoUrl}
-        repeat={branding.repeatLogo}
-        styles={styles}
-        accent={branding.accent}
-      />
-      <View style={styles.atGlanceTable} wrap>
-        <View style={styles.atGlanceRowHeader} fixed>
-          <Text style={[styles.atGlanceCellDay, styles.atGlanceHeaderText]}>
-            Day
-          </Text>
-          <Text style={[styles.atGlanceCellWide, styles.atGlanceHeaderText]}>
-            Where
-          </Text>
-          <Text style={[styles.atGlanceCellWide, styles.atGlanceHeaderText]}>
-            Stay
-          </Text>
-          <Text
-            style={[styles.atGlanceCellHighlights, styles.atGlanceHeaderText]}
-          >
-            Highlights
-          </Text>
+      <SectionHeading eyebrow="The Overview" title="Trip at a glance" styles={styles} accent={accent} />
+      {itinerary.summary?.trim() ? (
+        <Text style={styles.glanceSummary}>{itinerary.summary.trim()}</Text>
+      ) : null}
+      <View style={styles.gtbl} wrap>
+        <View style={styles.gtblHead} fixed>
+          <Text style={[styles.gtblHeadCell, styles.gCellDay]}>Day</Text>
+          <Text style={[styles.gtblHeadCell, styles.gCellWide]}>Where</Text>
+          <Text style={[styles.gtblHeadCell, styles.gCellWide]}>Stay</Text>
+          <Text style={[styles.gtblHeadCell, styles.gCellHi]}>Highlights</Text>
         </View>
         {itinerary.days.map((day, i) => (
-          <View key={i} style={styles.atGlanceRow} wrap={false}>
-            <View style={styles.atGlanceCellDay}>
-              <Text style={styles.atGlanceDayNum}>
-                {String(i + 1).padStart(2, "0")}
-              </Text>
+          <View key={i} style={styles.gtblRow} wrap={false}>
+            <View style={styles.gCellDay}>
+              <Text style={styles.gDayNum}>{String(i + 1).padStart(2, "0")}</Text>
               {startDate && (
-                <Text style={styles.atGlanceDayDate}>
+                <Text style={styles.gDayDate}>
                   {fmtDayLabel(addDays(startDate, i))}
                 </Text>
               )}
             </View>
-            <Text style={styles.atGlanceCellWide}>
+            <Text style={[styles.gCellWide, styles.gPlace]}>
               {day.city || stripDayPrefix(day.title) || "—"}
             </Text>
-            <Text style={styles.atGlanceCellWide}>
-              {day.hotel || "—"}
-            </Text>
-            <Text style={styles.atGlanceCellHighlights}>
+            <Text style={[styles.gCellWide, styles.gBody]}>{day.hotel || "—"}</Text>
+            <Text style={[styles.gCellHi, styles.gBody]}>
               {day.activities && day.activities.length > 0
                 ? day.activities.slice(0, 3).join(" · ")
                 : "—"}
@@ -491,71 +486,37 @@ function AtAGlance({
 function TravelPlan({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
   const flights = snapshot.segments.filter((s) => s.type === "FLIGHT");
   const trains = snapshot.segments.filter((s) => s.type === "TRAIN");
+  const time = (d: Date) =>
+    d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
 
-  return (
-    <View style={styles.section}>
-      <SectionHeading
-        eyebrow="Getting there"
-        title="Travel plan"
-        agencyName={snapshot.agency.name}
-        logoUrl={snapshot.agency.logoUrl}
-        repeat={snapshot.branding.repeatLogo}
-        styles={styles}
-        accent={snapshot.branding.accent}
-      />
-      {flights.length > 0 && (
-        <SegmentGroup
-          title="Flights"
-          segments={flights}
-          styles={styles}
-          accent={snapshot.branding.accent}
-        />
-      )}
-      {trains.length > 0 && (
-        <SegmentGroup
-          title="Trains"
-          segments={trains}
-          styles={styles}
-          accent={snapshot.branding.accent}
-        />
-      )}
-    </View>
-  );
-}
-
-function SegmentGroup({
-  title,
-  segments,
-  styles,
-  accent,
-}: {
-  title: string;
-  segments: ProposalPdfSnapshot["segments"];
-  styles: Styles;
-  accent: string;
-}) {
-  return (
+  const Group = ({
+    title,
+    segs,
+  }: {
+    title: string;
+    segs: ProposalPdfSnapshot["segments"];
+  }) => (
     <View style={styles.card} wrap={false}>
       <Text style={[styles.cardEyebrow, { color: accent }]}>{title}</Text>
-      {segments.map((s) => {
+      {segs.map((s) => {
         const isFlight = s.type === "FLIGHT";
-        const identifier = isFlight
+        const id = isFlight
           ? [s.airline, s.flightNumber].filter(Boolean).join(" · ")
           : [s.trainName, s.trainNumber].filter(Boolean).join(" · ");
         const dep = new Date(s.departureTime);
         const arr = new Date(s.arrivalTime);
-        const time = (d: Date) =>
-          d.toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          });
         return (
           <View key={s.id} style={styles.segmentRow}>
             <View style={styles.segmentRouteRow}>
@@ -566,19 +527,22 @@ function SegmentGroup({
                 Day {s.dayNumber}
               </Text>
             </View>
-            {identifier ? (
-              <Text style={styles.segmentMeta}>{identifier}</Text>
-            ) : null}
+            {id ? <Text style={styles.segmentMeta}>{id}</Text> : null}
             <Text style={styles.segmentTime}>
-              {dep.toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-              })}{" "}
+              {dep.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}{" "}
               · {time(dep)} → {time(arr)}
             </Text>
           </View>
         );
       })}
+    </View>
+  );
+
+  return (
+    <View style={styles.section}>
+      <SectionHeading eyebrow="Getting there" title="Travel plan" styles={styles} accent={accent} />
+      {flights.length > 0 && <Group title="Flights" segs={flights} />}
+      {trains.length > 0 && <Group title="Trains" segs={trains} />}
     </View>
   );
 }
@@ -588,154 +552,98 @@ function SegmentGroup({
 function DayByDay({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
-  const { itinerary, trip, agency, branding } = snapshot;
+  const { itinerary, trip } = snapshot;
   if (!itinerary) return null;
 
   return (
     <View style={styles.section}>
-      <SectionHeading
-        eyebrow="The journey"
-        title="Day by day"
-        agencyName={agency.name}
-        logoUrl={agency.logoUrl}
-        repeat={branding.repeatLogo}
-        styles={styles}
-        accent={branding.accent}
-      />
+      <SectionHeading eyebrow="The Journey" title="Day by day" styles={styles} accent={accent} />
       {itinerary.days.map((day, i) => {
         const dateLabel = trip.startDate
           ? fmtDayLabel(addDays(trip.startDate, i))
           : null;
+        const meals = hasAnyMealsPdf(day.meals)
+          ? ([
+              day.meals?.breakfast && "Breakfast",
+              day.meals?.lunch && "Lunch",
+              day.meals?.dinner && "Dinner",
+            ].filter(Boolean) as string[])
+          : [];
+        const foodText =
+          !isGenericMealNote(day.foodNote || day.food) &&
+          (day.foodNote || day.food)
+            ? day.foodNote || day.food
+            : null;
         return (
-          <View key={i} style={styles.dayBlock} wrap={false}>
-            <View style={styles.dayHeader}>
-              <View>
-                <Text
-                  style={[styles.dayBadge, { color: branding.accent }]}
-                >
-                  Day {i + 1}
-                  {dateLabel ? ` · ${dateLabel}` : ""}
-                </Text>
-                <Text style={styles.dayTitle}>{stripDayPrefix(day.title)}</Text>
-                {day.city ? (
-                  <Text style={styles.dayCity}>{day.city}</Text>
-                ) : null}
-              </View>
+          <View key={i} style={styles.pdfDay} wrap={false}>
+            {/* rail */}
+            <View style={styles.dayRail}>
+              <Text style={[styles.dayNum, { color: accent }]}>
+                {String(i + 1).padStart(2, "0")}
+              </Text>
+              {dateLabel && <Text style={styles.dayDate}>{dateLabel}</Text>}
             </View>
+            {/* body */}
+            <View style={styles.dayBody}>
+              <View style={styles.dayTitleRow}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={styles.dayTitle}>{stripDayPrefix(day.title)}</Text>
+                  {day.city ? <Text style={styles.dayCity}>{day.city}</Text> : null}
+                </View>
+                {meals.length > 0 && (
+                  <View style={styles.dayMeals}>
+                    {meals.map((m) => (
+                      <Text key={m} style={styles.mchip}>
+                        {m}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </View>
 
-            {day.summary?.trim() ? (
-              <Text style={styles.daySummary}>{day.summary.trim()}</Text>
-            ) : null}
+              {day.summary?.trim() ? (
+                <Text style={styles.dayText}>{day.summary.trim()}</Text>
+              ) : null}
 
-            {day.activities && day.activities.length > 0 ? (
-              <View style={styles.dayList}>
-                <Text style={[styles.dayListEyebrow, { color: branding.accent }]}>
-                  Experiences
-                </Text>
-                {day.activities.map((a, j) => (
-                  <Text key={j} style={styles.dayListItem}>
-                    • {a}
+              {day.activities && day.activities.length > 0 ? (
+                <View style={styles.dayExp}>
+                  {day.activities.map((a, j) => (
+                    <View key={j} style={styles.dayExpItem}>
+                      <View style={[styles.dayBullet, { backgroundColor: accent }]} />
+                      <Text style={styles.dayExpText}>{a}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+
+              {day.hotel && (
+                <View style={styles.dayStay}>
+                  <Text style={[styles.dayStayLabel, { color: accent }]}>
+                    Where you&apos;ll stay
                   </Text>
-                ))}
-              </View>
-            ) : null}
+                  <Text style={styles.dayStayValue}>
+                    {day.hotel}
+                    {day.roomType ? ` · ${day.roomType}` : ""}
+                  </Text>
+                </View>
+              )}
 
-            {day.hotel && (
-              <View style={styles.stayLine}>
-                <Text style={[styles.stayLabel, { color: branding.accent }]}>
-                  Stay
-                </Text>
-                <Text style={styles.stayValue}>
-                  {day.hotel}
-                  {day.roomType ? ` · ${day.roomType}` : ""}
-                </Text>
-              </View>
-            )}
-
-            {/* Meals included — only the chips themselves, never a
-                shorthand restatement. */}
-            {hasAnyMealsPdf(day.meals) && (
-              <View style={styles.mealsLine}>
-                <Text style={[styles.mealsLabel, { color: branding.accent }]}>
-                  Meals included
-                </Text>
-                <Text style={styles.mealsValue}>
-                  {(
-                    [
-                      day.meals?.breakfast && "Breakfast",
-                      day.meals?.lunch && "Lunch",
-                      day.meals?.dinner && "Dinner",
-                    ].filter(Boolean) as string[]
-                  ).join(" · ")}
-                </Text>
-              </View>
-            )}
-
-            {!isGenericMealNote(day.foodNote || day.food) &&
-            (day.foodNote || day.food) ? (
-              <View style={styles.calloutBox}>
-                <Text style={[styles.calloutLabel, { color: branding.accent }]}>
-                  Dining
-                </Text>
-                <Text style={styles.calloutText}>
-                  {day.foodNote || day.food}
-                </Text>
-              </View>
-            ) : null}
+              {foodText ? (
+                <View style={styles.calloutBox}>
+                  <Text style={[styles.calloutLabel, { color: accent }]}>Dining</Text>
+                  <Text style={styles.calloutText}>{foodText}</Text>
+                </View>
+              ) : null}
+            </View>
           </View>
         );
       })}
-    </View>
-  );
-}
-
-// --- inclusions / exclusions ---------------------------------------------
-
-function Inclusions({
-  included,
-  excluded,
-  styles,
-}: {
-  included: string[];
-  excluded: string[];
-  styles: Styles;
-}) {
-  return (
-    <View style={styles.section}>
-      <SectionHeading
-        eyebrow="The fine print"
-        title="What's included"
-        styles={styles}
-        accent={styles._accent}
-      />
-      <View style={styles.inclusionsGrid}>
-        {included.length > 0 && (
-          <View style={styles.inclusionsCol} wrap={false}>
-            <Text style={[styles.inclusionsHeading, { color: "#0E6B41" }]}>
-              Your package includes
-            </Text>
-            {included.map((it, i) => (
-              <Text key={i} style={styles.inclusionsItem}>
-                ✓ {it}
-              </Text>
-            ))}
-          </View>
-        )}
-        {excluded.length > 0 && (
-          <View style={styles.inclusionsCol} wrap={false}>
-            <Text style={styles.inclusionsHeadingMuted}>Not included</Text>
-            {excluded.map((it, i) => (
-              <Text key={i} style={styles.inclusionsItemMuted}>
-                ✗ {it}
-              </Text>
-            ))}
-          </View>
-        )}
-      </View>
     </View>
   );
 }
@@ -745,77 +653,96 @@ function Inclusions({
 function PricingBlock({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
-  const { pricing, branding, meta, agency } = snapshot;
+  const { pricing, meta } = snapshot;
   if (!pricing) return null;
   const validUntil = addDays(meta.preparedAt, meta.validityDays);
 
   return (
     <View style={styles.section} break>
-      <SectionHeading
-        eyebrow="Investment"
-        title="Your package price"
-        agencyName={agency.name}
-        logoUrl={agency.logoUrl}
-        repeat={branding.repeatLogo}
-        styles={styles}
-        accent={branding.accent}
-      />
-      <View style={styles.pricingShell} wrap={false}>
-        {/* Headline */}
-        <View style={styles.pricingHeadline}>
-          {agency.logoUrl ? (
-            <Image src={agency.logoUrl} style={styles.pricingLogo} />
-          ) : null}
-          <Text
-            style={[
-              styles.pricingHeadlineEyebrow,
-              { color: branding.accent },
-            ]}
-          >
-            Total package
-          </Text>
-          <Text style={styles.pricingHeadlineAmount}>
-            {formatINR(pricing.total)}
-          </Text>
-          {pricing.travelers > 1 && (
-            <Text style={styles.pricingHeadlineSub}>
-              {formatINR(pricing.perPerson)} per person ·{" "}
-              {pricing.travelers} travellers
-            </Text>
-          )}
-        </View>
+      <SectionHeading eyebrow="Investment" title="Your package price" styles={styles} accent={accent} />
 
-        {/* Breakdown */}
-        {pricing.categories.length > 0 && (
-          <View style={styles.pricingBreakdown}>
-            <Text
-              style={[styles.pricingBreakdownTitle, { color: branding.accent }]}
-            >
-              How it breaks down
-            </Text>
-            {pricing.categories.map((c) => (
-              <View key={c.category} style={styles.pricingRow}>
-                <Text style={styles.pricingCategory}>{c.label}</Text>
-                <Text style={styles.pricingAmount}>
-                  {formatINR(c.amount)}
-                </Text>
-              </View>
-            ))}
-            <View style={styles.pricingTotalRow}>
-              <Text style={styles.pricingTotalLabel}>Total</Text>
-              <Text style={styles.pricingTotalAmount}>
-                {formatINR(pricing.total)}
-              </Text>
+      <View style={styles.investCard} wrap={false}>
+        <View style={[styles.investGlow, { backgroundColor: alpha(accent, 0.16) }]} />
+        <Text style={[styles.investEyebrow, { color: accent }]}>Total package</Text>
+        <Text style={styles.investTotal}>{formatINR(pricing.total)}</Text>
+        {pricing.travelers > 1 && (
+          <Text style={styles.investPp}>
+            {formatINR(pricing.perPerson)} per person · {pricing.travelers}{" "}
+            travellers
+          </Text>
+        )}
+      </View>
+
+      {pricing.categories.length > 0 && (
+        <View style={styles.brk} wrap={false}>
+          <Text style={[styles.brkTitle, { color: accent }]}>
+            How it breaks down
+          </Text>
+          {pricing.categories.map((c) => (
+            <View key={c.category} style={styles.brkRow}>
+              <Text style={styles.brkCat}>{c.label}</Text>
+              <Text style={styles.brkAmt}>{formatINR(c.amount)}</Text>
             </View>
-            <Text style={styles.pricingValidity}>
-              All amounts are in Indian Rupees and inclusive of applicable
-              service charges. This quotation is valid until{" "}
-              {fmtDate(validUntil)}.
+          ))}
+          <View style={styles.brkTotalRow}>
+            <Text style={styles.brkTotalLabel}>Total</Text>
+            <Text style={[styles.brkTotalAmt, { color: accent }]}>
+              {formatINR(pricing.total)}
             </Text>
+          </View>
+          <Text style={styles.validity}>
+            All amounts are in Indian Rupees and inclusive of applicable service
+            charges. This quotation is valid until {fmtDate(validUntil)}.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// --- inclusions -----------------------------------------------------------
+
+function Inclusions({
+  included,
+  excluded,
+  styles,
+  accent,
+}: {
+  included: string[];
+  excluded: string[];
+  styles: Styles;
+  accent: string;
+}) {
+  return (
+    <View style={styles.section}>
+      <SectionHeading eyebrow="The fine print" title="What's included" styles={styles} accent={accent} />
+      <View style={styles.incGrid}>
+        {included.length > 0 && (
+          <View style={styles.incCol} wrap={false}>
+            <Text style={[styles.incHead, { color: "#3c6b48" }]}>
+              Your package includes
+            </Text>
+            {included.map((it, i) => (
+              <Text key={i} style={styles.incItem}>
+                ✓ {it}
+              </Text>
+            ))}
+          </View>
+        )}
+        {excluded.length > 0 && (
+          <View style={styles.incCol} wrap={false}>
+            <Text style={styles.incHeadMuted}>Not included</Text>
+            {excluded.map((it, i) => (
+              <Text key={i} style={styles.incItemMuted}>
+                ✗ {it}
+              </Text>
+            ))}
           </View>
         )}
       </View>
@@ -828,14 +755,16 @@ function PricingBlock({
 function TermsBlock({
   terms,
   styles,
+  accent,
 }: {
   terms: string;
   styles: Styles;
+  accent: string;
 }) {
   return (
     <View style={styles.section} wrap={false}>
       <View style={styles.termsBox}>
-        <Text style={[styles.termsEyebrow, { color: styles._accent }]}>
+        <Text style={[styles.termsEyebrow, { color: accent }]}>
           Booking terms & conditions
         </Text>
         <Text style={styles.termsBody}>{terms}</Text>
@@ -849,9 +778,11 @@ function TermsBlock({
 function ClosingPage({
   snapshot,
   styles,
+  accent,
 }: {
   snapshot: ProposalPdfSnapshot;
   styles: Styles;
+  accent: string;
 }) {
   const { agency, branding } = snapshot;
   const contacts: { label: string; value: string }[] = [];
@@ -861,32 +792,22 @@ function ClosingPage({
 
   return (
     <Page size="A4" style={styles.closingPage}>
+      <View style={[styles.closingGlow, { backgroundColor: alpha(accent, 0.14) }]} />
       <View style={styles.closingInner}>
-        {agency.logoUrl ? (
-          <Image src={agency.logoUrl} style={styles.closingLogo} />
-        ) : (
-          <View style={styles.closingLogoFallback}>
-            <Text style={styles.closingLogoFallbackText}>
-              {agency.name.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )}
-
-        {branding.signatureNote ? (
-          <Text style={styles.closingSignature}>{branding.signatureNote}</Text>
-        ) : (
-          <Text style={[styles.closingEyebrow, { color: branding.accent }]}>
-            Ready when you are
-          </Text>
-        )}
-
+        <Seal agency={agency} size={60} accent={accent} onDark />
+        <Text style={styles.closingSig}>
+          {branding.signatureNote ??
+            "When you're ready, we'll handle every detail — so all that's left for you is to arrive."}
+        </Text>
+        <Text style={[styles.closingEyebrow, { color: accent }]}>
+          With warm regards
+        </Text>
         <Text style={styles.closingAgency}>{agency.name}</Text>
-
         {contacts.length > 0 && (
           <View style={styles.closingContacts}>
             {contacts.map((c, i) => (
               <View key={i} style={styles.closingContactItem}>
-                <Text style={[styles.closingContactLabel, { color: branding.accent }]}>
+                <Text style={[styles.closingContactLabel, { color: accent }]}>
                   {c.label}
                 </Text>
                 <Text style={styles.closingContactValue}>{c.value}</Text>
@@ -894,70 +815,20 @@ function ClosingPage({
             ))}
           </View>
         )}
-
-        <Text style={styles.closingCraft}>Crafted with TripCraft</Text>
       </View>
+      <Text style={styles.closingCraft}>Crafted with TripCraft</Text>
     </Page>
-  );
-}
-
-// --- section heading (used inside content) --------------------------------
-
-function SectionHeading({
-  eyebrow,
-  title,
-  agencyName,
-  logoUrl,
-  repeat,
-  styles,
-  accent,
-}: {
-  eyebrow: string;
-  title: string;
-  agencyName?: string;
-  logoUrl?: string | null;
-  repeat?: boolean;
-  styles: Styles;
-  accent: string;
-}) {
-  return (
-    <View style={styles.sectionHeading}>
-      {repeat && agencyName ? (
-        logoUrl ? (
-          <Image src={logoUrl} style={styles.sectionLogo} />
-        ) : (
-          <View style={styles.sectionLogoFallback}>
-            <Text style={styles.sectionLogoFallbackText}>
-              {agencyName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-        )
-      ) : null}
-      <Text style={[styles.sectionEyebrow, { color: accent }]}>{eyebrow}</Text>
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
   );
 }
 
 // --- styles ---------------------------------------------------------------
 
-type Theme = "classic" | "editorial" | "minimal";
 type Styles = ReturnType<typeof makeStyles>;
 
-function makeStyles(theme: Theme, accent: string) {
-  const isMinimal = theme === "minimal";
-  const isEditorial = theme === "editorial";
-  // Cover surface — dark navy for classic, ivory for editorial, white for minimal.
-  const coverBg = isMinimal ? WHITE : isEditorial ? IVORY : NAVY;
-  const coverFg = isMinimal || isEditorial ? NAVY : IVORY;
-
-  const base = StyleSheet.create({
-    // Cover page ---------------------------------------------------------
-    coverPage: {
-      backgroundColor: coverBg,
-      color: coverFg,
-      padding: 0,
-    },
+function makeStyles(accent: string) {
+  return StyleSheet.create({
+    // cover ----------------------------------------------------------------
+    coverPage: { backgroundColor: NAVY, color: ON_DARK, padding: 0 },
     coverImage: {
       position: "absolute",
       top: 0,
@@ -965,7 +836,7 @@ function makeStyles(theme: Theme, accent: string) {
       width: "100%",
       height: "100%",
       objectFit: "cover",
-      opacity: isEditorial ? 0.25 : 0.45,
+      opacity: 0.5,
     },
     coverScrim: {
       position: "absolute",
@@ -974,158 +845,110 @@ function makeStyles(theme: Theme, accent: string) {
       width: "100%",
       height: "100%",
       backgroundColor: NAVY,
-      opacity: 0.55,
+      opacity: 0.62,
+    },
+    coverGlow: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      width: 300,
+      height: 300,
+      borderRadius: 150,
+      opacity: 0.7,
     },
     coverInner: {
-      padding: 48,
+      padding: 50,
       height: "100%",
       flexDirection: "column",
       justifyContent: "space-between",
     },
-    coverHeader: {
+    coverTop: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
     },
-    coverHeaderLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 14,
-    },
-    coverLogo: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      objectFit: "cover",
-    },
-    coverLogoFallback: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: NAVY,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    coverLogoFallbackText: {
-      color: IVORY,
-      fontSize: 18,
+    coverBrand: { flexDirection: "row", alignItems: "center", gap: 12 },
+    coverWord: {
+      color: "#fff",
       fontFamily: "Helvetica-Bold",
-    },
-    eyebrow: {
-      fontSize: 8,
-      letterSpacing: 2,
-      textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
-    },
-    coverAgency: {
-      color: NAVY,
       fontSize: 12,
-      fontFamily: "Helvetica-Bold",
-      marginTop: 2,
+      letterSpacing: 3,
     },
-    coverAgencyOnDark: {
-      color: IVORY,
-      fontSize: 12,
-      fontFamily: "Helvetica-Bold",
-      marginTop: 2,
+    coverTag: {
+      fontSize: 7,
+      letterSpacing: 2,
+      textTransform: "uppercase",
+      marginTop: 4,
     },
-    coverVersion: {
-      color: MUTED,
+    coverVLabel: {
       fontSize: 8,
       letterSpacing: 2,
       textTransform: "uppercase",
+      color: "rgba(255,255,255,0.6)",
     },
-    coverVersionOnDark: {
-      color: IVORY,
-      opacity: 0.5,
-      fontSize: 8,
-      letterSpacing: 2,
+    coverVValue: {
+      fontSize: 11,
+      color: "#fff",
+      marginTop: 3,
+    },
+    coverKicker: {
+      fontSize: 10,
+      letterSpacing: 4,
       textTransform: "uppercase",
+      fontFamily: "Helvetica-Bold",
+      marginBottom: 14,
     },
-    coverBody: {
-      marginTop: 60,
-    },
-    coverDestination: {
-      color: NAVY,
-      fontSize: 56,
+    coverTitle: {
+      color: "#fff",
+      fontSize: 74,
       fontFamily: "Times-Roman",
       lineHeight: 0.95,
     },
-    coverDestinationOnDark: {
-      color: IVORY,
-      fontSize: 56,
-      fontFamily: "Times-Roman",
-      lineHeight: 0.95,
-    },
-    coverSummary: {
-      marginTop: 18,
-      color: INK,
-      fontSize: 11,
-      lineHeight: 1.6,
-      maxWidth: 420,
-    },
-    coverSummaryOnDark: {
-      marginTop: 18,
-      color: IVORY,
-      opacity: 0.85,
-      fontSize: 11,
-      lineHeight: 1.6,
+    coverSub: {
+      marginTop: 16,
+      color: "rgba(255,255,255,0.82)",
+      fontFamily: "Times-Italic",
+      fontSize: 16,
+      lineHeight: 1.4,
       maxWidth: 420,
     },
     coverMetaRow: {
       flexDirection: "row",
-      marginTop: 40,
-      gap: 24,
       flexWrap: "wrap",
+      marginTop: 34,
+      paddingTop: 22,
+      borderTopWidth: 0.5,
+      borderTopColor: "rgba(255,255,255,0.2)",
     },
-    metaItem: {
-      minWidth: 100,
-    },
+    metaItem: { width: "50%", marginBottom: 18 },
     metaLabel: {
       fontSize: 7,
-      letterSpacing: 1.5,
+      letterSpacing: 1.8,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
     },
     metaValue: {
-      marginTop: 4,
-      color: NAVY,
+      marginTop: 5,
+      color: "#fff",
       fontFamily: "Times-Roman",
-      fontSize: 12,
-    },
-    metaValueOnDark: {
-      marginTop: 4,
-      color: IVORY,
-      fontFamily: "Times-Roman",
-      fontSize: 12,
-    },
-    coverFooter: {
-      marginTop: 30,
+      fontSize: 15,
     },
     coverFooterText: {
-      color: MUTED,
+      marginTop: 18,
+      color: "rgba(255,255,255,0.5)",
       fontSize: 8,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
-    },
-    coverFooterTextOnDark: {
-      color: IVORY,
-      opacity: 0.6,
-      fontSize: 8,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
+      letterSpacing: 0.5,
     },
 
-    // Content page ------------------------------------------------------
+    // content page ---------------------------------------------------------
     contentPage: {
-      backgroundColor: WHITE,
+      backgroundColor: IVORY,
       color: INK,
-      paddingTop: 56,
-      paddingBottom: 50,
+      paddingTop: 60,
+      paddingBottom: 48,
       paddingHorizontal: 44,
       fontFamily: "Helvetica",
     },
-
     runningHeader: {
       position: "absolute",
       top: 18,
@@ -1133,46 +956,24 @@ function makeStyles(theme: Theme, accent: string) {
       right: 44,
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
+      gap: 8,
       paddingBottom: 8,
       borderBottomWidth: 0.5,
       borderBottomColor: LINE,
     },
-    runningLogo: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      objectFit: "cover",
-    },
-    runningLogoFallback: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      backgroundColor: NAVY,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    runningLogoFallbackText: {
-      color: IVORY,
-      fontSize: 10,
-      fontFamily: "Helvetica-Bold",
-    },
-    runningHeaderTextWrap: {
-      flexDirection: "column",
-    },
     runningHeaderAgency: {
-      color: NAVY,
+      color: INK,
       fontFamily: "Helvetica-Bold",
       fontSize: 9,
     },
     runningHeaderTrip: {
       color: MUTED,
-      fontSize: 7,
-      letterSpacing: 1,
-      textTransform: "uppercase",
-      marginTop: 1,
+      fontSize: 8,
     },
-
+    runningPage: {
+      fontSize: 8,
+      color: MUTED,
+    },
     runningFooter: {
       position: "absolute",
       bottom: 18,
@@ -1185,124 +986,86 @@ function makeStyles(theme: Theme, accent: string) {
       borderTopColor: LINE,
     },
     runningFooterText: {
-      color: MUTED,
+      color: FAINT,
       fontSize: 7,
-      letterSpacing: 1,
+      letterSpacing: 1.4,
       textTransform: "uppercase",
     },
 
-    // Section heading inside content -----------------------------------
-    section: {
-      marginTop: 18,
-      marginBottom: 8,
-    },
-    sectionHeading: {
-      alignItems: "center",
-      marginBottom: 14,
-    },
-    sectionLogo: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      objectFit: "cover",
-      marginBottom: 8,
-    },
-    sectionLogoFallback: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      backgroundColor: NAVY,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 8,
-    },
-    sectionLogoFallbackText: {
-      color: IVORY,
-      fontSize: 10,
-      fontFamily: "Helvetica-Bold",
-    },
+    // section heading ------------------------------------------------------
+    section: { marginTop: 16, marginBottom: 6 },
+    sectionHeading: { marginBottom: 16 },
     sectionEyebrow: {
       fontSize: 8,
-      letterSpacing: 2,
+      letterSpacing: 2.4,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
-      textAlign: "center",
+      marginBottom: 7,
     },
     sectionTitle: {
-      marginTop: 4,
-      fontSize: 22,
+      fontSize: 28,
       color: NAVY,
       fontFamily: "Times-Roman",
-      textAlign: "center",
     },
+    ruleGold: { marginTop: 12, width: 64, height: 2 },
 
-    // At-a-glance table ------------------------------------------------
-    atGlanceTable: {
-      borderWidth: 0.5,
-      borderColor: LINE,
-      borderRadius: 4,
+    // at a glance ----------------------------------------------------------
+    glanceSummary: {
+      fontSize: 11,
+      lineHeight: 1.7,
+      color: INK2,
+      marginBottom: 18,
+      maxWidth: 480,
     },
-    atGlanceRowHeader: {
+    gtbl: { borderWidth: 0.5, borderColor: LINE, borderRadius: 4 },
+    gtblHead: {
       flexDirection: "row",
-      backgroundColor: IVORY,
-      borderBottomWidth: 0.5,
-      borderBottomColor: LINE,
+      backgroundColor: IVORY2,
+      borderBottomWidth: 1,
+      borderBottomColor: NAVY,
       paddingVertical: 6,
       paddingHorizontal: 8,
     },
-    atGlanceRow: {
-      flexDirection: "row",
-      borderBottomWidth: 0.5,
-      borderBottomColor: LINE,
-      paddingVertical: 7,
-      paddingHorizontal: 8,
-    },
-    atGlanceHeaderText: {
+    gtblHeadCell: {
       fontSize: 7,
-      letterSpacing: 1.2,
+      letterSpacing: 1.4,
       textTransform: "uppercase",
       color: MUTED,
       fontFamily: "Helvetica-Bold",
     },
-    atGlanceCellDay: {
-      width: 60,
-      paddingRight: 6,
+    gtblRow: {
+      flexDirection: "row",
+      borderBottomWidth: 0.5,
+      borderBottomColor: LINE,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
     },
-    atGlanceCellWide: {
-      flex: 1.2,
-      paddingRight: 8,
-      fontSize: 9,
-      color: NAVY,
-    },
-    atGlanceCellHighlights: {
-      flex: 1.8,
-      fontSize: 9,
-      color: INK,
-    },
-    atGlanceDayNum: {
-      fontSize: 10,
-      color: NAVY,
-      fontFamily: "Helvetica-Bold",
-    },
-    atGlanceDayDate: {
-      marginTop: 1,
+    gCellDay: { width: 70, paddingRight: 6 },
+    gCellWide: { flex: 1.2, paddingRight: 8 },
+    gCellHi: { flex: 1.8 },
+    gDayNum: { fontSize: 11, color: accent, fontFamily: "Helvetica-Bold" },
+    gDayDate: {
+      marginTop: 2,
       fontSize: 7,
       color: MUTED,
       letterSpacing: 1,
       textTransform: "uppercase",
     },
+    gPlace: { fontFamily: "Times-Roman", fontSize: 12, color: NAVY },
+    gBody: { fontSize: 9, color: INK2, lineHeight: 1.4 },
 
-    // Card --------------------------------------------------------------
+    // card / segments ------------------------------------------------------
     card: {
       borderWidth: 0.5,
       borderColor: LINE,
       borderRadius: 4,
       padding: 12,
       marginBottom: 10,
+      backgroundColor: PAPER,
     },
     cardEyebrow: {
       fontSize: 8,
-      letterSpacing: 1.5,
+      letterSpacing: 1.6,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
       marginBottom: 8,
@@ -1312,124 +1075,80 @@ function makeStyles(theme: Theme, accent: string) {
       borderBottomWidth: 0.5,
       borderBottomColor: LINE,
     },
-    segmentRouteRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-    },
-    segmentRoute: {
-      fontFamily: "Helvetica-Bold",
-      color: NAVY,
-      fontSize: 10,
-    },
+    segmentRouteRow: { flexDirection: "row", justifyContent: "space-between" },
+    segmentRoute: { fontFamily: "Helvetica-Bold", color: NAVY, fontSize: 10 },
     segmentDay: {
       fontSize: 7,
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
-    segmentMeta: {
-      marginTop: 2,
-      fontSize: 9,
-      color: INK,
-    },
-    segmentTime: {
-      marginTop: 1,
-      fontSize: 9,
-      color: MUTED,
-    },
+    segmentMeta: { marginTop: 2, fontSize: 9, color: INK },
+    segmentTime: { marginTop: 1, fontSize: 9, color: MUTED },
 
-    // Day block ---------------------------------------------------------
-    dayBlock: {
-      marginBottom: 14,
-      paddingBottom: 12,
-      borderBottomWidth: 0.5,
-      borderBottomColor: LINE,
-    },
-    dayHeader: {
+    // day block ------------------------------------------------------------
+    pdfDay: {
       flexDirection: "row",
-      justifyContent: "space-between",
-      marginBottom: 6,
+      gap: 22,
+      paddingVertical: 18,
+      borderTopWidth: 0.5,
+      borderTopColor: LINE,
     },
-    dayBadge: {
+    dayRail: { width: 70 },
+    dayNum: { fontFamily: "Times-Roman", fontSize: 40, lineHeight: 0.8 },
+    dayDate: {
       fontSize: 8,
-      letterSpacing: 2,
+      letterSpacing: 0.6,
       textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
+      color: MUTED,
+      marginTop: 8,
     },
-    dayTitle: {
-      marginTop: 4,
-      fontSize: 14,
-      color: NAVY,
-      fontFamily: "Times-Roman",
-    },
+    dayBody: { flex: 1 },
+    dayTitleRow: { flexDirection: "row", justifyContent: "space-between" },
+    dayTitle: { fontFamily: "Times-Roman", fontSize: 21, color: NAVY, lineHeight: 1.1 },
     dayCity: {
-      marginTop: 2,
       fontSize: 8,
       color: MUTED,
       letterSpacing: 1,
       textTransform: "uppercase",
-    },
-    daySummary: {
       marginTop: 4,
-      fontSize: 10,
-      lineHeight: 1.5,
-      color: INK,
     },
-    dayList: {
-      marginTop: 8,
-    },
-    dayListEyebrow: {
+    dayMeals: { flexDirection: "row", gap: 4, flexWrap: "wrap" },
+    mchip: {
+      backgroundColor: "#E7F0E8",
+      color: "#3c6b48",
       fontSize: 7,
-      letterSpacing: 1.5,
+      fontFamily: "Helvetica-Bold",
+      paddingVertical: 2,
+      paddingHorizontal: 6,
+      borderRadius: 3,
+      textTransform: "uppercase",
+    },
+    dayText: { fontSize: 11, lineHeight: 1.65, color: INK2, marginTop: 10 },
+    dayExp: { marginTop: 12 },
+    dayExpItem: { flexDirection: "row", gap: 8, marginBottom: 4 },
+    dayBullet: { width: 5, height: 5, borderRadius: 2.5, marginTop: 4 },
+    dayExpText: { fontSize: 10, color: INK, flex: 1, lineHeight: 1.4 },
+    dayStay: {
+      marginTop: 12,
+      paddingTop: 10,
+      paddingHorizontal: 12,
+      paddingBottom: 10,
+      backgroundColor: PAPER,
+      borderWidth: 0.5,
+      borderColor: LINE,
+      borderRadius: 5,
+    },
+    dayStayLabel: {
+      fontSize: 7,
+      letterSpacing: 1.4,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
-      marginBottom: 4,
     },
-    dayListItem: {
-      fontSize: 9,
-      color: INK,
-      marginBottom: 2,
-    },
-    stayLine: {
-      marginTop: 8,
-      flexDirection: "row",
-      gap: 8,
-      paddingTop: 6,
-      borderTopWidth: 0.5,
-      borderTopColor: LINE,
-    },
-    stayLabel: {
-      fontSize: 7,
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
-      width: 28,
-    },
-    stayValue: {
-      fontSize: 9,
-      color: NAVY,
-      flex: 1,
-    },
-    mealsLine: {
-      marginTop: 6,
-      flexDirection: "row",
-      gap: 8,
-    },
-    mealsLabel: {
-      fontSize: 7,
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
-      width: 70,
-    },
-    mealsValue: {
-      fontSize: 9,
-      color: INK,
-      flex: 1,
-    },
+    dayStayValue: { marginTop: 3, fontFamily: "Times-Roman", fontSize: 13, color: NAVY },
     calloutBox: {
-      marginTop: 8,
-      padding: 8,
-      backgroundColor: IVORY,
+      marginTop: 10,
+      padding: 9,
+      backgroundColor: IVORY2,
       borderRadius: 4,
     },
     calloutLabel: {
@@ -1439,244 +1158,185 @@ function makeStyles(theme: Theme, accent: string) {
       fontFamily: "Helvetica-Bold",
       marginBottom: 3,
     },
-    calloutText: {
-      fontSize: 9,
-      color: INK,
-      lineHeight: 1.5,
-    },
+    calloutText: { fontSize: 9, color: INK2, lineHeight: 1.5 },
 
-    // Inclusions --------------------------------------------------------
-    inclusionsGrid: {
-      flexDirection: "row",
-      gap: 10,
-    },
-    inclusionsCol: {
-      flex: 1,
-      borderWidth: 0.5,
-      borderColor: LINE,
-      borderRadius: 4,
-      padding: 10,
-    },
-    inclusionsHeading: {
-      fontSize: 8,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
-      marginBottom: 6,
-    },
-    inclusionsHeadingMuted: {
-      fontSize: 8,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
-      color: MUTED,
-      marginBottom: 6,
-    },
-    inclusionsItem: {
-      fontSize: 9,
-      color: INK,
-      marginBottom: 3,
-    },
-    inclusionsItemMuted: {
-      fontSize: 9,
-      color: MUTED,
-      marginBottom: 3,
-    },
-
-    // Pricing -----------------------------------------------------------
-    pricingShell: {
-      borderWidth: 0.5,
-      borderColor: LINE,
-      borderRadius: 4,
+    // investment -----------------------------------------------------------
+    investCard: {
+      backgroundColor: NAVY,
+      borderRadius: 8,
+      paddingVertical: 30,
+      paddingHorizontal: 32,
+      marginBottom: 20,
+      position: "relative",
       overflow: "hidden",
     },
-    pricingHeadline: {
-      backgroundColor: NAVY,
-      color: IVORY,
-      paddingVertical: 24,
-      paddingHorizontal: 24,
-      alignItems: "center",
+    investGlow: {
+      position: "absolute",
+      top: -40,
+      right: -40,
+      width: 220,
+      height: 220,
+      borderRadius: 110,
     },
-    pricingLogo: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      objectFit: "cover",
-      marginBottom: 8,
-    },
-    pricingHeadlineEyebrow: {
-      fontSize: 8,
-      letterSpacing: 2,
-      textTransform: "uppercase",
-      fontFamily: "Helvetica-Bold",
-    },
-    pricingHeadlineAmount: {
-      marginTop: 6,
-      color: IVORY,
-      fontSize: 36,
-      fontFamily: "Times-Roman",
-    },
-    pricingHeadlineSub: {
-      marginTop: 6,
-      color: IVORY,
-      opacity: 0.75,
+    investEyebrow: {
       fontSize: 9,
-    },
-    pricingBreakdown: {
-      padding: 18,
-    },
-    pricingBreakdownTitle: {
-      fontSize: 8,
-      letterSpacing: 1.5,
+      letterSpacing: 2.4,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
-      marginBottom: 8,
     },
-    pricingRow: {
+    investTotal: {
+      fontFamily: "Times-Roman",
+      fontSize: 52,
+      color: "#fff",
+      marginTop: 12,
+      lineHeight: 0.95,
+    },
+    investPp: {
+      fontSize: 11,
+      color: "rgba(255,255,255,0.66)",
+      marginTop: 12,
+    },
+    brk: {},
+    brkTitle: {
+      fontSize: 8,
+      letterSpacing: 1.6,
+      textTransform: "uppercase",
+      fontFamily: "Helvetica-Bold",
+      marginBottom: 6,
+    },
+    brkRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingVertical: 5,
+      paddingVertical: 9,
       borderBottomWidth: 0.5,
       borderBottomColor: LINE,
     },
-    pricingCategory: {
-      fontSize: 10,
-      color: INK,
-    },
-    pricingAmount: {
-      fontSize: 10,
-      color: NAVY,
-      fontFamily: "Helvetica-Bold",
-    },
-    pricingTotalRow: {
+    brkCat: { fontSize: 11, color: INK2 },
+    brkAmt: { fontSize: 11, color: INK, fontFamily: "Helvetica-Bold" },
+    brkTotalRow: {
       flexDirection: "row",
       justifyContent: "space-between",
-      paddingTop: 10,
+      paddingTop: 12,
     },
-    pricingTotalLabel: {
-      fontSize: 9,
-      letterSpacing: 1.5,
-      textTransform: "uppercase",
-      color: NAVY,
-      fontFamily: "Helvetica-Bold",
-    },
-    pricingTotalAmount: {
-      fontSize: 16,
-      color: NAVY,
+    brkTotalLabel: {
       fontFamily: "Times-Roman",
+      fontSize: 15,
+      color: NAVY,
     },
-    pricingValidity: {
-      marginTop: 10,
-      fontSize: 8,
-      color: MUTED,
-      lineHeight: 1.5,
-    },
+    brkTotalAmt: { fontFamily: "Times-Roman", fontSize: 19 },
+    validity: { marginTop: 14, fontSize: 9, color: MUTED, lineHeight: 1.6 },
 
-    // Terms -------------------------------------------------------------
+    // inclusions -----------------------------------------------------------
+    incGrid: { flexDirection: "row", gap: 18 },
+    incCol: { flex: 1 },
+    incHead: {
+      fontSize: 9,
+      letterSpacing: 1.8,
+      textTransform: "uppercase",
+      fontFamily: "Helvetica-Bold",
+      paddingBottom: 10,
+      borderBottomWidth: 0.5,
+      borderBottomColor: LINE,
+      marginBottom: 12,
+    },
+    incHeadMuted: {
+      fontSize: 9,
+      letterSpacing: 1.8,
+      textTransform: "uppercase",
+      fontFamily: "Helvetica-Bold",
+      color: MUTED,
+      paddingBottom: 10,
+      borderBottomWidth: 0.5,
+      borderBottomColor: LINE,
+      marginBottom: 12,
+    },
+    incItem: { fontSize: 10, color: INK2, marginBottom: 6, lineHeight: 1.4 },
+    incItemMuted: { fontSize: 10, color: MUTED, marginBottom: 6, lineHeight: 1.4 },
+
+    // terms ----------------------------------------------------------------
     termsBox: {
       borderWidth: 0.5,
       borderColor: LINE,
-      backgroundColor: IVORY,
-      padding: 12,
-      borderRadius: 4,
+      backgroundColor: IVORY2,
+      padding: 16,
+      borderRadius: 6,
     },
     termsEyebrow: {
       fontSize: 8,
-      letterSpacing: 1.5,
+      letterSpacing: 1.6,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
-      marginBottom: 6,
+      marginBottom: 8,
     },
-    termsBody: {
-      fontSize: 9,
-      color: INK,
-      lineHeight: 1.5,
-    },
+    termsBody: { fontSize: 9.5, color: INK2, lineHeight: 1.7 },
 
-    // Closing page ------------------------------------------------------
+    // closing --------------------------------------------------------------
     closingPage: {
-      backgroundColor: WHITE,
+      backgroundColor: NAVY,
       paddingVertical: 80,
       paddingHorizontal: 56,
+      position: "relative",
+    },
+    closingGlow: {
+      position: "absolute",
+      top: 60,
+      left: "50%",
+      marginLeft: -150,
+      width: 300,
+      height: 300,
+      borderRadius: 150,
     },
     closingInner: {
       alignItems: "center",
       justifyContent: "center",
-      marginTop: 80,
+      marginTop: 120,
     },
-    closingLogo: {
-      width: 110,
-      height: 110,
-      borderRadius: 55,
-      objectFit: "cover",
-      marginBottom: 24,
-    },
-    closingLogoFallback: {
-      width: 110,
-      height: 110,
-      borderRadius: 55,
-      backgroundColor: NAVY,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 24,
-    },
-    closingLogoFallbackText: {
-      color: IVORY,
-      fontSize: 44,
-      fontFamily: "Helvetica-Bold",
+    closingSig: {
+      fontFamily: "Times-Italic",
+      fontSize: 22,
+      color: "#fff",
+      lineHeight: 1.5,
+      textAlign: "center",
+      maxWidth: 380,
+      marginTop: 26,
     },
     closingEyebrow: {
       fontSize: 9,
-      letterSpacing: 2,
+      letterSpacing: 2.4,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
-      marginBottom: 10,
-    },
-    closingSignature: {
-      fontSize: 11,
-      color: INK,
-      lineHeight: 1.6,
-      fontStyle: "italic",
-      textAlign: "center",
-      maxWidth: 360,
-      marginBottom: 16,
+      marginTop: 26,
     },
     closingAgency: {
-      fontSize: 28,
-      color: NAVY,
       fontFamily: "Times-Roman",
+      fontSize: 28,
+      color: "#fff",
+      marginTop: 8,
     },
     closingContacts: {
-      marginTop: 20,
       flexDirection: "row",
-      gap: 36,
-      flexWrap: "wrap",
+      gap: 40,
+      marginTop: 26,
       justifyContent: "center",
     },
-    closingContactItem: {
-      alignItems: "center",
-    },
+    closingContactItem: { alignItems: "center" },
     closingContactLabel: {
-      fontSize: 7,
-      letterSpacing: 1.5,
+      fontSize: 8,
+      letterSpacing: 1.8,
       textTransform: "uppercase",
       fontFamily: "Helvetica-Bold",
     },
-    closingContactValue: {
-      marginTop: 2,
-      fontSize: 10,
-      color: INK,
-    },
+    closingContactValue: { marginTop: 5, fontSize: 11, color: "#fff" },
     closingCraft: {
-      marginTop: 40,
-      fontSize: 7,
-      letterSpacing: 2,
+      position: "absolute",
+      bottom: 44,
+      left: 0,
+      right: 0,
+      textAlign: "center",
+      fontSize: 8,
+      letterSpacing: 2.4,
       textTransform: "uppercase",
-      color: MUTED,
+      color: "rgba(255,255,255,0.38)",
     },
   });
-
-  // Attach the resolved accent so deeper components don't have to thread
-  // it through props when they only need a single colour.
-  return { ...base, _accent: accent } as typeof base & { _accent: string };
 }

@@ -61,10 +61,10 @@ export function InviteRow({
   }
 
   return (
-    <li className="rounded-2xl border border-line bg-white px-4 py-3 flex items-center gap-3">
+    <li className="rounded-lg border border-line bg-paper px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-navy text-sm truncate">{invite.email}</p>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="font-medium text-ink text-sm truncate">{invite.email}</p>
+        <p className="text-xs text-muted truncate">
           Invited by {invite.invitedByName ?? "—"} ·{" "}
           {formatDistanceToNow(invite.expiresAt, { addSuffix: true })} to accept
         </p>

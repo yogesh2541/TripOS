@@ -46,8 +46,8 @@ export function LeadCard({ contact }: { contact: LeadCardData }) {
       className={cn(
         // select-none stops a press-drag from selecting the card text
         // instead of starting the drag.
-        "rounded-2xl border border-line bg-white p-4 shadow-soft cursor-grab active:cursor-grabbing transition-all select-none",
-        isDragging && "opacity-50 ring-2 ring-sand"
+        "rounded-[10px] border border-line bg-paper p-4 shadow-soft cursor-grab active:cursor-grabbing transition-all select-none hover:-translate-y-0.5 hover:border-[var(--gold-line)] hover:shadow-lift",
+        isDragging && "opacity-50 ring-2 ring-gold"
       )}
     >
       {/* The whole card is draggable. The Link must NOT stop pointer-down
@@ -60,7 +60,7 @@ export function LeadCard({ contact }: { contact: LeadCardData }) {
         className="block"
       >
         <div className="flex items-start justify-between gap-2">
-          <p className="font-display text-lg text-navy leading-tight">
+          <p className="font-display text-lg text-ink leading-tight">
             {contact.name}
           </p>
           {contact.wa ? (
@@ -71,31 +71,31 @@ export function LeadCard({ contact }: { contact: LeadCardData }) {
             />
           ) : null}
         </div>
-        <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-muted">
           {LEAD_SOURCE_LABEL[contact.source]}
         </p>
 
         {contact.destination && (
-          <div className="mt-3 flex items-center gap-1.5 text-sm text-ink/80">
-            <MapPin className="h-3.5 w-3.5 text-sand-700" />
+          <div className="mt-3 flex items-center gap-1.5 text-sm text-ink-2">
+            <MapPin className="h-3.5 w-3.5 text-gold-deep" />
             {contact.destination}
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <div className="mt-3 flex items-center justify-between text-xs text-muted">
           <span className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
-            {contact.adults}
+            <span className="font-mono tabular-nums">{contact.adults}</span>
           </span>
           {contact.budget && (
-            <span className="font-medium text-navy">
+            <span className="font-mono font-semibold text-gold-deep">
               {formatINR(contact.budget)}
             </span>
           )}
         </div>
 
         {contact.travelStartDate && (
-          <div className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          <div className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-faint">
             From {formatDate(contact.travelStartDate)}
           </div>
         )}
@@ -103,10 +103,8 @@ export function LeadCard({ contact }: { contact: LeadCardData }) {
         {contact.nextFollowUpAt && (
           <div
             className={cn(
-              "mt-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] uppercase tracking-[0.18em]",
-              overdue
-                ? "bg-red-50 text-red-700"
-                : "bg-sand-50 text-sand-800"
+              "mt-3 inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[10px] uppercase tracking-[0.16em]",
+              overdue ? "bg-bad-soft text-[#9a4234]" : "bg-gold-soft text-gold-deep"
             )}
           >
             <CalendarClock className="h-3 w-3" />

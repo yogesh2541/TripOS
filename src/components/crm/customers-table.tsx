@@ -36,9 +36,9 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
       sortValue: (r) => r.name.toLowerCase(),
       render: (r) => (
         <div className="min-w-0">
-          <p className="font-medium text-navy truncate">{r.name}</p>
+          <p className="font-medium text-ink truncate">{r.name}</p>
           {r.convertedAt && (
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-[11px] text-muted truncate font-mono tabular-nums">
               Since {formatDate(r.convertedAt)}
             </p>
           )}
@@ -52,7 +52,7 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
       className: "hidden sm:block",
       sortValue: (r) => r.tripCount,
       render: (r) => (
-        <span className="tabular-nums text-ink/80">{r.tripCount}</span>
+        <span className="font-mono tabular-nums text-ink-2">{r.tripCount}</span>
       ),
     },
     {
@@ -61,7 +61,7 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
       align: "right",
       sortValue: (r) => r.booked,
       render: (r) => (
-        <span className="tabular-nums text-navy">{formatINR(r.booked)}</span>
+        <span className="font-mono tabular-nums text-ink">{formatINR(r.booked)}</span>
       ),
     },
     {
@@ -71,7 +71,7 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
       className: "hidden sm:block",
       sortValue: (r) => r.paid,
       render: (r) => (
-        <span className="tabular-nums text-ink/80">{formatINR(r.paid)}</span>
+        <span className="font-mono tabular-nums text-ink-2">{formatINR(r.paid)}</span>
       ),
     },
     {
@@ -85,7 +85,7 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
         return (
           <span
             className={
-              "tabular-nums " + (due > 0 ? "text-red-700" : "text-emerald-700")
+              "font-mono tabular-nums " + (due > 0 ? "text-bad" : "text-ok")
             }
           >
             {due > 0 ? formatINR(due) : "Settled"}
@@ -105,7 +105,7 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
             lastDirection={r.wa.lastDirection}
           />
         ) : (
-          <span className="text-muted-foreground text-xs">—</span>
+          <span className="text-muted text-xs">—</span>
         ),
     },
   ];
@@ -132,7 +132,7 @@ export function CustomersTable({ customers }: { customers: CustomerRow[] }) {
         gridClassName="grid-cols-[1.8fr_0.7fr_1fr_1fr_1.1fr_auto]"
         initialSort={{ key: "booked", dir: "desc" }}
         empty={
-          <div className="rounded-2xl border border-dashed border-line bg-white/60 p-10 text-center text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-line bg-paper-2 p-10 text-center text-sm text-muted">
             No customers match this search.
           </div>
         }

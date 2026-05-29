@@ -180,13 +180,13 @@ export function AssignmentFormDialog({
           <div className="sm:col-span-2 space-y-1.5">
             <Label>Vendor</Label>
             {selectedVendor ? (
-              <div className="flex items-center justify-between gap-2 rounded-xl border border-sand-200 bg-sand-50/50 px-3 py-2.5">
+              <div className="flex items-center justify-between gap-2 rounded-[10px] border border-[var(--gold-line)] bg-gold-soft/40 px-3 py-2.5">
                 <div className="flex items-center gap-2 min-w-0">
                   {selectedVendor.isPreferred ? (
-                    <Star className="h-3.5 w-3.5 fill-sand text-sand shrink-0" />
+                    <Star className="h-3.5 w-3.5 fill-gold-deep text-gold-deep shrink-0" />
                   ) : null}
                   <div className="min-w-0">
-                    <p className="font-medium text-navy truncate">
+                    <p className="font-medium text-ink truncate">
                       {selectedVendor.name}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -204,7 +204,7 @@ export function AssignmentFormDialog({
                 </Button>
               </div>
             ) : (
-              <div className="space-y-2 rounded-xl border border-line bg-white p-2">
+              <div className="space-y-2 rounded-[10px] border border-line bg-paper p-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -227,15 +227,15 @@ export function AssignmentFormDialog({
                           <button
                             type="button"
                             onClick={() => update("vendorId", v.id)}
-                            className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-ivory transition-colors"
+                            className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-paper-2 transition-colors"
                           >
                             {v.isPreferred ? (
-                              <Star className="h-3.5 w-3.5 fill-sand text-sand shrink-0" />
+                              <Star className="h-3.5 w-3.5 fill-gold-deep text-gold-deep shrink-0" />
                             ) : (
                               <span className="h-3.5 w-3.5 shrink-0" />
                             )}
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-navy truncate">
+                              <p className="text-sm font-medium text-ink truncate">
                                 {v.name}
                               </p>
                               <p className="text-[11px] text-muted-foreground truncate">
@@ -318,8 +318,8 @@ export function AssignmentFormDialog({
           <div className="space-y-1.5">
             <Label htmlFor="a-qty">{isHotelLike ? "Nights" : "Quantity"}</Label>
             {derivedNights !== null ? (
-              <div className="flex h-11 items-center gap-2 rounded-2xl border border-line bg-ivory px-4 text-sm">
-                <span className="font-medium text-navy tabular-nums">
+              <div className="flex h-11 items-center gap-2 rounded-[10px] border border-line bg-paper-2 px-4 text-sm">
+                <span className="font-medium text-ink font-mono tabular-nums">
                   {derivedNights}
                 </span>
                 <span className="text-xs text-muted-foreground">
@@ -385,12 +385,12 @@ export function AssignmentFormDialog({
             <Label>Margin</Label>
             <div
               className={cn(
-                "flex h-11 items-center gap-2 rounded-2xl border px-4 text-sm",
+                "flex h-11 items-center gap-2 rounded-[10px] border px-4 text-sm",
                 margin === null
-                  ? "border-line bg-ivory text-muted-foreground"
+                  ? "border-line bg-paper-2 text-muted"
                   : margin.amount >= 0
-                    ? "border-emerald-200 bg-emerald-50/60 text-emerald-800"
-                    : "border-red-200 bg-red-50/60 text-red-700"
+                    ? "border-ok/30 bg-ok-soft/60 text-ok"
+                    : "border-bad/30 bg-bad-soft/60 text-bad"
               )}
             >
               {margin === null ? (
@@ -432,15 +432,15 @@ export function AssignmentFormDialog({
 
           <label
             className={cn(
-              "sm:col-span-2 flex items-center gap-2 text-sm rounded-xl border border-line p-3",
-              form.customerVisible ? "bg-emerald-50/40" : "bg-ivory"
+              "sm:col-span-2 flex items-center gap-2 text-sm rounded-[10px] border border-line p-3",
+              form.customerVisible ? "bg-ok-soft/40" : "bg-paper-2"
             )}
           >
             <input
               type="checkbox"
               checked={form.customerVisible ?? true}
               onChange={(e) => update("customerVisible", e.target.checked)}
-              className="h-4 w-4 accent-sand-700"
+              className="h-4 w-4 accent-[var(--gold-line)]"
             />
             <span>
               Show this on the traveler-facing proposal & voucher

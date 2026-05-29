@@ -45,11 +45,11 @@ export default async function CommsAutomationsPage() {
         <div>
           <Link
             href="/communications"
-            className="text-xs uppercase tracking-[0.18em] text-muted-foreground hover:text-navy inline-flex items-center gap-1"
+            className="text-xs uppercase tracking-[0.18em] text-muted hover:text-ink inline-flex items-center gap-1"
           >
             <ArrowLeft className="h-3 w-3" /> Communications
           </Link>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl text-navy tracking-tight leading-tight">
+          <h1 className="mt-2 tc-page-title">
             Automations
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -67,7 +67,7 @@ export default async function CommsAutomationsPage() {
           action={
             <Link
               href="/communications/templates"
-              className="underline underline-offset-4 text-navy"
+              className="underline underline-offset-4 text-ink"
             >
               Open templates
             </Link>
@@ -99,7 +99,7 @@ export default async function CommsAutomationsPage() {
         </ul>
       )}
 
-      <p className="mt-8 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      <p className="mt-8 text-[10px] uppercase tracking-[0.18em] text-muted">
         Runner cadence · invoke <code className="font-mono">GET /api/cron/whatsapp</code>{" "}
         every 5–15 minutes
       </p>

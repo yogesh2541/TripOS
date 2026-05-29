@@ -35,34 +35,34 @@ export function SegmentInlineCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-sand-200 bg-sand-50/50 px-5 py-4",
+        "rounded-lg border border-[var(--gold-line)] bg-gold-soft/40 px-5 py-4",
         className
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 min-w-0">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-sand-200 text-sand-700 flex-shrink-0">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper border border-[var(--gold-line)] text-gold-deep flex-shrink-0">
             <Icon className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="font-medium text-navy">
-              {segment.from} <span className="text-sand-700">→</span>{" "}
+            <p className="font-medium text-ink">
+              {segment.from} <span className="text-gold-deep">→</span>{" "}
               {segment.to}
             </p>
             {identifier && (
-              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted mt-0.5">
                 {identifier}
               </p>
             )}
           </div>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-sm tabular-nums text-navy">
+          <p className="text-sm font-mono tabular-nums text-ink">
             {formatTime(segment.departureTime)}
-            <span className="text-muted-foreground"> → </span>
+            <span className="text-muted"> → </span>
             {formatTime(segment.arrivalTime)}
           </p>
-          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+          <p className="text-[10px] uppercase tracking-[0.18em] text-faint font-mono tabular-nums mt-0.5">
             {formatDateShort(segment.departureTime)}
           </p>
         </div>

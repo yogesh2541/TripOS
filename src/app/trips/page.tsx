@@ -85,16 +85,15 @@ export default async function TripsIndexPage({
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-8">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Studio
+          <p className="tc-eyebrow gold">
+            <Compass className="h-[13px] w-[13px]" />
+            Pipeline
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Trips
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Every itinerary you've drafted, in one place.
+          <h1 className="tc-page-title mt-2.5">Trips</h1>
+          <p className="tc-page-sub">
+            Every itinerary in flight — from first draft to confirmed departure.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -125,16 +124,12 @@ export default async function TripsIndexPage({
               <Link
                 key={f.value ?? "all"}
                 href={href}
-                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                  active
-                    ? "border-navy bg-navy text-ivory"
-                    : "border-line bg-white text-muted-foreground hover:border-navy/40 hover:text-navy"
-                }`}
+                className={`tc-chip${active ? " on" : ""}`}
               >
                 {f.label}
                 <span
-                  className={`tabular-nums ${
-                    active ? "text-ivory/70" : "text-muted-foreground/60"
+                  className={`font-mono tabular-nums text-[11px] ${
+                    active ? "text-gold" : "text-faint"
                   }`}
                 >
                   {f.count}

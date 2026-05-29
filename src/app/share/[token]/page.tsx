@@ -158,26 +158,28 @@ export default async function PublicQuotePage({
         </div>
       </header>
 
-      <main className="container py-10 md:py-16 max-w-5xl space-y-10">
-        <PreviewRenderer
-          trip={{
-            destination: quote.trip.destination,
-            days: quote.trip.days,
-            travelers: quote.trip.travelers,
-            startDate: quote.trip.startDate,
-            travelType: quote.trip.travelType,
-          }}
-          itinerary={itinerary}
-          pricing={pricing}
-          segments={quote.trip.travelSegments}
-          agency={proposalAgency}
-          branding={proposalBranding}
-          meta={{
-            version: quote.version,
-            preparedAt: quote.updatedAt.toISOString(),
-            validityDays: 14,
-          }}
-        />
+      <main className="mx-auto max-w-5xl py-8 md:py-12 px-4 md:px-6 space-y-10">
+        <div className="overflow-hidden rounded-xl border border-line shadow-lift print:border-0 print:shadow-none print:rounded-none">
+          <PreviewRenderer
+            trip={{
+              destination: quote.trip.destination,
+              days: quote.trip.days,
+              travelers: quote.trip.travelers,
+              startDate: quote.trip.startDate,
+              travelType: quote.trip.travelType,
+            }}
+            itinerary={itinerary}
+            pricing={pricing}
+            segments={quote.trip.travelSegments}
+            agency={proposalAgency}
+            branding={proposalBranding}
+            meta={{
+              version: quote.version,
+              preparedAt: quote.updatedAt.toISOString(),
+              validityDays: 14,
+            }}
+          />
+        </div>
 
         {canAccept ? (
           <div className="print:hidden">

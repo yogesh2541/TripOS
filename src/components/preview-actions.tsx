@@ -1,22 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Download, Link2 } from "lucide-react";
+import { Check, Download, Link2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ShareOnWhatsappButton } from "@/components/whatsapp/share-on-whatsapp-button";
+import { SendProposalDialog } from "@/components/quotes/send-proposal-dialog";
 
 export function PreviewActions({
   tripId,
   quoteId,
   recipientPhone,
   recipientName,
+  recipientEmail,
   destination,
+  agencyName,
+  total,
+  perPerson,
+  version,
+  dateRange,
+  validityDays,
+  preparedAt,
+  shareToken,
 }: {
   tripId: string;
   quoteId?: string | null;
   recipientPhone?: string | null;
   recipientName?: string | null;
+  recipientEmail?: string | null;
   destination?: string | null;
+  agencyName?: string;
+  total?: number | null;
+  perPerson?: number | null;
+  version?: number | null;
+  dateRange?: string | null;
+  validityDays?: number;
+  preparedAt?: string | null;
+  shareToken?: string | null;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -28,24 +46,8 @@ export function PreviewActions({
     });
   }
 
-  const firstName = recipientName?.trim().split(/\s+/)[0] ?? "";
-
   return (
     <div className="flex items-center gap-2">
-      {quoteId ? (
-        <ShareOnWhatsappButton
-          kind="proposal"
-          tripId={tripId}
-          quoteId={quoteId}
-          recipientPhone={recipientPhone ?? null}
-          fallbackMessage={
-            firstName
-              ? `Hi ${firstName} ✨ your ${destination ?? "trip"} proposal is ready.`
-              : undefined
-          }
-          label="Share on WhatsApp"
-        />
-      ) : null}
       <Button variant="outline" size="sm" onClick={copyLink}>
         {copied ? (
           <Check className="h-3.5 w-3.5" />
@@ -60,11 +62,35 @@ export function PreviewActions({
           target="_blank"
           rel="noopener"
         >
-          <Button size="sm">
+          <Button variant="outline" size="sm">
             <Download className="h-3.5 w-3.5" />
-            Download PDF
+            PDF
           </Button>
         </a>
+      ) : null}
+      {quoteId ? (
+        <SendProposalDialog
+          tripId={tripId}
+          quoteId={quoteId}
+          recipientName={recipientName}
+          recipientPhone={recipientPhone}
+          recipientEmail={recipientEmail}
+          destination={destination}
+          agencyName={agencyName}
+          total={total}
+          perPerson={perPerson}
+          version={version}
+          dateRange={dateRange}
+          validityDays={validityDays}
+          preparedAt={preparedAt}
+          shareToken={shareToken}
+          trigger={
+            <Button variant="accent" size="sm">
+              <Send className="h-3.5 w-3.5" />
+              Send proposal
+            </Button>
+          }
+        />
       ) : null}
     </div>
   );

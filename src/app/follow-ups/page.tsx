@@ -55,14 +55,10 @@ export default async function FollowUpsPage() {
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Today's plate
-          </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Follow-ups
-          </h1>
+          <p className="tc-eyebrow gold">Today's plate</p>
+          <h1 className="tc-page-title mt-2.5">Follow-ups</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {overdue.length > 0 && (
               <>

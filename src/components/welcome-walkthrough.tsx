@@ -110,33 +110,33 @@ export function WelcomeWalkthrough({
       aria-modal="true"
     >
       <div
-        className="absolute inset-0 bg-navy/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-inkwash/60 backdrop-blur-sm"
         onClick={finish}
         aria-hidden
       />
-      <div className="relative w-full max-w-lg rounded-3xl border border-line bg-white shadow-pop overflow-hidden">
+      <div className="relative w-full max-w-lg rounded-lg border border-line bg-paper shadow-pop overflow-hidden">
         <button
           onClick={finish}
-          className="absolute top-4 right-4 z-10 rounded-full p-1.5 text-muted-foreground hover:bg-ivory hover:text-navy transition-colors"
+          className="absolute top-4 right-4 z-10 rounded-[6px] p-1.5 text-muted hover:bg-paper-2 hover:text-ink transition-colors"
           aria-label="Skip tour"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Visual top */}
-        <div className="relative bg-navy px-8 pt-12 pb-10 text-center overflow-hidden">
+        <div className="relative bg-inkwash px-8 pt-12 pb-10 text-center overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(200,169,106,0.22),transparent_60%)]" />
-          <span className="relative inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-ivory/10 border border-ivory/15 text-sand">
+          <span className="relative inline-flex h-16 w-16 items-center justify-center rounded-[10px] bg-[var(--on-dark)]/10 border border-[var(--on-dark)]/15 text-gold-deep">
             <Icon className="h-7 w-7" />
           </span>
         </div>
 
         {/* Content */}
         <div className="px-8 py-7 text-center">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-sand-700">
+          <p className="tc-eyebrow gold">
             Step {step + 1} of {SLIDES.length}
           </p>
-          <h2 className="mt-2 font-display text-3xl text-navy leading-tight">
+          <h2 className="mt-2 font-display text-3xl text-ink leading-tight">
             {title}
           </h2>
           <p className="mt-3 text-sm text-ink/75 leading-relaxed max-w-sm mx-auto">

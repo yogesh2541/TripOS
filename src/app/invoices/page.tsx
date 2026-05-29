@@ -99,17 +99,16 @@ export default async function InvoicesPage({
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-10">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Billing
+          <p className="tc-eyebrow gold">
+            <FileText className="h-[13px] w-[13px]" />
+            Pipeline · Finance
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Invoices
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="tc-page-title mt-2.5">Invoices &amp; bookings</h1>
+          <p className="tc-page-sub">
             {totals._count} issued ·{" "}
-            <span className="font-medium text-navy">
+            <span className="font-mono font-medium text-ink">
               {formatINR(totals._sum.grandTotal ?? 0)}
             </span>{" "}
             lifetime billed
@@ -117,17 +116,12 @@ export default async function InvoicesPage({
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center gap-2 mb-8">
+      <div className="flex flex-wrap items-center gap-2 mb-7">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
             href={filterHref(f.key)}
-            className={cn(
-              "h-9 px-4 inline-flex items-center rounded-full border text-xs uppercase tracking-[0.16em] transition-colors",
-              f.key === filter
-                ? "border-navy bg-navy text-ivory"
-                : "border-line bg-white text-navy hover:border-sand"
-            )}
+            className={cn("tc-chip", f.key === filter && "on")}
           >
             {f.label}
           </Link>
@@ -159,7 +153,7 @@ export default async function InvoicesPage({
           body="Invoices generate from booked trips. Open any booking and tap 'Generate tax invoice' to draft your first one."
           action={
             <Link href="/bookings">
-              <button className="inline-flex items-center gap-2 rounded-2xl bg-navy text-ivory px-6 py-2.5 text-sm font-medium shadow-soft hover:bg-navy-600">
+              <button className="tc-btn tc-btn-primary">
                 <Plus className="h-4 w-4" />
                 Open bookings
               </button>
@@ -175,15 +169,15 @@ export default async function InvoicesPage({
             <li key={inv.id}>
               <Link
                 href={`/invoices/${inv.id}`}
-                className="grid grid-cols-[1.4fr_1fr_1fr_auto] items-center gap-6 rounded-2xl border border-line bg-white px-5 py-4 hover:shadow-soft transition-all group"
+                className="group grid grid-cols-[1.4fr_1fr_1fr_auto] items-center gap-6 rounded-lg border border-line bg-paper px-5 py-4 shadow-soft transition-all hover:-translate-y-0.5 hover:border-[var(--gold-line)] hover:shadow-lift"
               >
                 <div className="min-w-0">
-                  <p className="font-display text-lg text-navy leading-tight">
+                  <p className="font-mono text-sm font-semibold text-ink leading-tight">
                     {inv.invoiceNumber ?? (
-                      <span className="text-muted-foreground">Draft</span>
+                      <span className="text-muted">Draft</span>
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  <p className="text-xs text-muted mt-0.5 truncate">
                     {inv.booking?.trip?.destination ?? "—"}
                     {inv.booking?.trip?.contact
                       ? ` · ${inv.booking.trip.contact.name}`
@@ -191,14 +185,14 @@ export default async function InvoicesPage({
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  <p className="tc-stat-label">
                     {inv.status === "ISSUED"
                       ? "Issued"
                       : inv.status === "CANCELLED"
                         ? "Cancelled"
                         : "Drafted"}
                   </p>
-                  <p className="text-sm text-navy mt-0.5">
+                  <p className="text-sm text-ink mt-0.5">
                     {inv.status === "ISSUED"
                       ? formatDate(inv.issuedAt!)
                       : inv.status === "CANCELLED"
@@ -207,18 +201,18 @@ export default async function InvoicesPage({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-navy tabular-nums">
+                  <p className="font-mono font-semibold text-ink tabular-nums">
                     {formatINR(inv.grandTotal)}
                   </p>
                   {inv.invoiceFy ? (
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground mt-0.5">
+                    <p className="text-[10px] uppercase tracking-[0.18em] text-faint mt-0.5">
                       FY {inv.invoiceFy}
                     </p>
                   ) : null}
                 </div>
                 <div className="flex items-center gap-3">
                   <Badge variant={TONE[inv.status]}>{inv.status}</Badge>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-navy transition-colors" />
+                  <ArrowUpRight className="h-4 w-4 text-muted group-hover:text-gold-deep transition-colors" />
                 </div>
               </Link>
             </li>

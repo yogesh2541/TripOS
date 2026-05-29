@@ -95,9 +95,9 @@ export function ProposalBrandingForm({
   return (
     <div className="space-y-8">
       {/* Live mini-preview ----------------------------------------------- */}
-      <section className="rounded-2xl border border-line bg-white p-5 shadow-soft">
+      <section className="rounded-lg border border-line bg-paper p-5 shadow-soft">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-sand-700">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-gold-deep">
             Live preview
           </p>
           <span
@@ -132,14 +132,14 @@ export function ProposalBrandingForm({
                 type="button"
                 disabled={!canEdit}
                 onClick={() => update("theme", t)}
-                className={`relative text-left rounded-2xl border p-4 transition-all ${
+                className={`relative text-left rounded-lg border p-4 transition-all ${
                   active
-                    ? "border-navy ring-2 ring-navy/20 bg-white shadow-soft"
-                    : "border-line bg-white hover:border-navy/40 hover:shadow-soft"
+                    ? "border-[var(--gold-line)] ring-2 ring-[var(--gold-line)]/20 bg-paper shadow-soft"
+                    : "border-line bg-paper hover:border-[var(--gold-line)]/60 hover:shadow-soft"
                 } disabled:opacity-60`}
               >
                 <div
-                  className="h-16 rounded-xl mb-3 overflow-hidden flex items-end p-2"
+                  className="h-16 rounded-[8px] mb-3 overflow-hidden flex items-end p-2"
                   style={{ backgroundColor: info.swatch.bg }}
                 >
                   <span
@@ -149,12 +149,12 @@ export function ProposalBrandingForm({
                     Travel proposal
                   </span>
                 </div>
-                <p className="font-display text-lg text-navy">{info.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                <p className="font-display text-lg text-ink">{info.name}</p>
+                <p className="mt-1 text-xs text-muted leading-relaxed">
                   {info.tagline}
                 </p>
                 {active && (
-                  <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-navy text-ivory">
+                  <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-[6px] bg-inkwash text-[var(--on-dark)]">
                     <Check className="h-3 w-3" />
                   </span>
                 )}
@@ -178,7 +178,7 @@ export function ProposalBrandingForm({
               value={form.accentColor || "#C8A96A"}
               onChange={(e) => update("accentColor", e.target.value)}
               disabled={!canEdit}
-              className="h-11 w-14 cursor-pointer rounded-xl border border-line bg-white p-1 disabled:opacity-60"
+              className="h-11 w-14 cursor-pointer rounded-[10px] border border-line bg-paper p-1 disabled:opacity-60"
               aria-label="Accent colour"
             />
             <Input
@@ -217,21 +217,21 @@ export function ProposalBrandingForm({
                   type="button"
                   disabled={!canEdit}
                   onClick={() => update("coverStyle", c)}
-                  className={`flex items-start justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors ${
+                  className={`flex items-start justify-between gap-3 rounded-[10px] border px-3.5 py-2.5 text-left transition-colors ${
                     active
-                      ? "border-navy bg-ivory"
-                      : "border-line bg-white hover:border-navy/40"
+                      ? "border-[var(--gold-line)] bg-paper-2"
+                      : "border-line bg-paper hover:border-[var(--gold-line)]/60"
                   } disabled:opacity-60`}
                 >
                   <span>
-                    <span className="block text-sm text-navy font-medium">
+                    <span className="block text-sm text-ink font-medium">
                       {info.name}
                     </span>
-                    <span className="block text-xs text-muted-foreground">
+                    <span className="block text-xs text-muted">
                       {info.tagline}
                     </span>
                   </span>
-                  {active && <Check className="h-4 w-4 text-navy shrink-0 mt-0.5" />}
+                  {active && <Check className="h-4 w-4 text-gold-deep shrink-0 mt-0.5" />}
                 </button>
               );
             })}
@@ -269,20 +269,20 @@ export function ProposalBrandingForm({
             disabled={!canEdit}
           />
         </div>
-        <div className="rounded-xl border border-line bg-ivory/60 px-3.5 py-2.5">
+        <div className="rounded-[10px] border border-line bg-paper-2 px-3.5 py-2.5">
           <label className="flex items-start gap-2.5 cursor-pointer">
             <input
               type="checkbox"
               checked={form.repeatLogo}
               onChange={(e) => update("repeatLogo", e.target.checked)}
               disabled={!canEdit}
-              className="h-4 w-4 mt-0.5 rounded border-line accent-navy"
+              className="h-4 w-4 mt-0.5 rounded border-line accent-[var(--gold-line)]"
             />
             <span>
-              <span className="block text-sm text-navy font-medium">
+              <span className="block text-sm text-ink font-medium">
                 Stamp the agency logo on every section
               </span>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-xs text-muted">
                 Keeps your brand visible throughout the document — especially
                 on the printed / PDF version.
               </span>
@@ -302,7 +302,7 @@ export function ProposalBrandingForm({
           placeholder="With warm regards,\nThe Wanderwarrior team"
           disabled={!canEdit}
         />
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           Shown above your contact block at the end of every proposal.
         </p>
       </section>
@@ -332,12 +332,12 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <p className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.22em] text-sand-700">
+      <p className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.22em] text-gold-deep">
         {icon}
         {title}
       </p>
       {hint && (
-        <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+        <p className="mt-0.5 text-xs text-muted">{hint}</p>
       )}
     </div>
   );
@@ -358,8 +358,8 @@ function ToggleRow({
 }) {
   return (
     <label
-      className={`flex items-start gap-2.5 rounded-xl border border-line bg-white px-3.5 py-2.5 cursor-pointer ${
-        disabled ? "opacity-60 cursor-not-allowed" : "hover:border-navy/40"
+      className={`flex items-start gap-2.5 rounded-[10px] border border-line bg-paper px-3.5 py-2.5 cursor-pointer ${
+        disabled ? "opacity-60 cursor-not-allowed" : "hover:border-[var(--gold-line)]/60"
       }`}
     >
       <input
@@ -367,7 +367,7 @@ function ToggleRow({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
         disabled={disabled}
-        className="h-4 w-4 mt-0.5 rounded border-line accent-navy"
+        className="h-4 w-4 mt-0.5 rounded border-line accent-[var(--gold-line)]"
       />
       <span>
         <span className="block text-sm text-navy font-medium">{label}</span>
@@ -393,7 +393,7 @@ function ThemePreview({
 }) {
   if (theme === "minimal") {
     return (
-      <div className="rounded-xl border border-line bg-white p-6">
+      <div className="rounded-[10px] border border-line bg-paper p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {logoUrl ? (
@@ -404,9 +404,9 @@ function ThemePreview({
                 className="h-7 w-7 rounded-full object-cover border border-line"
               />
             ) : (
-              <span className="h-7 w-7 rounded-full bg-ivory border border-line" />
+              <span className="h-7 w-7 rounded-full bg-paper-2 border border-line" />
             )}
-            <span className="text-xs text-navy font-medium">
+            <span className="text-xs text-ink font-medium">
               {agencyName}
             </span>
           </div>
@@ -414,10 +414,10 @@ function ThemePreview({
             Proposal
           </span>
         </div>
-        <p className="mt-4 font-display text-2xl text-navy leading-tight">
+        <p className="mt-4 font-display text-2xl text-ink leading-tight">
           Bali · 7 days
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-muted">
           Crafted by {agencyName}
         </p>
       </div>
@@ -426,7 +426,7 @@ function ThemePreview({
 
   if (theme === "editorial") {
     return (
-      <div className="rounded-xl border border-line bg-[#FAF7F0] p-6">
+      <div className="rounded-[10px] border border-line bg-[#FAF7F0] p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {logoUrl ? (
@@ -437,18 +437,18 @@ function ThemePreview({
                 className="h-8 w-8 rounded-full object-cover border border-line"
               />
             ) : (
-              <span className="h-8 w-8 rounded-full bg-white border border-line" />
+              <span className="h-8 w-8 rounded-full bg-paper border border-line" />
             )}
             <span className="text-[10px] uppercase tracking-[0.22em]" style={{ color: accent }}>
               {agencyName}
             </span>
           </div>
         </div>
-        <p className="mt-6 font-display text-3xl text-navy leading-tight">
+        <p className="mt-6 font-display text-3xl text-ink leading-tight">
           Bali — Seven days, two travellers
         </p>
         <div className="mt-3 h-px w-12" style={{ backgroundColor: accent }} />
-        <p className="mt-3 text-xs text-muted-foreground italic">
+        <p className="mt-3 text-xs text-muted italic">
           A curated journey through Ubud and Uluwatu.
         </p>
       </div>
@@ -457,7 +457,7 @@ function ThemePreview({
 
   // classic (default)
   return (
-    <div className="rounded-xl bg-[#1A2238] text-ivory p-6 overflow-hidden relative">
+    <div className="rounded-[10px] bg-[#1A2238] text-[var(--on-dark)] p-6 overflow-hidden relative">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(200,169,106,0.18),transparent_60%)]" />
       <div className="relative flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -482,7 +482,7 @@ function ThemePreview({
       <p className="relative mt-6 font-display text-3xl leading-tight">
         Bali
       </p>
-      <p className="relative mt-2 text-xs text-ivory/70">
+      <p className="relative mt-2 text-xs text-[var(--on-dark)]/70">
         7 days · 2 travellers · Luxury
       </p>
     </div>

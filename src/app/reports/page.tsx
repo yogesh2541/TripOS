@@ -3,6 +3,7 @@ import {
   BarChart3,
   Filter,
   IndianRupee,
+  Sparkles,
   TrendingUp,
   Users,
   Wallet,
@@ -10,6 +11,7 @@ import {
 import { PageShell } from "@/components/page-shell";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { AreaLine, Bars, Donut, Sparkline } from "@/components/charts";
 import { requireAgency } from "@/lib/session";
 import { getEffectivePlan } from "@/server/services/subscription";
 import {
@@ -17,7 +19,10 @@ import {
   parseRange,
   RANGE_LABEL,
   type AnalyticsRange,
+  type AgentRow,
   type Funnel,
+  type RevenueBlock,
+  type SourceRow,
 } from "@/server/services/analytics";
 import { LEAD_SOURCE_LABEL, LEAD_STATUS_LABEL } from "@/lib/crm";
 import { formatINR } from "@/lib/utils";
@@ -39,12 +44,11 @@ export default async function ReportsPage({
     return (
       <PageShell>
         <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
+          <p className="tc-eyebrow gold">
+            <BarChart3 className="h-[13px] w-[13px]" />
             Insights
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Reports
-          </h1>
+          <h1 className="tc-page-title mt-2.5">Reports</h1>
         </header>
         <EmptyState
           icon={<BarChart3 className="h-5 w-5" />}
@@ -68,20 +72,19 @@ export default async function ReportsPage({
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-8">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
+          <p className="tc-eyebrow gold">
+            <BarChart3 className="h-[13px] w-[13px]" />
             Insights
           </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Reports
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <h1 className="tc-page-title mt-2.5">Reports</h1>
+          <p className="tc-page-sub">
             How your pipeline converts, what it earns, and who's driving it.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-muted">
             <Filter className="h-3 w-3" />
             Period
           </span>
@@ -91,11 +94,7 @@ export default async function ReportsPage({
               <Link
                 key={r}
                 href={`/reports?range=${r}`}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                  active
-                    ? "border-navy bg-navy text-ivory"
-                    : "border-line bg-white text-muted-foreground hover:border-navy/40 hover:text-navy"
-                }`}
+                className={`tc-chip${active ? " on" : ""}`}
               >
                 {RANGE_LABEL[r]}
               </Link>
@@ -112,22 +111,27 @@ export default async function ReportsPage({
           variant="card"
         />
       ) : (
-        <div className="space-y-10">
-          {/* KPI row */}
+        <div className="space-y-8">
+          {/* KPI row — trend sparklines where a monthly series exists */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Kpi
               icon={<IndianRupee className="h-4 w-4" />}
               label="Booked revenue"
               value={formatINR(a.revenue.booked)}
+              tone="navy"
               sub={`${a.revenue.bookingCount} booking${
                 a.revenue.bookingCount === 1 ? "" : "s"
-              }`}
+              } · avg ${formatINR(a.revenue.avgTripValue)}`}
+              spark={a.revenue.byMonth.map((m) => m.booked)}
             />
             <Kpi
               icon={<Wallet className="h-4 w-4" />}
               label="Collected"
               value={formatINR(a.revenue.collected)}
-              sub={`${formatINR(a.revenue.outstanding)} outstanding`}
+              tone="sage"
+              sub={`${formatINR(a.revenue.outstanding)} still outstanding`}
+              spark={a.revenue.byMonth.map((m) => m.collected)}
+              sparkColor="var(--dv-sage)"
             />
             <Kpi
               icon={<TrendingUp className="h-4 w-4" />}
@@ -139,31 +143,48 @@ export default async function ReportsPage({
               icon={<Users className="h-4 w-4" />}
               label="Win rate"
               value={`${a.funnel.winRate}%`}
+              tone="clay"
               sub={`${a.funnel.won} won of ${a.funnel.total} leads`}
             />
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          {/* Revenue trend (wide) + where business comes from (donut) */}
+          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] items-start">
+            <RevenueTrendCard revenue={a.revenue} />
+            <SourceMixCard sources={a.sources} />
+          </div>
+
+          {/* Funnel + leaderboard */}
+          <div className="grid gap-6 lg:grid-cols-2 items-start">
             <FunnelCard funnel={a.funnel} />
-            <RevenueTrendCard byMonth={a.revenue.byMonth} />
+            <LeaderboardCard agents={a.agents} />
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-2">
+          {/* Booked vs collected, month by month */}
+          <MonthlyBarsCard byMonth={a.revenue.byMonth} />
+
+          {/* Source detail + status breakdown */}
+          <div className="grid gap-6 lg:grid-cols-2 items-start">
             <SourceCard sources={a.sources} />
-            <AgentCard agents={a.agents} />
+            {a.leadsByStatus.length > 0 ? (
+              <StatusBreakdown rows={a.leadsByStatus} total={a.funnel.total} />
+            ) : (
+              <span />
+            )}
           </div>
-
-          {a.leadsByStatus.length > 0 && (
-            <StatusBreakdown
-              rows={a.leadsByStatus}
-              total={a.funnel.total}
-            />
-          )}
         </div>
       )}
     </PageShell>
   );
 }
+
+const DV_COLORS = [
+  "var(--dv-slate)",
+  "var(--dv-sage)",
+  "var(--gold)",
+  "var(--dv-clay)",
+  "var(--dv-plum)",
+];
 
 // --- KPI --------------------------------------------------------------------
 
@@ -172,22 +193,34 @@ function Kpi({
   label,
   value,
   sub,
+  tone = "default",
+  spark,
+  sparkColor = "var(--gold)",
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   sub: string;
+  tone?: "default" | "navy" | "sage" | "clay";
+  spark?: number[];
+  sparkColor?: string;
 }) {
+  const hasSpark = spark && spark.length > 1 && spark.some((v) => v > 0);
   return (
-    <div className="rounded-2xl border border-line bg-white p-5 shadow-soft">
-      <div className="flex items-center gap-2 text-sand-700">
-        {icon}
-        <span className="text-[10px] uppercase tracking-[0.2em]">{label}</span>
+    <div className="tc-stat">
+      <div className="tc-stat-top">
+        <span className={tone === "default" ? "tc-stat-ic" : `tc-stat-ic ${tone}`}>
+          {icon}
+        </span>
       </div>
-      <p className="mt-3 font-display text-3xl text-navy leading-none tabular-nums">
-        {value}
-      </p>
-      <p className="mt-2 text-xs text-muted-foreground">{sub}</p>
+      <div className="tc-stat-label">{label}</div>
+      <div className="tc-stat-val tnum">{value}</div>
+      {hasSpark ? (
+        <div className="mt-2.5">
+          <Sparkline data={spark!} color={sparkColor} w={150} h={28} />
+        </div>
+      ) : null}
+      <div className="tc-stat-foot">{sub}</div>
     </div>
   );
 }
@@ -196,25 +229,37 @@ function Kpi({
 
 function Card({
   title,
+  description,
   hint,
   children,
 }: {
   title: string;
+  description?: string;
   hint?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-line bg-white p-6 shadow-soft">
-      <div className="flex items-baseline justify-between gap-3 mb-5">
-        <h2 className="font-display text-xl text-navy">{title}</h2>
-        {hint && (
-          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            {hint}
-          </span>
-        )}
+    <section className="tc-card h-full">
+      <div className="tc-card-head">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-ink text-[14.5px]">{title}</h3>
+          {description ? (
+            <p className="mt-0.5 text-[11.5px] text-muted">{description}</p>
+          ) : null}
+        </div>
+        {hint && <span className="t-mut shrink-0">{hint}</span>}
       </div>
-      {children}
+      <div className="p-[18px]">{children}</div>
     </section>
+  );
+}
+
+function Insight({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mt-4 flex items-start gap-1.5 rounded-[8px] bg-gold-soft/50 px-3 py-2 text-[12px] leading-relaxed text-ink-2">
+      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-gold-deep" />
+      <span>{children}</span>
+    </p>
   );
 }
 
@@ -222,14 +267,28 @@ function Card({
 
 function FunnelCard({ funnel }: { funnel: Funnel }) {
   const stages = [
-    { label: "Leads", count: funnel.total },
-    { label: "Contacted", count: funnel.contacted },
-    { label: "Quoted", count: funnel.quoted },
-    { label: "Won", count: funnel.won },
+    { label: "Leads", count: funnel.total, color: "var(--dv-slate)" },
+    { label: "Contacted", count: funnel.contacted, color: "var(--dv-sage)" },
+    { label: "Quoted", count: funnel.quoted, color: "var(--gold)" },
+    { label: "Won", count: funnel.won, color: "var(--inkwash)" },
   ];
+  // Biggest leak — the consecutive step with the steepest fall-off.
+  let leak: { from: string; to: string; keptPct: number } | null = null;
+  for (let i = 1; i < stages.length; i++) {
+    const prev = stages[i - 1].count;
+    if (prev <= 0) continue;
+    const keptPct = Math.round((stages[i].count / prev) * 100);
+    if (!leak || keptPct < leak.keptPct) {
+      leak = { from: stages[i - 1].label, to: stages[i].label, keptPct };
+    }
+  }
   return (
-    <Card title="Conversion funnel" hint={`${funnel.winRate}% win rate`}>
-      <div className="space-y-2.5">
+    <Card
+      title="Conversion funnel"
+      description={`${funnel.winRate}% of leads become bookings`}
+      hint={`${funnel.total} leads`}
+    >
+      <div className="space-y-4">
         {stages.map((s, i) => {
           const width = funnel.total > 0 ? (s.count / funnel.total) * 100 : 0;
           const dropFromPrev =
@@ -238,84 +297,80 @@ function FunnelCard({ funnel }: { funnel: Funnel }) {
               : null;
           return (
             <div key={s.label}>
-              <div className="flex items-baseline justify-between text-sm mb-1">
-                <span className="text-ink">{s.label}</span>
-                <span className="tabular-nums text-navy font-medium">
-                  {s.count}
+              <div className="flex items-center justify-between text-[13px] mb-1.5">
+                <span className="flex items-center gap-2 text-ink-2">
+                  <span
+                    className="h-[9px] w-[9px] rounded-[3px]"
+                    style={{ background: s.color }}
+                  />
+                  {s.label}
+                </span>
+                <span className="font-mono tabular-nums">
+                  <b className="t-strong">{s.count}</b>
                   {dropFromPrev !== null && (
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {dropFromPrev}%
-                    </span>
+                    <span className="ml-2 t-mut">· {dropFromPrev}% kept</span>
                   )}
                 </span>
               </div>
-              <div className="h-7 rounded-lg bg-ivory border border-line/60 overflow-hidden">
-                <div
-                  className="h-full rounded-lg bg-navy"
-                  style={{ width: `${Math.max(width, s.count > 0 ? 4 : 0)}%` }}
+              <div className="tc-meter" style={{ height: 8 }}>
+                <i
+                  style={{
+                    width: `${Math.max(width, s.count > 0 ? 4 : 0)}%`,
+                    background: s.color,
+                  }}
                 />
               </div>
             </div>
           );
         })}
       </div>
-      {funnel.lost > 0 && (
-        <p className="mt-4 text-xs text-muted-foreground">
-          {funnel.lost} contact{funnel.lost === 1 ? "" : "s"} marked lost in this
-          period.
-        </p>
-      )}
+      {leak ? (
+        <Insight>
+          Biggest drop-off is <b>{leak.from} → {leak.to}</b>, where only{" "}
+          {leak.keptPct}% carry through.
+          {funnel.lost > 0
+            ? ` ${funnel.lost} marked lost this period.`
+            : ""}
+        </Insight>
+      ) : null}
     </Card>
   );
 }
 
-// --- Revenue trend ----------------------------------------------------------
+// --- Revenue trend (collected, area) ----------------------------------------
 
-function RevenueTrendCard({
-  byMonth,
-}: {
-  byMonth: { month: string; label: string; booked: number; collected: number }[];
-}) {
-  const max = Math.max(1, ...byMonth.map((m) => m.booked));
+function RevenueTrendCard({ revenue }: { revenue: RevenueBlock }) {
+  const area = revenue.byMonth.map((m) => ({
+    label: m.label,
+    value: m.collected,
+  }));
+  const collectionRate =
+    revenue.booked > 0
+      ? Math.round((revenue.collected / revenue.booked) * 100)
+      : 0;
   return (
-    <Card title="Revenue trend" hint="Booked vs collected">
-      {byMonth.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">
-          No bookings in this period.
-        </p>
+    <Card
+      title="Revenue collected"
+      description="Cash in, month by month"
+      hint={revenue.byMonth.length > 0 ? `${collectionRate}% of booked` : undefined}
+    >
+      {area.length === 0 ? (
+        <p className="text-sm text-muted italic">No bookings in this period.</p>
       ) : (
-        <div className="space-y-3">
-          {byMonth.map((m) => (
-            <div key={m.month}>
-              <div className="flex items-baseline justify-between text-xs mb-1">
-                <span className="uppercase tracking-[0.14em] text-muted-foreground">
-                  {m.label}
-                </span>
-                <span className="tabular-nums text-navy">
-                  {formatINR(m.booked)}
-                </span>
-              </div>
-              <div className="relative h-5 rounded-md bg-ivory border border-line/60 overflow-hidden">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-md bg-sand-200"
-                  style={{ width: `${(m.booked / max) * 100}%` }}
-                />
-                <div
-                  className="absolute inset-y-0 left-0 rounded-md bg-navy"
-                  style={{ width: `${(m.collected / max) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-          <div className="flex items-center gap-4 pt-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm bg-navy" />
-              Collected
+        <div>
+          <div className="flex items-end gap-3 mb-1">
+            <span className="font-display text-3xl tracking-tight text-ink tabular-nums">
+              {formatINR(revenue.collected)}
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm bg-sand-200" />
-              Booked
+            <span className="mb-1 text-[12px] text-muted">
+              of {formatINR(revenue.booked)} booked
             </span>
+          </div>
+          <AreaLine data={area} h={190} />
+          <div className="mt-3 grid grid-cols-3 gap-3 border-t border-line-2 pt-3 text-center">
+            <MiniStat label="Outstanding" value={formatINR(revenue.outstanding)} />
+            <MiniStat label="Avg. trip" value={formatINR(revenue.avgTripValue)} />
+            <MiniStat label="Margin" value={`${revenue.marginPct}%`} />
           </div>
         </div>
       )}
@@ -323,25 +378,157 @@ function RevenueTrendCard({
   );
 }
 
-// --- Source attribution -----------------------------------------------------
-
-function SourceCard({
-  sources,
-}: {
-  sources: {
-    source: keyof typeof LEAD_SOURCE_LABEL;
-    leads: number;
-    won: number;
-    revenue: number;
-    conversion: number;
-  }[];
-}) {
+function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <Card title="Contact sources" hint="Where business comes from">
+    <div>
+      <p className="tc-stat-label">{label}</p>
+      <p className="mt-1 font-mono tabular-nums text-sm font-semibold text-ink">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+// --- Source mix (donut) -----------------------------------------------------
+
+function SourceMixCard({ sources }: { sources: SourceRow[] }) {
+  const withLeads = [...sources]
+    .filter((s) => s.leads > 0)
+    .sort((a, b) => b.leads - a.leads)
+    .slice(0, 5);
+  const donut = withLeads.map((s, i) => ({
+    label: LEAD_SOURCE_LABEL[s.source],
+    value: s.leads,
+    color: DV_COLORS[i % DV_COLORS.length],
+  }));
+  // Best converter with a meaningful sample (≥3 leads).
+  const best = [...sources]
+    .filter((s) => s.leads >= 3)
+    .sort((a, b) => b.conversion - a.conversion)[0];
+  return (
+    <Card title="Where business comes from" description="Leads by channel">
+      {donut.length === 0 ? (
+        <p className="text-sm text-muted italic">No leads yet.</p>
+      ) : (
+        <>
+          <Donut data={donut} size={150} centerLabel="LEADS" />
+          {best ? (
+            <Insight>
+              <b>{LEAD_SOURCE_LABEL[best.source]}</b> converts best —{" "}
+              {best.conversion}% of its leads book.
+            </Insight>
+          ) : null}
+        </>
+      )}
+    </Card>
+  );
+}
+
+// --- Sales leaderboard ------------------------------------------------------
+
+function LeaderboardCard({ agents }: { agents: AgentRow[] }) {
+  const ranked = [...agents]
+    .filter((ag) => ag.revenue > 0 || ag.won > 0 || ag.leads > 0)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 8);
+  const max = Math.max(1, ...ranked.map((r) => r.revenue));
+  return (
+    <Card title="Sales leaderboard" description="Revenue closed per agent">
+      {ranked.length === 0 ? (
+        <p className="text-sm text-muted italic">No assigned leads or trips yet.</p>
+      ) : (
+        <div className="space-y-4">
+          {ranked.map((ag, i) => {
+            const initials = ag.name
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((w) => w[0]?.toUpperCase() ?? "")
+              .join("");
+            const color = DV_COLORS[i % DV_COLORS.length];
+            return (
+              <div key={ag.userId}>
+                <div className="flex items-center gap-3 mb-1.5">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[11px] font-semibold"
+                    style={{
+                      background: `color-mix(in srgb, ${color} 18%, transparent)`,
+                      color,
+                    }}
+                  >
+                    {initials || "—"}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-ink truncate">
+                      {ag.name}
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      {ag.trips} trip{ag.trips === 1 ? "" : "s"} · {ag.won} won
+                    </p>
+                  </div>
+                  <span className="font-mono tabular-nums text-[13px] font-semibold text-ink">
+                    {formatINR(ag.revenue)}
+                  </span>
+                </div>
+                <div className="tc-meter">
+                  <i
+                    style={{ width: `${(ag.revenue / max) * 100}%`, background: color }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// --- Booked vs collected, monthly bars --------------------------------------
+
+function MonthlyBarsCard({
+  byMonth,
+}: {
+  byMonth: { month: string; label: string; booked: number; collected: number }[];
+}) {
+  if (byMonth.length === 0) return null;
+  // Scale to lakhs so the axis stays legible for INR figures.
+  const bars = byMonth.map((m) => ({
+    label: m.label,
+    values: [
+      Math.round(m.collected / 1000) / 100,
+      Math.round(m.booked / 1000) / 100,
+    ],
+  }));
+  return (
+    <Card title="Booked vs collected" description="By month, in ₹ lakh">
+      <div className="mb-3 flex items-center gap-4 text-[11.5px] text-muted">
+        <span className="flex items-center gap-1.5">
+          <span className="h-[9px] w-[9px] rounded-[3px] bg-gold" />
+          Collected
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className="h-[9px] w-[9px] rounded-[3px]"
+            style={{ background: "var(--dv-slate)" }}
+          />
+          Booked
+        </span>
+      </div>
+      <Bars data={bars} h={200} colors={["var(--gold)", "var(--dv-slate)"]} />
+    </Card>
+  );
+}
+
+// --- Source attribution table -----------------------------------------------
+
+function SourceCard({ sources }: { sources: SourceRow[] }) {
+  return (
+    <Card title="Source detail" description="Leads, conversion and revenue by channel">
       {sources.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No leads yet.</p>
       ) : (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[440px]">
           <thead>
             <tr className="text-left text-[10px] uppercase tracking-[0.16em] text-muted-foreground border-b border-line">
               <th className="pb-2 font-medium">Source</th>
@@ -357,7 +544,7 @@ function SourceCard({
                 key={s.source}
                 className="border-b border-line/50 last:border-0"
               >
-                <td className="py-2.5 text-navy">
+                <td className="py-2.5 text-ink">
                   {LEAD_SOURCE_LABEL[s.source]}
                 </td>
                 <td className="py-2.5 text-right tabular-nums text-ink">
@@ -369,72 +556,14 @@ function SourceCard({
                 <td className="py-2.5 text-right tabular-nums text-muted-foreground">
                   {s.conversion}%
                 </td>
-                <td className="py-2.5 text-right tabular-nums text-navy font-medium">
+                <td className="py-2.5 text-right font-mono tabular-nums text-ink font-semibold">
                   {formatINR(s.revenue)}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      )}
-    </Card>
-  );
-}
-
-// --- Agent performance ------------------------------------------------------
-
-function AgentCard({
-  agents,
-}: {
-  agents: {
-    userId: string;
-    name: string;
-    leads: number;
-    won: number;
-    trips: number;
-    revenue: number;
-  }[];
-}) {
-  return (
-    <Card title="Agent performance" hint="Revenue closed">
-      {agents.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">
-          No assigned leads or trips yet.
-        </p>
-      ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-[10px] uppercase tracking-[0.16em] text-muted-foreground border-b border-line">
-              <th className="pb-2 font-medium">Agent</th>
-              <th className="pb-2 font-medium text-right">Leads</th>
-              <th className="pb-2 font-medium text-right">Won</th>
-              <th className="pb-2 font-medium text-right">Trips</th>
-              <th className="pb-2 font-medium text-right">Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {agents.map((ag) => (
-              <tr
-                key={ag.userId}
-                className="border-b border-line/50 last:border-0"
-              >
-                <td className="py-2.5 text-navy">{ag.name}</td>
-                <td className="py-2.5 text-right tabular-nums text-ink">
-                  {ag.leads}
-                </td>
-                <td className="py-2.5 text-right tabular-nums text-ink">
-                  {ag.won}
-                </td>
-                <td className="py-2.5 text-right tabular-nums text-ink">
-                  {ag.trips}
-                </td>
-                <td className="py-2.5 text-right tabular-nums text-navy font-medium">
-                  {formatINR(ag.revenue)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        </div>
       )}
     </Card>
   );
@@ -455,14 +584,10 @@ function StatusBreakdown({
         {rows.map((r) => (
           <div
             key={r.status}
-            className="rounded-xl border border-line/60 bg-ivory px-4 py-3"
+            className="rounded-[10px] border border-line bg-paper-2 px-4 py-3"
           >
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              {LEAD_STATUS_LABEL[r.status]}
-            </p>
-            <p className="mt-1 font-display text-2xl text-navy tabular-nums">
-              {r.count}
-            </p>
+            <p className="tc-stat-label">{LEAD_STATUS_LABEL[r.status]}</p>
+            <p className="tc-stat-val tnum mt-1 !text-2xl">{r.count}</p>
           </div>
         ))}
       </div>

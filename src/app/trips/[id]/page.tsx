@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, CalendarDays, Eye, MapPin, Users } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 import { PageShell } from "@/components/page-shell";
 import { QuoteBuilder, type QuoteData } from "@/components/quotes/quote-builder";
 import { BookingPanel } from "@/components/bookings/booking-panel";
@@ -21,7 +22,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireAgency } from "@/lib/session";
 import { getTripWorkflow } from "@/server/services/trip-workflow";
-import { isRazorpayConfigured } from "@/lib/razorpay";
+import { isRazorpayConfiguredForAgency } from "@/server/services/integrations";
 import type { ItineraryContent } from "@/lib/ai";
 import type { LineItemCategory, PricingItem } from "@/types";
 import { TRIP_STATUS_LABEL, TRIP_STATUS_TONE } from "@/lib/crm";
@@ -35,7 +36,7 @@ export default async function TripWorkspacePage({
 }) {
   const { agencyId, user } = await requireAgency();
   const canEdit = user.activeAgencyRole !== "VIEWER";
-  const paymentsConfigured = isRazorpayConfigured();
+  const paymentsConfigured = await isRazorpayConfiguredForAgency(agencyId);
   const [trip, leadOptions] = await Promise.all([
     prisma.trip.findFirst({
     // Tenant-scoped: a trip id from another agency resolves to notFound().
@@ -120,14 +121,45 @@ export default async function TripWorkspacePage({
 
   return (
     <PageShell>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-10">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-navy transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All trips
-        </Link>
+      <Link
+        href="/trips"
+        className="tc-btn tc-btn-ghost tc-btn-sm mb-3.5 inline-flex w-fit"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Trips
+      </Link>
+
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Badge variant={TRIP_STATUS_TONE[trip.status]}>
+              {TRIP_STATUS_LABEL[trip.status]}
+            </Badge>
+            {trip.travelType ? (
+              <Badge variant="muted">{trip.travelType}</Badge>
+            ) : null}
+            <WhatsappBadge scope={{ tripId: trip.id }} href="/communications" />
+          </div>
+          <h1 className="tc-page-title">{trip.destination}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-x-[18px] gap-y-2 text-[13px] text-ink-2">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="h-[15px] w-[15px] text-gold-deep" />
+              {trip.startDate ? formatDate(trip.startDate) : "Dates TBD"}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="font-mono tabular-nums">{trip.days}</span> days
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Users className="h-[15px] w-[15px] text-gold-deep" />
+              <span className="font-mono tabular-nums">{trip.travelers}</span>{" "}
+              travelers
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="h-[15px] w-[15px] text-gold-deep" />
+              {trip.destination}
+            </span>
+          </div>
+        </div>
         <div className="flex flex-wrap items-center gap-3">
           <LinkLeadControl
             tripId={trip.id}
@@ -135,10 +167,6 @@ export default async function TripWorkspacePage({
             leads={leadOptions}
             canEdit={canEdit}
           />
-          <Badge variant={TRIP_STATUS_TONE[trip.status]}>
-            {TRIP_STATUS_LABEL[trip.status]}
-          </Badge>
-          <WhatsappBadge scope={{ tripId: trip.id }} href="/communications" />
           {trip.contact?.phone ? (
             <WhatsappComposer
               defaultPhone={trip.contact.phone}
@@ -204,6 +232,12 @@ export default async function TripWorkspacePage({
                 quotes={quotes}
                 itinerary={itineraryContent}
                 segments={segments}
+                destination={trip.destination}
+                recipient={
+                  trip.contact
+                    ? { name: trip.contact.name, phone: trip.contact.phone }
+                    : null
+                }
               />
             </div>
           </div>

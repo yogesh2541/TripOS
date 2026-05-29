@@ -47,15 +47,11 @@ export default async function OperationsDashboardPage() {
 
   return (
     <PageShell>
-      <header className="flex flex-wrap items-end justify-between gap-6 mb-8">
+      <header className="flex flex-wrap items-end justify-between gap-6 mb-7">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-sand-700">
-            Operations
-          </p>
-          <h1 className="mt-3 font-display text-4xl md:text-5xl text-navy leading-tight">
-            Today
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">{todayLabel}</p>
+          <p className="tc-eyebrow gold">Operations</p>
+          <h1 className="tc-page-title mt-2.5">Today</h1>
+          <p className="tc-page-sub">{todayLabel}</p>
         </div>
       </header>
 

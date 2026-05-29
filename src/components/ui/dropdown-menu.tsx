@@ -17,7 +17,7 @@ export const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-line bg-white p-1 text-ink shadow-pop",
+        "z-50 min-w-[12rem] overflow-hidden rounded-[10px] border border-line bg-paper p-1 text-ink shadow-pop",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         className
       )}
@@ -36,8 +36,8 @@ export const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-xl px-3 py-2 text-sm outline-none transition-colors",
-      "focus:bg-ivory data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex cursor-default select-none items-center gap-2 rounded-[8px] px-3 py-2 text-sm outline-none transition-colors",
+      "focus:bg-paper-2 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       inset && "pl-8",
       className
     )}
@@ -53,7 +53,7 @@ export const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none focus:bg-ivory",
+      "relative flex cursor-default select-none items-center rounded-[8px] py-2 pl-8 pr-3 text-sm outline-none focus:bg-paper-2",
       className
     )}
     checked={checked}
@@ -61,7 +61,7 @@ export const DropdownMenuCheckboxItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
       <DropdownMenuPrimitive.ItemIndicator>
-        <Check className="h-3.5 w-3.5 text-sand-700" />
+        <Check className="h-3.5 w-3.5 text-gold-deep" />
       </DropdownMenuPrimitive.ItemIndicator>
     </span>
     {children}

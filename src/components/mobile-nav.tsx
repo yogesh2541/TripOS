@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, Menu, Search, X } from "lucide-react";
@@ -9,7 +10,11 @@ import { cn } from "@/lib/utils";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  // Portal target only exists client-side.
+  useEffect(() => setMounted(true), []);
 
   // close on route change
   useEffect(() => {
@@ -49,41 +54,53 @@ export function MobileNav() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-navy hover:border-sand-200"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-line bg-paper text-ink-2 hover:border-[var(--gold-line)]"
       >
         <Menu className="h-4 w-4" />
       </button>
 
-      {open ? (
+      {open && mounted
+        ? createPortal(
         <div
-          className="fixed inset-0 z-50"
+          className="fixed inset-0 z-[100]"
           onClick={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
           <div
-            className="absolute inset-0 bg-navy/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-inkwash/50 backdrop-blur-sm"
             aria-hidden
           />
           <aside
             role="dialog"
             aria-label="Menu"
-            className="absolute left-0 top-0 h-full w-[82vw] max-w-xs bg-ivory shadow-lift flex flex-col"
+            className="absolute left-0 top-0 h-full w-[82vw] max-w-xs bg-inkwash text-[var(--on-dark)] shadow-lift flex flex-col"
           >
-            <header className="flex items-center justify-between px-4 h-16 border-b border-line/70">
-              <span className="flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-ivory">
-                  <Compass className="h-4 w-4" />
+            <header
+              className="flex items-center justify-between px-4"
+              style={{
+                height: "var(--top-h)",
+                borderBottom: "1px solid rgba(255,255,255,.07)",
+              }}
+            >
+              <span className="flex items-center gap-2.5">
+                <span
+                  className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] text-inkwash"
+                  style={{
+                    background: "linear-gradient(150deg, var(--gold), #B0863F)",
+                  }}
+                >
+                  <Compass className="h-[17px] w-[17px]" />
                 </span>
-                <span className="font-display text-lg text-navy tracking-tight">
-                  TripCraft
+                <span className="font-display text-lg text-white tracking-tight">
+                  Trip<b className="font-semibold text-gold">Craft</b>
                 </span>
               </span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close menu"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:text-navy hover:bg-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-[var(--on-dark-mut)] hover:text-white hover:bg-white/5"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -92,17 +109,17 @@ export function MobileNav() {
             <button
               type="button"
               onClick={fireSearch}
-              className="m-4 flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2.5 text-sm text-muted-foreground hover:border-sand-200 hover:text-navy"
+              className="m-4 flex items-center gap-2 rounded-[9px] border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-[var(--on-dark-mut)] hover:text-white"
             >
               <Search className="h-4 w-4" />
               Search everything
             </button>
 
-            <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-5">
+            <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-4">
               {NAV_GROUPS.map((group, gi) => (
                 <div key={group.label ?? `g${gi}`}>
                   {group.label ? (
-                    <p className="px-3 mb-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    <p className="px-2.5 mb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.24em] text-[rgba(157,176,190,.55)]">
                       {group.label}
                     </p>
                   ) : null}
@@ -115,16 +132,16 @@ export function MobileNav() {
                           <Link
                             href={item.href}
                             className={cn(
-                              "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                              "flex items-center gap-[11px] rounded-[9px] px-2.5 py-2.5 text-[13px] transition-colors",
                               active
-                                ? "bg-navy text-ivory font-medium"
-                                : "text-navy hover:bg-white"
+                                ? "bg-white/[0.08] text-white font-medium"
+                                : "text-[var(--on-dark-mut)] hover:bg-white/5 hover:text-white"
                             )}
                           >
                             <Icon
                               className={cn(
                                 "h-4 w-4",
-                                active ? "text-ivory" : "text-sand-700"
+                                active ? "text-gold" : "text-[rgba(157,176,190,.7)]"
                               )}
                             />
                             {item.label}
@@ -137,12 +154,17 @@ export function MobileNav() {
               ))}
             </nav>
 
-            <footer className="border-t border-line/70 px-4 py-3 text-[11px] text-muted-foreground">
+            <footer
+              className="px-4 py-3 text-[11px] text-[var(--on-dark-mut)]"
+              style={{ borderTop: "1px solid rgba(255,255,255,.07)" }}
+            >
               TripCraft · Crafted for premium travel
             </footer>
           </aside>
-        </div>
-      ) : null}
+        </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }
